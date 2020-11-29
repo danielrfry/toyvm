@@ -31,6 +31,7 @@
 		375A3A8D25684A5E00EEB67A /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		375A3A9625684A8300EEB67A /* Virtualization.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Virtualization.framework; path = System/Library/Frameworks/Virtualization.framework; sourceTree = SDKROOT; };
 		375A3A9B2568500400EEB67A /* toyvm.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = toyvm.entitlements; sourceTree = "<group>"; };
+		379F73F5257405E1008AAEB7 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -48,6 +49,7 @@
 		375A3A8125684A5E00EEB67A = {
 			isa = PBXGroup;
 			children = (
+				379F73F5257405E1008AAEB7 /* README.md */,
 				375A3A9B2568500400EEB67A /* toyvm.entitlements */,
 				375A3A8C25684A5E00EEB67A /* toyvm */,
 				375A3A8B25684A5E00EEB67A /* Products */,
