@@ -75,7 +75,7 @@ int main(int argc, char * argv[]) {
     while ((ch = getopt_long(argc, argv, "m:k:i:d:r:p:", longopts, NULL)) != -1) {
         switch (ch) {
             case 'm':
-                memorySize = strtol(optarg, NULL, 10) * 1024 * 1024;
+                memorySize = strtol(optarg, NULL, 10) * 1024 * 1024 * 1024;
                 break;
             case 'k':
                 kernelURL = [NSURL fileURLWithPath:@(optarg)];
