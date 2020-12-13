@@ -15,4 +15,5 @@ jobs:
       - name: Upload
         uses: actions/upload-artifact@v2
         with:
+          name: toyvm-bin
           path: toyvm-bin.tar.bz2
