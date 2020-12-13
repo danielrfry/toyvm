@@ -1,0 +1,14 @@
+name: Build
+on: [push]
+jobs:
+  build:
+    runs-on: macos-11.0
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build
+        run: xcodebuild -project toyvm.xcodeproj -target toyvm -configuration Release
+      - name: Archive
+        uses: actions/upload-artifact@v2
+        with:
+          name: toyvm-bin
+          path: build/Release/*
