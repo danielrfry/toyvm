@@ -11,9 +11,8 @@ jobs:
         run: |
           mkdir toyvm-bin
           cp -R build/Release/* toyvm-bin/
-          zip -r9 toyvm-bin.zip toyvm-bin
+          tar -cvjf toyvm-bin.tar.bz2 toyvm-bin
       - name: Upload
         uses: actions/upload-artifact@v2
         with:
-          name: toyvm-bin
-          path: toyvm-bin.zip
+          path: toyvm-bin.tar.bz2
