@@ -1,6 +1,4 @@
 #  Toy Linux VM using Virtualization.framework
-![Build](https://github.com/danielrfry/toyvm/workflows/Build/badge.svg)
-
 This is a toy virtual machine built using Apple's Virtualization framework, that is capable of running Linux on macOS Big Sur on Apple Silicon and Intel Macs.
 
 [Installation Guide](doc/INSTALL.md)
