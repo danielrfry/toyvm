@@ -22,6 +22,7 @@ static struct option longopts[] = {
     { "cpus",       required_argument,  NULL,   'p' },
     { "share",      required_argument,  NULL,   's' },
     { "share-ro",   required_argument,  NULL,   't' },
+    { "audio",      no_argument,        NULL,   'a' },
     { NULL,         0,                  NULL,   0 }
 };
 
@@ -80,6 +81,16 @@ BOOL add_share_device(const char *arg, BOOL readOnly, NSMutableDictionary *destD
     return YES;
 }
 
+VZVirtioSoundDeviceConfiguration *create_sound_device(void) {
+    VZVirtioSoundDeviceConfiguration *cfg = [[VZVirtioSoundDeviceConfiguration alloc] init];
+    VZVirtioSoundDeviceInputStreamConfiguration *inputStream = [[VZVirtioSoundDeviceInputStreamConfiguration alloc] init];
+    inputStream.source = [[VZHostAudioInputStreamSource alloc] init];
+    VZVirtioSoundDeviceOutputStreamConfiguration *outputStream = [[VZVirtioSoundDeviceOutputStreamConfiguration alloc] init];
+    outputStream.sink = [[VZHostAudioOutputStreamSink alloc] init];
+    cfg.streams = @[inputStream, outputStream];
+    return cfg;
+}
+
 int usage(void) {
     //              "--------------------------------------------------------------------------------"
     fprintf(stderr, "usage: toyvm [options] [kernel command line]\n"
@@ -98,7 +109,8 @@ int usage(void) {
                     "  -p --cpus <number>       Number of CPU (core)s to make available to the VM\n"
                     "                           (default: 2)\n"
                     "  -m --memory <amount>     Amount of memory to reserve for the VM in gigabytes\n"
-                    "                           (default: 2)\n");
+                    "                           (default: 2)\n"
+                    "  -a                       Enable virtual audio device\n");
     return 1;
 }
 
@@ -109,10 +121,11 @@ int main(int argc, char * argv[]) {
     NSMutableArray *disks = [NSMutableArray array];
     NSMutableDictionary *sharedDirs = [NSMutableDictionary dictionary];
     int cpus = 2;
+    BOOL enableAudio = NO;
     
     // Parse command line
     int ch;
-    while ((ch = getopt_long(argc, argv, "m:k:i:d:r:p:s:t:", longopts, NULL)) != -1) {
+    while ((ch = getopt_long(argc, argv, "m:k:i:d:r:p:s:t:a", longopts, NULL)) != -1) {
         switch (ch) {
             case 'm':
                 memorySize = strtol(optarg, NULL, 10) * 1024 * 1024 * 1024;
@@ -141,6 +154,9 @@ int main(int argc, char * argv[]) {
             case 't':
                 if (!add_share_device(optarg, YES, sharedDirs))
                     return 1;
+                break;
+            case 'a':
+                enableAudio = YES;
                 break;
             default:
                 return usage();
@@ -193,6 +209,11 @@ int main(int argc, char * argv[]) {
     config.storageDevices = disks;
     config.directorySharingDevices = [sharedDirs allValues];
     config.CPUCount = cpus;
+
+    // Audio
+    if (enableAudio) {
+        config.audioDevices = @[create_sound_device()];
+    }
 
     // Validate
     NSError *err;
