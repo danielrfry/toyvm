@@ -13,6 +13,8 @@
 #include <termios.h>
 #include <getopt.h>
 
+#define TOYVM_OPT_NO_NET 1
+
 static struct option longopts[] = {
     { "memory",     required_argument,  NULL,   'm' },
     { "kernel",     required_argument,  NULL,   'k' },
@@ -23,6 +25,7 @@ static struct option longopts[] = {
     { "share",      required_argument,  NULL,   's' },
     { "share-ro",   required_argument,  NULL,   't' },
     { "audio",      no_argument,        NULL,   'a' },
+    { "no-net",     no_argument,        NULL,   TOYVM_OPT_NO_NET },
     { NULL,         0,                  NULL,   0 }
 };
 
@@ -91,6 +94,13 @@ VZVirtioSoundDeviceConfiguration *create_sound_device(void) {
     return cfg;
 }
 
+void add_network_interface_nat(VZVirtualMachineConfiguration *config) {
+    VZNATNetworkDeviceAttachment *natAttachment = [[VZNATNetworkDeviceAttachment alloc] init];
+    VZVirtioNetworkDeviceConfiguration *netDevCfg = [[VZVirtioNetworkDeviceConfiguration alloc] init];
+    netDevCfg.attachment = natAttachment;
+    config.networkDevices = @[netDevCfg];
+}
+
 int usage(void) {
     //              "--------------------------------------------------------------------------------"
     fprintf(stderr, "usage: toyvm [options] [kernel command line]\n"
@@ -110,7 +120,8 @@ int usage(void) {
                     "                           (default: 2)\n"
                     "  -m --memory <amount>     Amount of memory to reserve for the VM in gigabytes\n"
                     "                           (default: 2)\n"
-                    "  -a                       Enable virtual audio device\n");
+                    "  -a                       Enable virtual audio device\n"
+                    "  --no-net                 Do not add a virtual network interface\n");
     return 1;
 }
 
@@ -122,6 +133,7 @@ int main(int argc, char * argv[]) {
     NSMutableDictionary *sharedDirs = [NSMutableDictionary dictionary];
     int cpus = 2;
     BOOL enableAudio = NO;
+    BOOL enableNetworking = YES;
     
     // Parse command line
     int ch;
@@ -158,6 +170,9 @@ int main(int argc, char * argv[]) {
             case 'a':
                 enableAudio = YES;
                 break;
+            case TOYVM_OPT_NO_NET:
+                enableNetworking = NO;
+                break;
             default:
                 return usage();
         }
@@ -185,10 +200,9 @@ int main(int argc, char * argv[]) {
     VZVirtualMachineConfiguration *config = [[VZVirtualMachineConfiguration alloc] init];
 
     // Network device
-    VZNATNetworkDeviceAttachment *natAttachment = [[VZNATNetworkDeviceAttachment alloc] init];
-    VZVirtioNetworkDeviceConfiguration *netDevCfg = [[VZVirtioNetworkDeviceConfiguration alloc] init];
-    netDevCfg.attachment = natAttachment;
-    config.networkDevices = @[netDevCfg];
+    if (enableNetworking) {
+        add_network_interface_nat(config);
+    }
 
     // Console
     VZVirtioConsoleDeviceSerialPortConfiguration *consoleCfg = [[VZVirtioConsoleDeviceSerialPortConfiguration alloc] init];
