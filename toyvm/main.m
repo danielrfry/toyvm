@@ -14,6 +14,7 @@
 #include <getopt.h>
 
 #define TOYVM_OPT_NO_NET 1
+#define TOYVM_OPT_ROSETTA 2
 
 static struct option longopts[] = {
     { "memory",     required_argument,  NULL,   'm' },
@@ -26,6 +27,7 @@ static struct option longopts[] = {
     { "share-ro",   required_argument,  NULL,   't' },
     { "audio",      no_argument,        NULL,   'a' },
     { "no-net",     no_argument,        NULL,   TOYVM_OPT_NO_NET },
+    { "enable-rosetta", no_argument,    NULL,   TOYVM_OPT_ROSETTA },
     { NULL,         0,                  NULL,   0 }
 };
 
@@ -101,6 +103,27 @@ void add_network_interface_nat(VZVirtualMachineConfiguration *config) {
     config.networkDevices = @[netDevCfg];
 }
 
+BOOL add_rosetta_share_device(NSMutableDictionary *destDict) {
+    NSError *err = nil;
+    if (@available(macOS 13.0, *)) {
+        VZLinuxRosettaDirectoryShare *share = [[VZLinuxRosettaDirectoryShare alloc] initWithError:&err];
+        if (!share) {
+            NSLog(@"Error creating Rosetta directory share:");
+            NSLog(@"%@", err);
+            return NO;
+        }
+        
+        VZVirtioFileSystemDeviceConfiguration *fileSystemDevice = [[VZVirtioFileSystemDeviceConfiguration alloc] initWithTag:@"rosetta"];
+        fileSystemDevice.share = share;
+        [destDict setObject:fileSystemDevice forKey:fileSystemDevice.tag];
+        
+        return YES;
+    } else {
+        NSLog(@"Rosetta support requires macOS 13.0 or later");
+        return NO;
+    }
+}
+
 int usage(void) {
     //              "--------------------------------------------------------------------------------"
     fprintf(stderr, "usage: toyvm [options] [kernel command line]\n"
@@ -121,7 +144,8 @@ int usage(void) {
                     "  -m --memory <amount>     Amount of memory to reserve for the VM in gigabytes\n"
                     "                           (default: 2)\n"
                     "  -a                       Enable virtual audio device\n"
-                    "  --no-net                 Do not add a virtual network interface\n");
+                    "  --no-net                 Do not add a virtual network interface\n"
+                    "  --enable-rosetta         Enable the Rosetta directory share in the guest OS\n");
     return 1;
 }
 
@@ -172,6 +196,10 @@ int main(int argc, char * argv[]) {
                 break;
             case TOYVM_OPT_NO_NET:
                 enableNetworking = NO;
+                break;
+            case TOYVM_OPT_ROSETTA:
+                if (!add_rosetta_share_device(sharedDirs))
+                    return 1;
                 break;
             default:
                 return usage();
