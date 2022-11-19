@@ -26,4 +26,5 @@ Options:
   -m --memory <amount>     Amount of memory to reserve for the VM in gigabytes
                            (default: 2)
   -a                       Enable virtual audio device
+  --no-net                 Do not add a virtual network interface
 ```
