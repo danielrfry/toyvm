@@ -5,7 +5,7 @@ This is a toy virtual machine built using Apple's Virtualization framework, that
 
 There's a short video demo of toyvm running Debian on an M1 Mac mini [here](https://www.youtube.com/watch?v=zXqVAUl7T4k).
 
-As well as toyvm itself, kernel, initial ram disk and root filesystem images are needed to build a working system. Please see [debian-vm-aarch64](https://github.com/danielrfry/debian-vm-aarch64) for pre-built ones for Debian Buster on Apple Silicon. The scripts used to produce these are also available at [debian-vm-build](https://github.com/danielrfry/debian-vm-build).
+As well as toyvm itself, kernel, initial ram disk and root filesystem images are needed to build a working system. Please see [debian-vm-build](https://github.com/danielrfry/debian-vm-build) for pre-built ones for Debian Buster on Apple Silicon, and the scripts used to produce them.
 
 ```
 usage: toyvm [options] [kernel command line]

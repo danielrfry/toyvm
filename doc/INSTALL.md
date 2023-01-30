@@ -27,17 +27,12 @@ sudo cp build/Release/toyvm /usr/local/bin
 ```
 
 ## Installing the virtual machine
-Download the pre-built Debian virtual machine:
+Download the pre-built Debian virtual machine from [debian-vm-build Releases](https://github.com/danielrfry/debian-vm-build/releases).
+
+Unpack the kernel, initrd and root filesystem images:
 ```
 cd ~/toyvm
-curl -O https://media.githubusercontent.com/media/danielrfry/debian-vm-aarch64/main/debian-rootfs-aarch64.tar.bz2
-curl -O https://media.githubusercontent.com/media/danielrfry/debian-vm-aarch64/main/initrd.img-4.19.160
-curl -O https://media.githubusercontent.com/media/danielrfry/debian-vm-aarch64/main/vmlinuz-4.19.160
-```
-
-Unpack the disk image:
-```
-tar -xvjf debian-rootfs-aarch64.tar.bz2
+tar -xvjf debian-vm-aarch64_*.tar.bz2 
 ```
 
 ## Booting the virtual machine
