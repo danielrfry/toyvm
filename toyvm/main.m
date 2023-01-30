@@ -7,6 +7,7 @@
 
 #import <Foundation/Foundation.h>
 #import <Virtualization/Virtualization.h>
+#import <TargetConditionals.h>
 
 #import "ToyVMDelegate.h"
 
@@ -104,6 +105,7 @@ void add_network_interface_nat(VZVirtualMachineConfiguration *config) {
 }
 
 BOOL add_rosetta_share_device(NSMutableDictionary *destDict) {
+#if TARGET_CPU_ARM64
     NSError *err = nil;
     if (@available(macOS 13.0, *)) {
         VZLinuxRosettaDirectoryShare *share = [[VZLinuxRosettaDirectoryShare alloc] initWithError:&err];
@@ -122,6 +124,10 @@ BOOL add_rosetta_share_device(NSMutableDictionary *destDict) {
         NSLog(@"Rosetta support requires macOS 13.0 or later");
         return NO;
     }
+#else
+    NSLog(@"Rosetta support requires an Apple Silicon processor");
+    return NO;
+#endif
 }
 
 int usage(void) {
