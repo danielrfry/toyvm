@@ -13,16 +13,24 @@ extension ToyVM {
         static let configuration = CommandConfiguration(
             abstract: "Start a VM",
             discussion: """
-                Remaining positional arguments are passed to the kernel as the command line. \
-                Use -- to separate toyvm options from kernel arguments that begin with -.
+                When a VM bundle is specified, configuration is loaded from the bundle. \
+                Any options provided on the command line override the bundle configuration. \
+                Without a bundle, --kernel is required. \
+                Use -- to separate toyvm options from arguments that begin with -.
                 """
         )
 
-        @Option(name: [.customShort("k"), .long], help: "Path to the kernel image to load [required]")
-        var kernel: String
+        @Argument(help: "Path to a VM bundle to start")
+        var bundle: String? = nil
+
+        @Option(name: [.customShort("k"), .long], help: "Path to the kernel image to load (required without a bundle)")
+        var kernel: String? = nil
 
         @Option(name: [.customShort("i"), .long], help: "Path to an initrd image to load")
-        var initrd: String?
+        var initrd: String? = nil
+
+        @Option(name: [.customShort("c"), .customLong("cmdline")], help: "Kernel command line (default: console=hvc0)")
+        var cmdline: String? = nil
 
         @Option(name: [.customShort("d"), .long], help: "Add a read/write virtual storage device backed by the specified raw disk image file")
         var disk: [String] = []
@@ -37,10 +45,10 @@ extension ToyVM {
         var shareRO: [String] = []
 
         @Option(name: [.customShort("p"), .long], help: "Number of CPUs to make available to the VM")
-        var cpus: Int = 2
+        var cpus: Int? = nil
 
         @Option(name: [.customShort("m"), .long], help: "Amount of memory in gigabytes to reserve for the VM")
-        var memory: Int = 2
+        var memory: Int? = nil
 
         @Flag(name: [.customShort("a"), .customLong("audio")], help: "Enable virtual audio device")
         var audio: Bool = false
@@ -51,13 +59,22 @@ extension ToyVM {
         @Flag(name: .customLong("enable-rosetta"), help: "Enable the Rosetta directory share in the guest OS")
         var enableRosetta: Bool = false
 
-        @Argument(help: "Kernel command line")
-        var kernelCommandLine: [String] = ["console=hvc0"]
-
         mutating func run() throws {
+            // Load bundle config if a bundle path was given
+            let bundleURL = bundle.map { URL(fileURLWithPath: $0, isDirectory: true) }
+            let bundleConfig = try bundleURL.map { try VMConfig.load(from: $0) }
+
+            // Resolve kernel path: CLI option takes precedence, then bundle (relative → absolute)
+            guard let effectiveKernelPath = kernel
+                    ?? bundleConfig.flatMap({ cfg in bundleURL.map { $0.appendingPathComponent(cfg.kernel).path } })
+            else {
+                throw ValidationError("--kernel is required when no VM bundle is specified")
+            }
+
             let config = VZVirtualMachineConfiguration()
 
-            if !noNet {
+            // Networking: --no-net disables; bundle or default enables
+            if !noNet && (bundleConfig?.network ?? true) {
                 let netDev = VZVirtioNetworkDeviceConfiguration()
                 netDev.attachment = VZNATNetworkDeviceAttachment()
                 config.networkDevices = [netDev]
@@ -70,17 +87,35 @@ extension ToyVM {
             )
             config.serialPorts = [consoleCfg]
 
-            let bootLoader = VZLinuxBootLoader(kernelURL: URL(fileURLWithPath: kernel))
-            if let initrdPath = initrd {
+            let bootLoader = VZLinuxBootLoader(kernelURL: URL(fileURLWithPath: effectiveKernelPath))
+
+            let effectiveInitrd: String?
+            if let i = initrd {
+                effectiveInitrd = i
+            } else if let cfg = bundleConfig, let initrdRel = cfg.initrd, let bURL = bundleURL {
+                effectiveInitrd = bURL.appendingPathComponent(initrdRel).path
+            } else {
+                effectiveInitrd = nil
+            }
+            if let initrdPath = effectiveInitrd {
                 bootLoader.initialRamdiskURL = URL(fileURLWithPath: initrdPath)
             }
-            bootLoader.commandLine = kernelCommandLine.joined(separator: " ")
+
+            bootLoader.commandLine = cmdline
+                ?? bundleConfig.map { $0.kernelCommandLine.joined(separator: " ") }
+                ?? "console=hvc0"
             config.bootLoader = bootLoader
 
-            config.memorySize = UInt64(memory) * 1024 * 1024 * 1024
-            config.cpuCount = cpus
+            config.cpuCount = cpus ?? bundleConfig?.cpus ?? 2
+            config.memorySize = UInt64(memory ?? bundleConfig?.memoryGB ?? 2) * 1024 * 1024 * 1024
 
+            // Storage: bundle disks first (paths resolved relative to bundle), then CLI disks
             var storageDevices: [VZStorageDeviceConfiguration] = []
+            if let cfg = bundleConfig, let bURL = bundleURL {
+                for d in cfg.disks {
+                    storageDevices.append(try makeStorageDevice(path: bURL.appendingPathComponent(d.file).path, readOnly: d.readOnly))
+                }
+            }
             for path in disk {
                 storageDevices.append(try makeStorageDevice(path: path, readOnly: false))
             }
@@ -89,7 +124,13 @@ extension ToyVM {
             }
             config.storageDevices = storageDevices
 
+            // Shares: bundle shares form the base (keyed by tag); CLI shares add or replace
             var sharedDirs: [String: VZVirtioFileSystemDeviceConfiguration] = [:]
+            if let cfg = bundleConfig {
+                for s in cfg.shares {
+                    sharedDirs[s.tag] = try makeShareDeviceFromConfig(s)
+                }
+            }
             for arg in share {
                 let cfg = try makeShareDevice(arg: arg, readOnly: false)
                 sharedDirs[cfg.tag] = cfg
@@ -98,15 +139,18 @@ extension ToyVM {
                 let cfg = try makeShareDevice(arg: arg, readOnly: true)
                 sharedDirs[cfg.tag] = cfg
             }
-            if enableRosetta {
-                let cfg = try makeRosettaShareDevice()
-                sharedDirs[cfg.tag] = cfg
-            }
-            config.directorySharingDevices = Array(sharedDirs.values)
 
-            if audio {
+            // Audio: --audio enables; bundle config also enables; neither means disabled
+            if audio || (bundleConfig?.audio ?? false) {
                 config.audioDevices = [makeSoundDevice()]
             }
+
+            // Rosetta: --enable-rosetta enables; bundle config also enables
+            if enableRosetta || (bundleConfig?.rosetta ?? false) {
+                sharedDirs["rosetta"] = try makeRosettaShareDevice()
+            }
+
+            config.directorySharingDevices = Array(sharedDirs.values)
 
             try config.validate()
 
@@ -153,6 +197,13 @@ extension ToyVM {
             try VZVirtioFileSystemDeviceConfiguration.validateTag(tag)
             let cfg = VZVirtioFileSystemDeviceConfiguration(tag: tag)
             cfg.share = VZSingleDirectoryShare(directory: VZSharedDirectory(url: URL(fileURLWithPath: path), readOnly: readOnly))
+            return cfg
+        }
+
+        private func makeShareDeviceFromConfig(_ shareCfg: ShareConfig) throws -> VZVirtioFileSystemDeviceConfiguration {
+            try VZVirtioFileSystemDeviceConfiguration.validateTag(shareCfg.tag)
+            let cfg = VZVirtioFileSystemDeviceConfiguration(tag: shareCfg.tag)
+            cfg.share = VZSingleDirectoryShare(directory: VZSharedDirectory(url: URL(fileURLWithPath: shareCfg.path), readOnly: shareCfg.readOnly))
             return cfg
         }
 

@@ -15,22 +15,43 @@ OPTIONS:
 
 SUBCOMMANDS:
   start                   Start a VM
+  create                  Create a VM bundle
 
-USAGE: toyvm start --kernel <kernel> [--initrd <initrd>] [--disk <disk> ...]
-                   [--disk-ro <disk-ro> ...] [--share <share> ...] [--share-ro <share-ro> ...]
-                   [--cpus <cpus>] [--memory <memory>] [-a] [--no-net] [--enable-rosetta]
-                   [<kernel-command-line> ...]
+USAGE: toyvm start [<options>] [<bundle>]
 
 ARGUMENTS:
-  <kernel-command-line>   Kernel command line (default: console=hvc0)
+  <bundle>                Path to a VM bundle to start
 
 OPTIONS:
-  -k, --kernel <kernel>   Path to the kernel image to load [required]
+  -k, --kernel <kernel>   Path to the kernel image to load (required without a bundle)
   -i, --initrd <initrd>   Path to an initrd image to load
+  -c, --cmdline <cmdline> Kernel command line (default: console=hvc0)
   -d, --disk <disk>       Add a read/write virtual storage device backed by the
                           specified raw disk image file
   -r, --disk-ro <disk-ro> As --disk but adds a read-only storage device
   -s, --share <share>     Add a directory share device; accepts [tag:]path
+                          (tag defaults to "share")
+  -t, --share-ro <share-ro>
+                          As --share but adds a read-only directory share
+  -p, --cpus <cpus>       Number of CPUs to make available to the VM
+  -m, --memory <memory>   Amount of memory in gigabytes to reserve for the VM
+  -a, --audio             Enable virtual audio device
+  --no-net                Do not add a virtual network interface
+  --enable-rosetta        Enable the Rosetta directory share in the guest OS
+  -h, --help              Show help information.
+
+USAGE: toyvm create [<options>] <bundle> --kernel <kernel> [<kernel-command-line> ...]
+
+ARGUMENTS:
+  <bundle>                Path to the VM bundle directory to create
+  <kernel-command-line>   Kernel command line (default: console=hvc0)
+
+OPTIONS:
+  -k, --kernel <kernel>   Path to the kernel image to copy into the bundle [required]
+  -i, --initrd <initrd>   Path to an initrd image to copy into the bundle
+  -d, --disk <disk>       Create a read/write disk image of the given size (e.g. 20G, 512M)
+  -r, --disk-ro <disk-ro> As --disk but marks the disk image as read-only
+  -s, --share <share>     Add a directory share; accepts [tag:]path
                           (tag defaults to "share")
   -t, --share-ro <share-ro>
                           As --share but adds a read-only directory share
@@ -43,5 +64,7 @@ OPTIONS:
   -h, --help              Show help information.
 ```
 
-> **Note:** Use `--` to separate toyvm options from kernel command line arguments
-> that begin with `-` (e.g., `toyvm start -k kernel -- -single`).
+When a VM bundle is supplied to `start`, its configuration is used as the base. Any options given on the command line override the corresponding bundle settings. Options that enable features (`--audio`, `--enable-rosetta`) are additive; `--no-net` disables networking regardless of the bundle setting.
+
+> **Note:** Use `--` to separate toyvm options from arguments that begin with `-`
+> (e.g., `toyvm start -k kernel -- -single`, or `toyvm start myvm.bundle -- -single`).

@@ -55,6 +55,6 @@ tar -xvjf debian-vm-aarch64_*.tar.bz2
 ## Booting the virtual machine
 Start the virtual machine:
 ```
-toyvm start -i ~/toyvm/initrd.img-4.19.160 -k ~/toyvm/vmlinuz-4.19.160 -d ~/toyvm/debian-rootfs-aarch64.img 'root=/dev/vda1 console=hvc0 nosplash'
+toyvm start -i ~/toyvm/initrd.img-4.19.160 -k ~/toyvm/vmlinuz-4.19.160 -d ~/toyvm/debian-rootfs-aarch64.img --cmdline 'root=/dev/vda1 console=hvc0 nosplash'
 ```
 Log in as `root` with password `password`.
