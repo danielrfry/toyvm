@@ -8,10 +8,18 @@ There's a short video demo of toyvm running Debian on an M1 Mac mini [here](http
 As well as toyvm itself, kernel, initial ram disk and root filesystem images are needed to build a working system. Please see [debian-vm-build](https://github.com/danielrfry/debian-vm-build) for pre-built ones for Debian Buster on Apple Silicon, and the scripts used to produce them.
 
 ```
-USAGE: toyvm --kernel <kernel> [--initrd <initrd>] [--disk <disk> ...]
-             [--disk-ro <disk-ro> ...] [--share <share> ...] [--share-ro <share-ro> ...]
-             [--cpus <cpus>] [--memory <memory>] [-a] [--no-net] [--enable-rosetta]
-             [<kernel-command-line> ...]
+USAGE: toyvm <subcommand>
+
+OPTIONS:
+  -h, --help              Show help information.
+
+SUBCOMMANDS:
+  start                   Start a VM
+
+USAGE: toyvm start --kernel <kernel> [--initrd <initrd>] [--disk <disk> ...]
+                   [--disk-ro <disk-ro> ...] [--share <share> ...] [--share-ro <share-ro> ...]
+                   [--cpus <cpus>] [--memory <memory>] [-a] [--no-net] [--enable-rosetta]
+                   [<kernel-command-line> ...]
 
 ARGUMENTS:
   <kernel-command-line>   Kernel command line (default: console=hvc0)
@@ -36,4 +44,4 @@ OPTIONS:
 ```
 
 > **Note:** Use `--` to separate toyvm options from kernel command line arguments
-> that begin with `-` (e.g., `toyvm -k kernel -- -single`).
+> that begin with `-` (e.g., `toyvm start -k kernel -- -single`).

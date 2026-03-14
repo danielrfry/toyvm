@@ -3,14 +3,15 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 50;
+	objectVersion = 54;
 	objects = {
 
 /* Begin PBXBuildFile section */
 		2A21A2C6A57D40608FC50458 /* ArgumentParser in Frameworks */ = {isa = PBXBuildFile; productRef = DD30C2482CDB40B1842BD25A /* ArgumentParser */; };
+		375A3A9725684A8300EEB67A /* Virtualization.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 375A3A9625684A8300EEB67A /* Virtualization.framework */; };
+		37D473182F661CFA0027142F /* Start.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37D473172F661CFA0027142F /* Start.swift */; };
 		9C56E6C1A1444318AEA59160 /* ToyVMDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3B8843591644736A193283A /* ToyVMDelegate.swift */; };
 		FC2B71D4FC084E858EC3DFF2 /* ToyVM.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E8C366362A341E7B9E094FB /* ToyVM.swift */; };
-		375A3A9725684A8300EEB67A /* Virtualization.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 375A3A9625684A8300EEB67A /* Virtualization.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -26,12 +27,13 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		8E8C366362A341E7B9E094FB /* ToyVM.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToyVM.swift; sourceTree = "<group>"; };
-		A3B8843591644736A193283A /* ToyVMDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToyVMDelegate.swift; sourceTree = "<group>"; };
 		375A3A8A25684A5E00EEB67A /* toyvm */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = toyvm; sourceTree = BUILT_PRODUCTS_DIR; };
 		375A3A9625684A8300EEB67A /* Virtualization.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Virtualization.framework; path = System/Library/Frameworks/Virtualization.framework; sourceTree = SDKROOT; };
 		375A3A9B2568500400EEB67A /* toyvm.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = toyvm.entitlements; sourceTree = "<group>"; };
 		379F73F5257405E1008AAEB7 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		37D473172F661CFA0027142F /* Start.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Start.swift; sourceTree = "<group>"; };
+		8E8C366362A341E7B9E094FB /* ToyVM.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToyVM.swift; sourceTree = "<group>"; };
+		A3B8843591644736A193283A /* ToyVMDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToyVMDelegate.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -69,6 +71,7 @@
 		375A3A8C25684A5E00EEB67A /* toyvm */ = {
 			isa = PBXGroup;
 			children = (
+				37D473172F661CFA0027142F /* Start.swift */,
 				8E8C366362A341E7B9E094FB /* ToyVM.swift */,
 				A3B8843591644736A193283A /* ToyVMDelegate.swift */,
 			);
@@ -146,6 +149,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				9C56E6C1A1444318AEA59160 /* ToyVMDelegate.swift in Sources */,
+				37D473182F661CFA0027142F /* Start.swift in Sources */,
 				FC2B71D4FC084E858EC3DFF2 /* ToyVM.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -292,25 +296,6 @@
 		};
 /* End XCBuildConfiguration section */
 
-/* Begin XCRemoteSwiftPackageReference section */
-		FA327C6280C4413BA5488472 /* XCRemoteSwiftPackageReference "swift-argument-parser" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/apple/swift-argument-parser";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 1.3.0;
-			};
-		};
-/* End XCRemoteSwiftPackageReference section */
-
-/* Begin XCSwiftPackageProductDependency section */
-		DD30C2482CDB40B1842BD25A /* ArgumentParser */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = FA327C6280C4413BA5488472 /* XCRemoteSwiftPackageReference "swift-argument-parser" */;
-			productName = ArgumentParser;
-		};
-/* End XCSwiftPackageProductDependency section */
-
 /* Begin XCConfigurationList section */
 		375A3A8525684A5E00EEB67A /* Build configuration list for PBXProject "toyvm" */ = {
 			isa = XCConfigurationList;
@@ -331,6 +316,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		FA327C6280C4413BA5488472 /* XCRemoteSwiftPackageReference "swift-argument-parser" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-argument-parser";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.3.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		DD30C2482CDB40B1842BD25A /* ArgumentParser */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = FA327C6280C4413BA5488472 /* XCRemoteSwiftPackageReference "swift-argument-parser" */;
+			productName = ArgumentParser;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 375A3A8225684A5E00EEB67A /* Project object */;
 }
