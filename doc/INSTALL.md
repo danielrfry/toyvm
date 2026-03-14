@@ -14,7 +14,9 @@ cd ~/toyvm
 git clone https://github.com/danielrfry/toyvm.git
 ```
 
-Compile:
+### Building with Xcode
+
+Compile (Xcode will resolve the swift-argument-parser dependency automatically):
 ```
 cd toyvm
 xcodebuild -project toyvm.xcodeproj -target toyvm -configuration Release
@@ -24,6 +26,21 @@ Create the destination directory and copy the toyvm executable:
 ```
 sudo mkdir -p /usr/local/bin
 sudo cp build/Release/toyvm /usr/local/bin
+```
+
+### Building with Swift Package Manager
+
+As an alternative, you can build using the Swift Package Manager (requires only Xcode Command Line Tools):
+```
+cd toyvm
+swift build -c release
+```
+
+The built binary must be codesigned with the required Virtualization.framework entitlements before use:
+```
+codesign --sign - --entitlements toyvm.entitlements --force .build/release/toyvm
+sudo mkdir -p /usr/local/bin
+sudo cp .build/release/toyvm /usr/local/bin
 ```
 
 ## Installing the virtual machine

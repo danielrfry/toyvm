@@ -1,2 +1,29 @@
+# macOS
+.DS_Store
+
+# Xcode
+build/
+DerivedData/
 **/xcuserdata/
-build
+*.xcuserstate
+*.xcworkspace
+project.xcworkspace/
+*.xcuserdatad
+*.xcscmblueprint
+
+# Swift Package Manager
+.build/
+.swiftpm/
+Packages/
+
+# Xcode-generated swiftpm workspace data
+**/project.xcworkspace/xcshareddata/swiftpm/
+
+# Editor directories
+.idea/
+.vscode/
+
+# Other
+*.swp
+Thumbs.db
+
