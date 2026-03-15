@@ -70,7 +70,7 @@ extension ToyVM {
 
             // Resolve kernel path: CLI option takes precedence, then bundle (relative → absolute)
             guard let effectiveKernelPath = kernel
-                    ?? bundleConfig.flatMap({ cfg in bundleURL.map { $0.appendingPathComponent(cfg.kernel).path } })
+                    ?? bundleConfig.flatMap({ cfg in bundleURL.map { cfg.kernelURL(in: $0).path } })
             else {
                 throw ValidationError("--kernel is required when no VM bundle is specified")
             }
@@ -96,8 +96,8 @@ extension ToyVM {
             let effectiveInitrd: String?
             if let i = initrd {
                 effectiveInitrd = i
-            } else if let cfg = bundleConfig, let initrdRel = cfg.initrd, let bURL = bundleURL {
-                effectiveInitrd = bURL.appendingPathComponent(initrdRel).path
+            } else if let cfg = bundleConfig, let bURL = bundleURL, let initrdURL = cfg.initrdURL(in: bURL) {
+                effectiveInitrd = initrdURL.path
             } else {
                 effectiveInitrd = nil
             }
@@ -117,7 +117,7 @@ extension ToyVM {
             var storageDevices: [VZStorageDeviceConfiguration] = []
             if let cfg = bundleConfig, let bURL = bundleURL {
                 for d in cfg.disks {
-                    storageDevices.append(try makeStorageDevice(path: bURL.appendingPathComponent(d.file).path, readOnly: d.readOnly))
+                    storageDevices.append(try makeStorageDevice(path: cfg.diskURL(in: bURL, disk: d).path, readOnly: d.readOnly))
                 }
             }
             for path in disk {

@@ -67,17 +67,25 @@ extension ToyVM {
                 try fm.createDirectory(at: bundleURL, withIntermediateDirectories: false)
                 bundleCreated = true
 
+                // Create subdirectories for kernel, initrd, and disks
+                let kernelDir = bundleURL.appendingPathComponent(VMConfig.kernelDir)
+                let initrdDir = bundleURL.appendingPathComponent(VMConfig.initrdDir)
+                let disksDir = bundleURL.appendingPathComponent(VMConfig.disksDir)
+                try fm.createDirectory(at: kernelDir, withIntermediateDirectories: false)
+                try fm.createDirectory(at: initrdDir, withIntermediateDirectories: false)
+                try fm.createDirectory(at: disksDir, withIntermediateDirectories: false)
+
                 // Copy kernel
                 let kernelSrc = URL(fileURLWithPath: kernel)
-                let kernelRelPath = kernelSrc.lastPathComponent
-                try fm.copyItem(at: kernelSrc, to: bundleURL.appendingPathComponent(kernelRelPath))
+                let kernelFilename = kernelSrc.lastPathComponent
+                try fm.copyItem(at: kernelSrc, to: kernelDir.appendingPathComponent(kernelFilename))
 
                 // Copy initrd
-                var initrdRelPath: String? = nil
+                var initrdFilename: String? = nil
                 if let initrdPath = initrd {
                     let initrdSrc = URL(fileURLWithPath: initrdPath)
-                    initrdRelPath = initrdSrc.lastPathComponent
-                    try fm.copyItem(at: initrdSrc, to: bundleURL.appendingPathComponent(initrdRelPath!))
+                    initrdFilename = initrdSrc.lastPathComponent
+                    try fm.copyItem(at: initrdSrc, to: initrdDir.appendingPathComponent(initrdFilename!))
                 }
 
                 // Create disk images (r/w first, then r/o — matching start command ordering)
@@ -86,14 +94,14 @@ extension ToyVM {
                 for spec in disk {
                     let (format, size) = try parseDiskSpec(spec)
                     let name = "disk\(diskIndex).\(format.fileExtension)"
-                    try createDisk(at: bundleURL.appendingPathComponent(name), size: size, format: format)
+                    try createDisk(at: disksDir.appendingPathComponent(name), size: size, format: format)
                     diskConfigs.append(DiskConfig(file: name, readOnly: false, format: format))
                     diskIndex += 1
                 }
                 for spec in diskRO {
                     let (format, size) = try parseDiskSpec(spec)
                     let name = "disk\(diskIndex).\(format.fileExtension)"
-                    try createDisk(at: bundleURL.appendingPathComponent(name), size: size, format: format)
+                    try createDisk(at: disksDir.appendingPathComponent(name), size: size, format: format)
                     diskConfigs.append(DiskConfig(file: name, readOnly: true, format: format))
                     diskIndex += 1
                 }
@@ -125,8 +133,8 @@ extension ToyVM {
                     audio: audio,
                     network: !noNet,
                     rosetta: enableRosetta,
-                    kernel: kernelRelPath,
-                    initrd: initrdRelPath,
+                    kernel: kernelFilename,
+                    initrd: initrdFilename,
                     kernelCommandLine: cmdLine,
                     disks: diskConfigs,
                     shares: shareConfigs

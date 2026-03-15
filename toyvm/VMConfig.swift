@@ -59,6 +59,9 @@ struct ShareConfig: Codable {
 
 extension VMConfig {
     static let configFilename = "config.plist"
+    static let kernelDir = "kernel"
+    static let initrdDir = "initrd"
+    static let disksDir = "disks"
 
     static func load(from bundleURL: URL) throws -> VMConfig {
         let data = try Data(contentsOf: bundleURL.appendingPathComponent(configFilename))
@@ -70,6 +73,22 @@ extension VMConfig {
         encoder.outputFormat = .xml
         let data = try encoder.encode(self)
         try data.write(to: bundleURL.appendingPathComponent(VMConfig.configFilename))
+    }
+
+    /// Returns the full URL to the kernel image in the bundle.
+    func kernelURL(in bundleURL: URL) -> URL {
+        return bundleURL.appendingPathComponent(VMConfig.kernelDir).appendingPathComponent(kernel)
+    }
+
+    /// Returns the full URL to the initrd image in the bundle (if it exists).
+    func initrdURL(in bundleURL: URL) -> URL? {
+        guard let initrdFile = initrd else { return nil }
+        return bundleURL.appendingPathComponent(VMConfig.initrdDir).appendingPathComponent(initrdFile)
+    }
+
+    /// Returns the full URL to a disk image in the bundle.
+    func diskURL(in bundleURL: URL, disk: DiskConfig) -> URL {
+        return bundleURL.appendingPathComponent(VMConfig.disksDir).appendingPathComponent(disk.file)
     }
 }
 

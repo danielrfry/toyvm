@@ -127,36 +127,39 @@ extension ToyVM {
             // Kernel replacement
             if let newKernelPath = kernel {
                 let src = URL(fileURLWithPath: newKernelPath)
-                let newRelName = src.lastPathComponent
-                let oldRelName = config.kernel
-                if newRelName != oldRelName {
-                    try fm.copyItem(at: src, to: bundleURL.appendingPathComponent(newRelName))
-                    try fm.removeItem(at: bundleURL.appendingPathComponent(oldRelName))
+                let newFilename = src.lastPathComponent
+                let kernelDir = bundleURL.appendingPathComponent(VMConfig.kernelDir)
+                let oldFilename = config.kernel
+                let oldPath = kernelDir.appendingPathComponent(oldFilename)
+                let newPath = kernelDir.appendingPathComponent(newFilename)
+                if newFilename != oldFilename {
+                    try fm.copyItem(at: src, to: newPath)
+                    try fm.removeItem(at: oldPath)
                 } else {
-                    // Same filename — replace in place
-                    let dest = bundleURL.appendingPathComponent(newRelName)
-                    _ = try fm.replaceItemAt(dest, withItemAt: src)
+                    _ = try fm.replaceItemAt(newPath, withItemAt: src)
                 }
-                config.kernel = newRelName
+                config.kernel = newFilename
             }
 
             // Initrd replacement / removal
             if let newInitrdPath = initrd {
                 let src = URL(fileURLWithPath: newInitrdPath)
-                let newRelName = src.lastPathComponent
-                if let oldRelName = config.initrd, oldRelName != newRelName {
-                    try fm.copyItem(at: src, to: bundleURL.appendingPathComponent(newRelName))
-                    try fm.removeItem(at: bundleURL.appendingPathComponent(oldRelName))
+                let newFilename = src.lastPathComponent
+                let initrdDir = bundleURL.appendingPathComponent(VMConfig.initrdDir)
+                if let oldFilename = config.initrd, oldFilename != newFilename {
+                    try fm.copyItem(at: src, to: initrdDir.appendingPathComponent(newFilename))
+                    try fm.removeItem(at: initrdDir.appendingPathComponent(oldFilename))
                 } else if config.initrd == nil {
-                    try fm.copyItem(at: src, to: bundleURL.appendingPathComponent(newRelName))
+                    try fm.copyItem(at: src, to: initrdDir.appendingPathComponent(newFilename))
                 } else {
-                    let dest = bundleURL.appendingPathComponent(newRelName)
+                    let dest = initrdDir.appendingPathComponent(newFilename)
                     _ = try fm.replaceItemAt(dest, withItemAt: src)
                 }
-                config.initrd = newRelName
+                config.initrd = newFilename
             } else if removeInitrd {
-                if let oldRelName = config.initrd {
-                    try fm.removeItem(at: bundleURL.appendingPathComponent(oldRelName))
+                if let oldFilename = config.initrd {
+                    let initrdDir = bundleURL.appendingPathComponent(VMConfig.initrdDir)
+                    try fm.removeItem(at: initrdDir.appendingPathComponent(oldFilename))
                     config.initrd = nil
                 }
             }
@@ -168,11 +171,12 @@ extension ToyVM {
             }
 
             // Remove disks
+            let disksDir = bundleURL.appendingPathComponent(VMConfig.disksDir)
             for name in removeDisk {
                 guard let idx = config.disks.firstIndex(where: { $0.file == name }) else {
                     throw ToyVMError("No disk named '\(name)' in this bundle")
                 }
-                try fm.removeItem(at: bundleURL.appendingPathComponent(name))
+                try fm.removeItem(at: disksDir.appendingPathComponent(name))
                 config.disks.remove(at: idx)
             }
 
@@ -180,13 +184,13 @@ extension ToyVM {
             for spec in disk {
                 let (format, size) = try parseDiskSpec(spec)
                 let name = nextDiskFilename(existing: config.disks, format: format)
-                try createDisk(at: bundleURL.appendingPathComponent(name), size: size, format: format)
+                try createDisk(at: disksDir.appendingPathComponent(name), size: size, format: format)
                 config.disks.append(DiskConfig(file: name, readOnly: false, format: format))
             }
             for spec in diskRO {
                 let (format, size) = try parseDiskSpec(spec)
                 let name = nextDiskFilename(existing: config.disks, format: format)
-                try createDisk(at: bundleURL.appendingPathComponent(name), size: size, format: format)
+                try createDisk(at: disksDir.appendingPathComponent(name), size: size, format: format)
                 config.disks.append(DiskConfig(file: name, readOnly: true, format: format))
             }
 
@@ -249,7 +253,7 @@ extension ToyVM {
                 for disk in config.disks {
                     let rwLabel = disk.readOnly ? "ro" : "rw"
                     let fmtLabel = disk.format.rawValue
-                    let url = bundleURL.appendingPathComponent(disk.file)
+                    let url = config.diskURL(in: bundleURL, disk: disk)
                     let sizeDesc = diskSizeDescription(url: url, format: disk.format)
                     print("  [\(rwLabel), \(fmtLabel)] \(disk.file)\(sizeDesc.map { " (\($0))" } ?? "")")
                 }
