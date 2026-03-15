@@ -68,10 +68,17 @@ extension ToyVM {
                 try fm.createDirectory(at: bundleURL, withIntermediateDirectories: false)
                 bundleCreated = true
 
-                // Create subdirectories for kernel, initrd, and disks
-                let kernelDir = bundleURL.appendingPathComponent(VMConfig.kernelDir)
-                let initrdDir = bundleURL.appendingPathComponent(VMConfig.initrdDir)
-                let disksDir = bundleURL.appendingPathComponent(VMConfig.disksDir)
+                // Create branches directory and the root "main" branch subdirectory
+                let branchesDir = bundleURL.appendingPathComponent(VMConfig.branchesDir)
+                try fm.createDirectory(at: branchesDir, withIntermediateDirectories: false)
+                let rootBranch = "main"
+                let branchURL = VMConfig.branchURL(in: bundleURL, branch: rootBranch)
+                try fm.createDirectory(at: branchURL, withIntermediateDirectories: false)
+
+                // Create kernel, initrd, and disks subdirectories inside the branch
+                let kernelDir = branchURL.appendingPathComponent(VMConfig.kernelDir)
+                let initrdDir = branchURL.appendingPathComponent(VMConfig.initrdDir)
+                let disksDir = branchURL.appendingPathComponent(VMConfig.disksDir)
                 try fm.createDirectory(at: kernelDir, withIntermediateDirectories: false)
                 try fm.createDirectory(at: initrdDir, withIntermediateDirectories: false)
                 try fm.createDirectory(at: disksDir, withIntermediateDirectories: false)
@@ -89,7 +96,7 @@ extension ToyVM {
                     try fm.copyItem(at: initrdSrc, to: initrdDir.appendingPathComponent(initrdFilename!))
                 }
 
-                // Create disk images (r/w first, then r/o — matching start command ordering)
+                // Create disk images
                 var diskConfigs: [DiskConfig] = []
                 var diskIndex = 0
                 for spec in disk {
@@ -140,7 +147,11 @@ extension ToyVM {
                     disks: diskConfigs,
                     shares: shareConfigs
                 )
-                try config.save(to: bundleURL)
+                try config.save(to: branchURL)
+
+                // Write bundle-level metadata
+                let bundleMeta = BundleMeta(rootBranch: rootBranch)
+                try bundleMeta.save(to: bundleURL)
 
                 print("Created VM bundle: \(bundle)")
             } catch {

@@ -62,33 +62,39 @@ extension VMConfig {
     static let kernelDir = "kernel"
     static let initrdDir = "initrd"
     static let disksDir = "disks"
+    static let branchesDir = "branches"
 
-    static func load(from bundleURL: URL) throws -> VMConfig {
-        let data = try Data(contentsOf: bundleURL.appendingPathComponent(configFilename))
+    static func load(from branchURL: URL) throws -> VMConfig {
+        let data = try Data(contentsOf: branchURL.appendingPathComponent(configFilename))
         return try PropertyListDecoder().decode(VMConfig.self, from: data)
     }
 
-    func save(to bundleURL: URL) throws {
+    func save(to branchURL: URL) throws {
         let encoder = PropertyListEncoder()
         encoder.outputFormat = .xml
         let data = try encoder.encode(self)
-        try data.write(to: bundleURL.appendingPathComponent(VMConfig.configFilename))
+        try data.write(to: branchURL.appendingPathComponent(VMConfig.configFilename))
     }
 
-    /// Returns the full URL to the kernel image in the bundle.
-    func kernelURL(in bundleURL: URL) -> URL {
-        return bundleURL.appendingPathComponent(VMConfig.kernelDir).appendingPathComponent(kernel)
+    /// Returns the URL of the branch directory for the given branch name inside a bundle.
+    static func branchURL(in bundleURL: URL, branch: String) -> URL {
+        return bundleURL.appendingPathComponent(branchesDir).appendingPathComponent(branch)
     }
 
-    /// Returns the full URL to the initrd image in the bundle (if it exists).
-    func initrdURL(in bundleURL: URL) -> URL? {
+    /// Returns the full URL to the kernel image in this branch.
+    func kernelURL(in branchURL: URL) -> URL {
+        return branchURL.appendingPathComponent(VMConfig.kernelDir).appendingPathComponent(kernel)
+    }
+
+    /// Returns the full URL to the initrd image in this branch (if one is configured).
+    func initrdURL(in branchURL: URL) -> URL? {
         guard let initrdFile = initrd else { return nil }
-        return bundleURL.appendingPathComponent(VMConfig.initrdDir).appendingPathComponent(initrdFile)
+        return branchURL.appendingPathComponent(VMConfig.initrdDir).appendingPathComponent(initrdFile)
     }
 
-    /// Returns the full URL to a disk image in the bundle.
-    func diskURL(in bundleURL: URL, disk: DiskConfig) -> URL {
-        return bundleURL.appendingPathComponent(VMConfig.disksDir).appendingPathComponent(disk.file)
+    /// Returns the full URL to a disk image in this branch.
+    func diskURL(in branchURL: URL, disk: DiskConfig) -> URL {
+        return branchURL.appendingPathComponent(VMConfig.disksDir).appendingPathComponent(disk.file)
     }
 }
 

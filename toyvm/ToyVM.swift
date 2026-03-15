@@ -11,7 +11,7 @@ struct ToyVM: ParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "toyvm",
         abstract: "Toy Linux VM using Virtualization.framework",
-        subcommands: [StartCommand.self, CreateCommand.self, ConfigCommand.self, LsCommand.self]
+        subcommands: [StartCommand.self, CreateCommand.self, ConfigCommand.self, LsCommand.self, BranchCommand.self]
     )
 }
 

@@ -101,8 +101,10 @@ extension ToyVM {
 
         mutating func run() throws {
             let bundleURL = try resolveBundlePath(bundle)
+            let meta = try BundleMeta.load(from: bundleURL)
+            let branchURL = VMConfig.branchURL(in: bundleURL, branch: meta.activeBranch)
             let fm = FileManager.default
-            var config = try VMConfig.load(from: bundleURL)
+            var config = try VMConfig.load(from: branchURL)
 
             // Request confirmation for disk removal before making any changes
             if !removeDisk.isEmpty {
@@ -129,7 +131,7 @@ extension ToyVM {
             if let newKernelPath = kernel {
                 let src = URL(fileURLWithPath: newKernelPath)
                 let newFilename = src.lastPathComponent
-                let kernelDir = bundleURL.appendingPathComponent(VMConfig.kernelDir)
+                let kernelDir = branchURL.appendingPathComponent(VMConfig.kernelDir)
                 let oldFilename = config.kernel
                 let oldPath = kernelDir.appendingPathComponent(oldFilename)
                 let newPath = kernelDir.appendingPathComponent(newFilename)
@@ -146,7 +148,7 @@ extension ToyVM {
             if let newInitrdPath = initrd {
                 let src = URL(fileURLWithPath: newInitrdPath)
                 let newFilename = src.lastPathComponent
-                let initrdDir = bundleURL.appendingPathComponent(VMConfig.initrdDir)
+                let initrdDir = branchURL.appendingPathComponent(VMConfig.initrdDir)
                 if let oldFilename = config.initrd, oldFilename != newFilename {
                     try fm.copyItem(at: src, to: initrdDir.appendingPathComponent(newFilename))
                     try fm.removeItem(at: initrdDir.appendingPathComponent(oldFilename))
@@ -159,7 +161,7 @@ extension ToyVM {
                 config.initrd = newFilename
             } else if removeInitrd {
                 if let oldFilename = config.initrd {
-                    let initrdDir = bundleURL.appendingPathComponent(VMConfig.initrdDir)
+                    let initrdDir = branchURL.appendingPathComponent(VMConfig.initrdDir)
                     try fm.removeItem(at: initrdDir.appendingPathComponent(oldFilename))
                     config.initrd = nil
                 }
@@ -172,7 +174,7 @@ extension ToyVM {
             }
 
             // Remove disks
-            let disksDir = bundleURL.appendingPathComponent(VMConfig.disksDir)
+            let disksDir = branchURL.appendingPathComponent(VMConfig.disksDir)
             for name in removeDisk {
                 guard let idx = config.disks.firstIndex(where: { $0.file == name }) else {
                     throw ToyVMError("No disk named '\(name)' in this bundle")
@@ -229,13 +231,14 @@ extension ToyVM {
             if enableRosetta { config.rosetta = true  }
             if disableRosetta{ config.rosetta = false }
 
-            try config.save(to: bundleURL)
+            try config.save(to: branchURL)
 
             // Display the configuration (after any changes)
-            displayConfig(config, bundleURL: bundleURL)
+            print("Branch:      \(meta.activeBranch)")
+            displayConfig(config, branchURL: branchURL)
         }
 
-        private func displayConfig(_ config: VMConfig, bundleURL: URL) {
+        private func displayConfig(_ config: VMConfig, branchURL: URL) {
             print("Kernel:      \(config.kernel)")
             if let initrd = config.initrd {
                 print("Initrd:      \(initrd)")
@@ -254,7 +257,7 @@ extension ToyVM {
                 for disk in config.disks {
                     let rwLabel = disk.readOnly ? "ro" : "rw"
                     let fmtLabel = disk.format.rawValue
-                    let url = config.diskURL(in: bundleURL, disk: disk)
+                    let url = config.diskURL(in: branchURL, disk: disk)
                     let sizeDesc = diskSizeDescription(url: url, format: disk.format)
                     print("  [\(rwLabel), \(fmtLabel)] \(disk.file)\(sizeDesc.map { " (\($0))" } ?? "")")
                 }

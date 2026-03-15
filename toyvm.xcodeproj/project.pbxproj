@@ -14,6 +14,8 @@
 		37F379B82F66E422004A32AF /* StartCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37F379B62F66E422004A32AF /* StartCommand.swift */; };
 		37F379B92F66E422004A32AF /* CreateCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37F379B52F66E422004A32AF /* CreateCommand.swift */; };
 		37F379BB2F66E567004A32AF /* LsCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37F379BA2F66E567004A32AF /* LsCommand.swift */; };
+		8A370C09C53E487698EE9054 /* BundleMeta.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0679C9A064AC41E1B592BD32 /* BundleMeta.swift */; };
+		3267BA3FD5B340B09D4E1F93 /* BranchCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E10A52C1C074057822BA3F3 /* BranchCommand.swift */; };
 		9C56E6C1A1444318AEA59160 /* ToyVMDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3B8843591644736A193283A /* ToyVMDelegate.swift */; };
 		FC2B71D4FC084E858EC3DFF2 /* ToyVM.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E8C366362A341E7B9E094FB /* ToyVM.swift */; };
 /* End PBXBuildFile section */
@@ -36,6 +38,8 @@
 		375A3A9B2568500400EEB67A /* toyvm.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = toyvm.entitlements; sourceTree = "<group>"; };
 		379F73F5257405E1008AAEB7 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		37D4731B2F6624570027142F /* VMConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VMConfig.swift; sourceTree = "<group>"; };
+		0679C9A064AC41E1B592BD32 /* BundleMeta.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BundleMeta.swift; sourceTree = "<group>"; };
+		9E10A52C1C074057822BA3F3 /* BranchCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BranchCommand.swift; sourceTree = "<group>"; };
 		37F379B42F66E422004A32AF /* ConfigCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigCommand.swift; sourceTree = "<group>"; };
 		37F379B52F66E422004A32AF /* CreateCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateCommand.swift; sourceTree = "<group>"; };
 		37F379B62F66E422004A32AF /* StartCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StartCommand.swift; sourceTree = "<group>"; };
@@ -84,6 +88,8 @@
 				37F379B52F66E422004A32AF /* CreateCommand.swift */,
 				37F379B62F66E422004A32AF /* StartCommand.swift */,
 				37D4731B2F6624570027142F /* VMConfig.swift */,
+				0679C9A064AC41E1B592BD32 /* BundleMeta.swift */,
+				9E10A52C1C074057822BA3F3 /* BranchCommand.swift */,
 				8E8C366362A341E7B9E094FB /* ToyVM.swift */,
 				A3B8843591644736A193283A /* ToyVMDelegate.swift */,
 			);
@@ -167,6 +173,8 @@
 				37F379B92F66E422004A32AF /* CreateCommand.swift in Sources */,
 				37D4731C2F6624570027142F /* VMConfig.swift in Sources */,
 				37F379BB2F66E567004A32AF /* LsCommand.swift in Sources */,
+				8A370C09C53E487698EE9054 /* BundleMeta.swift in Sources */,
+				3267BA3FD5B340B09D4E1F93 /* BranchCommand.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

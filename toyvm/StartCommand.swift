@@ -63,15 +63,18 @@ extension ToyVM {
         mutating func run() throws {
             // Load bundle config if a bundle string was given (accept bare VM names)
             var bundleURL: URL? = nil
+            var branchURL: URL? = nil
             var bundleConfig: VMConfig? = nil
             if let b = bundle {
                 bundleURL = try resolveBundlePath(b, createParentIfNeeded: false)
-                bundleConfig = try VMConfig.load(from: bundleURL!)
+                let meta = try BundleMeta.load(from: bundleURL!)
+                branchURL = VMConfig.branchURL(in: bundleURL!, branch: meta.activeBranch)
+                bundleConfig = try VMConfig.load(from: branchURL!)
             }
 
-            // Resolve kernel path: CLI option takes precedence, then bundle (relative → absolute)
+            // Resolve kernel path: CLI option takes precedence, then active branch
             guard let effectiveKernelPath = kernel
-                    ?? bundleConfig.flatMap({ cfg in bundleURL.map { cfg.kernelURL(in: $0).path } })
+                    ?? bundleConfig.flatMap({ cfg in branchURL.map { cfg.kernelURL(in: $0).path } })
             else {
                 throw ValidationError("--kernel is required when no VM bundle is specified")
             }
@@ -97,7 +100,7 @@ extension ToyVM {
             let effectiveInitrd: String?
             if let i = initrd {
                 effectiveInitrd = i
-            } else if let cfg = bundleConfig, let bURL = bundleURL, let initrdURL = cfg.initrdURL(in: bURL) {
+            } else if let cfg = bundleConfig, let bURL = branchURL, let initrdURL = cfg.initrdURL(in: bURL) {
                 effectiveInitrd = initrdURL.path
             } else {
                 effectiveInitrd = nil
@@ -114,9 +117,9 @@ extension ToyVM {
             config.cpuCount = cpus ?? bundleConfig?.cpus ?? 2
             config.memorySize = UInt64(memory ?? bundleConfig?.memoryGB ?? 2) * 1024 * 1024 * 1024
 
-            // Storage: bundle disks first (paths resolved relative to bundle), then CLI disks
+            // Storage: bundle disks first (paths resolved relative to active branch), then CLI disks
             var storageDevices: [VZStorageDeviceConfiguration] = []
-            if let cfg = bundleConfig, let bURL = bundleURL {
+            if let cfg = bundleConfig, let bURL = branchURL {
                 for d in cfg.disks {
                     storageDevices.append(try makeStorageDevice(path: cfg.diskURL(in: bURL, disk: d).path, readOnly: d.readOnly))
                 }
