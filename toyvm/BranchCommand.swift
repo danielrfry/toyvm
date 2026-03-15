@@ -233,7 +233,7 @@ extension ToyVM {
                 guard meta.children(of: branchName).isEmpty else {
                     throw ToyVMError(
                         "Branch '\(branchName)' has child branches and cannot be committed. " +
-                        "Delete or commit its children first."
+                        "Delete its children first."
                     )
                 }
                 let parentSiblings = meta.children(of: parentName).filter { $0 != branchName }
@@ -241,7 +241,7 @@ extension ToyVM {
                     throw ToyVMError(
                         "Cannot commit '\(branchName)': its parent '\(parentName)' has other child " +
                         "branches (\(parentSiblings.joined(separator: ", "))). " +
-                        "Delete or commit them first."
+                        "Delete them first."
                     )
                 }
 
