@@ -12,6 +12,7 @@
 		37D473182F661CFA0027142F /* Start.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37D473172F661CFA0027142F /* Start.swift */; };
 		37D4731A2F6624410027142F /* Create.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37D473192F6624410027142F /* Create.swift */; };
 		37D4731C2F6624570027142F /* VMConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37D4731B2F6624570027142F /* VMConfig.swift */; };
+		37F379B12F66B80B004A32AF /* Info.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37F379B02F66B80B004A32AF /* Info.swift */; };
 		9C56E6C1A1444318AEA59160 /* ToyVMDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3B8843591644736A193283A /* ToyVMDelegate.swift */; };
 		FC2B71D4FC084E858EC3DFF2 /* ToyVM.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E8C366362A341E7B9E094FB /* ToyVM.swift */; };
 /* End PBXBuildFile section */
@@ -36,6 +37,7 @@
 		37D473172F661CFA0027142F /* Start.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Start.swift; sourceTree = "<group>"; };
 		37D473192F6624410027142F /* Create.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Create.swift; sourceTree = "<group>"; };
 		37D4731B2F6624570027142F /* VMConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VMConfig.swift; sourceTree = "<group>"; };
+		37F379B02F66B80B004A32AF /* Info.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Info.swift; sourceTree = "<group>"; };
 		8E8C366362A341E7B9E094FB /* ToyVM.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToyVM.swift; sourceTree = "<group>"; };
 		A3B8843591644736A193283A /* ToyVMDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToyVMDelegate.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -75,6 +77,7 @@
 		375A3A8C25684A5E00EEB67A /* toyvm */ = {
 			isa = PBXGroup;
 			children = (
+				37F379B02F66B80B004A32AF /* Info.swift */,
 				37D4731B2F6624570027142F /* VMConfig.swift */,
 				37D473192F6624410027142F /* Create.swift */,
 				37D473172F661CFA0027142F /* Start.swift */,
@@ -157,6 +160,7 @@
 				9C56E6C1A1444318AEA59160 /* ToyVMDelegate.swift in Sources */,
 				37D473182F661CFA0027142F /* Start.swift in Sources */,
 				FC2B71D4FC084E858EC3DFF2 /* ToyVM.swift in Sources */,
+				37F379B12F66B80B004A32AF /* Info.swift in Sources */,
 				37D4731A2F6624410027142F /* Create.swift in Sources */,
 				37D4731C2F6624570027142F /* VMConfig.swift in Sources */,
 			);
