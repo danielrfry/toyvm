@@ -158,32 +158,34 @@ extension ToyVM {
         struct RevertSubcommand: ParsableCommand {
             static let configuration = CommandConfiguration(
                 commandName: "revert",
-                abstract: "Revert a branch to the current state of its parent"
+                abstract: "Revert a branch to the current state of its parent (defaults to active branch)"
             )
 
             @Argument(help: "VM name or bundle path") var vm: String
-            @Argument(help: "Branch to revert") var name: String
+            @Argument(help: "Branch to revert (defaults to active branch)") var name: String?
 
             mutating func run() throws {
                 let bundleURL = try resolveBundlePath(vm)
                 let meta = try BundleMeta.load(from: bundleURL)
 
-                guard meta.branches[name] != nil else {
-                    throw ToyVMError("Branch '\(name)' does not exist")
+                let branchName = name ?? meta.activeBranch
+
+                guard meta.branches[branchName] != nil else {
+                    throw ToyVMError("Branch '\(branchName)' does not exist")
                 }
-                guard let parentName = meta.branches[name]!.parent else {
+                guard let parentName = meta.branches[branchName]!.parent else {
                     throw ToyVMError("The root branch cannot be reverted (it has no parent)")
                 }
 
-                var msg = "This will discard all changes to branch '\(name)' and revert to the state of '\(parentName)'.\n"
+                var msg = "This will discard all changes to branch '\(branchName)' and revert to the state of '\(parentName)'.\n"
                 msg += "Continue? (yes/no) "
                 guard confirm(msg) else {
                     throw ToyVMError("Revert cancelled.")
                 }
 
-                let branchURL = VMConfig.branchURL(in: bundleURL, branch: name)
+                let branchURL = VMConfig.branchURL(in: bundleURL, branch: branchName)
                 let parentURL = VMConfig.branchURL(in: bundleURL, branch: parentName)
-                let tempURL = VMConfig.branchURL(in: bundleURL, branch: name + ".\(UUID().uuidString).tmp")
+                let tempURL = VMConfig.branchURL(in: bundleURL, branch: branchName + ".\(UUID().uuidString).tmp")
 
                 // Clone parent to temp, then atomically swap
                 try cloneBranchDirectory(from: parentURL, to: tempURL)
@@ -195,7 +197,7 @@ extension ToyVM {
                     throw error
                 }
                 // BundleMeta unchanged (branch still exists with same parent)
-                print("Reverted '\(name)' to state of '\(parentName)'")
+                print("Reverted '\(branchName)' to state of '\(parentName)'")
             }
         }
 
