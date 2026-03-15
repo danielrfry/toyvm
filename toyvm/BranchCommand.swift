@@ -208,44 +208,46 @@ extension ToyVM {
         struct CommitSubcommand: ParsableCommand {
             static let configuration = CommandConfiguration(
                 commandName: "commit",
-                abstract: "Commit a branch to its parent (branch is then deleted)"
+                abstract: "Commit a branch to its parent (branch is then deleted, defaults to active branch)"
             )
 
             @Argument(help: "VM name or bundle path") var vm: String
-            @Argument(help: "Branch to commit") var name: String
+            @Argument(help: "Branch to commit (defaults to active branch)") var name: String?
 
             mutating func run() throws {
                 let bundleURL = try resolveBundlePath(vm)
                 var meta = try BundleMeta.load(from: bundleURL)
 
-                guard meta.branches[name] != nil else {
-                    throw ToyVMError("Branch '\(name)' does not exist")
+                let branchName = name ?? meta.activeBranch
+
+                guard meta.branches[branchName] != nil else {
+                    throw ToyVMError("Branch '\(branchName)' does not exist")
                 }
-                guard let parentName = meta.branches[name]!.parent else {
+                guard let parentName = meta.branches[branchName]!.parent else {
                     throw ToyVMError("The root branch cannot be committed (it has no parent)")
                 }
-                guard meta.children(of: name).isEmpty else {
+                guard meta.children(of: branchName).isEmpty else {
                     throw ToyVMError(
-                        "Branch '\(name)' has child branches and cannot be committed. " +
+                        "Branch '\(branchName)' has child branches and cannot be committed. " +
                         "Delete or commit its children first."
                     )
                 }
-                let parentSiblings = meta.children(of: parentName).filter { $0 != name }
+                let parentSiblings = meta.children(of: parentName).filter { $0 != branchName }
                 guard parentSiblings.isEmpty else {
                     throw ToyVMError(
-                        "Cannot commit '\(name)': its parent '\(parentName)' has other child " +
+                        "Cannot commit '\(branchName)': its parent '\(parentName)' has other child " +
                         "branches (\(parentSiblings.joined(separator: ", "))). " +
                         "Delete or commit them first."
                     )
                 }
 
-                var msg = "This will commit branch '\(name)' to '\(parentName)' and delete '\(name)'.\n"
+                var msg = "This will commit branch '\(branchName)' to '\(parentName)' and delete '\(branchName)'.\n"
                 msg += "Continue? (yes/no) "
                 guard confirm(msg) else {
                     throw ToyVMError("Commit cancelled.")
                 }
 
-                let branchURL = VMConfig.branchURL(in: bundleURL, branch: name)
+                let branchURL = VMConfig.branchURL(in: bundleURL, branch: branchName)
                 let parentURL = VMConfig.branchURL(in: bundleURL, branch: parentName)
                 let tempURL = VMConfig.branchURL(in: bundleURL, branch: parentName + ".\(UUID().uuidString).tmp")
 
@@ -260,11 +262,11 @@ extension ToyVM {
                 }
                 try FileManager.default.removeItem(at: branchURL)
 
-                meta.branches.removeValue(forKey: name)
+                meta.branches.removeValue(forKey: branchName)
                 meta.activeBranch = parentName
                 try meta.save(to: bundleURL)
 
-                print("Committed '\(name)' to '\(parentName)'; '\(name)' deleted")
+                print("Committed '\(branchName)' to '\(parentName)'; '\(branchName)' deleted")
             }
         }
 
