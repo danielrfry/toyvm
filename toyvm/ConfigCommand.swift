@@ -115,14 +115,11 @@ extension ToyVM {
                 }
 
                 // Prompt user for confirmation
-                fputs("This will permanently delete the following disk image(s):\n", stderr)
-                for diskName in removeDisk {
-                    fputs("  - \(diskName)\n", stderr)
-                }
-                fputs("Continue? (yes/no) ", stderr)
-                fflush(stderr)
+                var msg = "This will permanently delete the following disk image(s):\n"
+                for diskName in removeDisk { msg += "  - \(diskName)\n" }
+                msg += "Continue? (yes/no) "
 
-                guard let response = readLine(strippingNewline: true)?.lowercased(), response == "yes" else {
+                guard confirm(msg) else {
                     throw ToyVMError("Disk removal cancelled.")
                 }
             }

@@ -124,15 +124,16 @@ extension ToyVM {
                 }
 
                 // Confirm deletion
+                var msg: String
                 if toDelete.count == 1 {
-                    fputs("Will permanently delete branch '\(name)'.\n", stderr)
+                    msg = "Will permanently delete branch '\(name)'.\n"
                 } else {
-                    fputs("Will permanently delete branch '\(name)' and \(toDelete.count - 1) descendant(s):\n", stderr)
-                    for d in toDelete.dropFirst() { fputs("  - \(d)\n", stderr) }
+                    msg = "Will permanently delete branch '\(name)' and \(toDelete.count - 1) descendant(s):\n"
+                    for d in toDelete.dropFirst() { msg += "  - \(d)\n" }
                 }
-                fputs("Continue? (yes/no) ", stderr)
-                fflush(stderr)
-                guard let response = readLine(strippingNewline: true)?.lowercased(), response == "yes" else {
+                msg += "Continue? (yes/no) "
+
+                guard confirm(msg) else {
                     throw ToyVMError("Deletion cancelled.")
                 }
 
@@ -172,10 +173,9 @@ extension ToyVM {
                     throw ToyVMError("The root branch cannot be reverted (it has no parent)")
                 }
 
-                fputs("This will discard all changes to branch '\(name)' and revert to the state of '\(parentName)'.\n", stderr)
-                fputs("Continue? (yes/no) ", stderr)
-                fflush(stderr)
-                guard let response = readLine(strippingNewline: true)?.lowercased(), response == "yes" else {
+                var msg = "This will discard all changes to branch '\(name)' and revert to the state of '\(parentName)'.\n"
+                msg += "Continue? (yes/no) "
+                guard confirm(msg) else {
                     throw ToyVMError("Revert cancelled.")
                 }
 
@@ -233,10 +233,9 @@ extension ToyVM {
                     )
                 }
 
-                fputs("This will commit branch '\(name)' to '\(parentName)' and delete '\(name)'.\n", stderr)
-                fputs("Continue? (yes/no) ", stderr)
-                fflush(stderr)
-                guard let response = readLine(strippingNewline: true)?.lowercased(), response == "yes" else {
+                var msg = "This will commit branch '\(name)' to '\(parentName)' and delete '\(name)'.\n"
+                msg += "Continue? (yes/no) "
+                guard confirm(msg) else {
                     throw ToyVMError("Commit cancelled.")
                 }
 
