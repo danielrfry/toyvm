@@ -94,31 +94,33 @@ extension ToyVM {
             )
 
             @Argument(help: "VM name or bundle path") var vm: String
-            @Argument(help: "Branch to delete") var name: String
+            @Argument(help: "Branch to delete (defaults to active branch)") var name: String?
 
             mutating func run() throws {
                 let bundleURL = try resolveBundlePath(vm)
                 var meta = try BundleMeta.load(from: bundleURL)
 
-                guard meta.branches[name] != nil else {
-                    throw ToyVMError("Branch '\(name)' does not exist")
+                let branchName = name ?? meta.activeBranch
+
+                guard meta.branches[branchName] != nil else {
+                    throw ToyVMError("Branch '\(branchName)' does not exist")
                 }
-                guard meta.branches[name]!.parent != nil else {
+                guard meta.branches[branchName]!.parent != nil else {
                     throw ToyVMError("The root branch cannot be deleted")
                 }
 
-                let toDelete = [name] + meta.descendants(of: name)
+                let toDelete = [branchName] + meta.descendants(of: branchName)
 
-                // If the active branch is in the subtree being deleted, the parent of `name`
+                // If the active branch is in the subtree being deleted, the parent of `branchName`
                 // must become a leaf after deletion so it can take over as the active branch.
                 let activeWillBeDeleted = toDelete.contains(meta.activeBranch)
-                let parentName = meta.branches[name]!.parent!
+                let parentName = meta.branches[branchName]!.parent!
                 if activeWillBeDeleted {
-                    // Count how many children parent(name) will have after deleting `name`'s subtree
-                    let remainingSiblings = meta.children(of: parentName).filter { $0 != name }
+                    // Count how many children parent(branchName) will have after deleting `branchName`'s subtree
+                    let remainingSiblings = meta.children(of: parentName).filter { $0 != branchName }
                     if !remainingSiblings.isEmpty {
                         throw ToyVMError(
-                            "Cannot delete branch '\(name)': it contains the active branch " +
+                            "Cannot delete branch '\(branchName)': it contains the active branch " +
                             "'\(meta.activeBranch)', and its parent '\(parentName)' still has other " +
                             "child branches. Select a different active branch first."
                         )
@@ -128,9 +130,9 @@ extension ToyVM {
                 // Confirm deletion
                 var msg: String
                 if toDelete.count == 1 {
-                    msg = "Will permanently delete branch '\(name)'.\n"
+                    msg = "Will permanently delete branch '\(branchName)'.\n"
                 } else {
-                    msg = "Will permanently delete branch '\(name)' and \(toDelete.count - 1) descendant(s):\n"
+                    msg = "Will permanently delete branch '\(branchName)' and \(toDelete.count - 1) descendant(s):\n"
                     for d in toDelete.dropFirst() { msg += "  - \(d)\n" }
                 }
                 msg += "Continue? (yes/no) "
@@ -149,7 +151,7 @@ extension ToyVM {
                     meta.activeBranch = parentName
                 }
                 try meta.save(to: bundleURL)
-                print("Deleted branch '\(name)'" + (toDelete.count > 1 ? " and \(toDelete.count - 1) descendant(s)" : ""))
+                print("Deleted branch '\(branchName)'" + (toDelete.count > 1 ? " and \(toDelete.count - 1) descendant(s)" : ""))
             }
         }
 
