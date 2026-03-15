@@ -60,9 +60,13 @@ extension ToyVM {
         var enableRosetta: Bool = false
 
         mutating func run() throws {
-            // Load bundle config if a bundle path was given
-            let bundleURL = bundle.map { URL(fileURLWithPath: $0, isDirectory: true) }
-            let bundleConfig = try bundleURL.map { try VMConfig.load(from: $0) }
+            // Load bundle config if a bundle string was given (accept bare VM names)
+            var bundleURL: URL? = nil
+            var bundleConfig: VMConfig? = nil
+            if let b = bundle {
+                bundleURL = try resolveBundlePath(b, createParentIfNeeded: false)
+                bundleConfig = try VMConfig.load(from: bundleURL!)
+            }
 
             // Resolve kernel path: CLI option takes precedence, then bundle (relative → absolute)
             guard let effectiveKernelPath = kernel
