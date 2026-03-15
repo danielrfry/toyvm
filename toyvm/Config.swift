@@ -4,6 +4,7 @@
 //
 
 import ArgumentParser
+import Darwin
 import Foundation
 import Virtualization
 
@@ -101,6 +102,27 @@ extension ToyVM {
             let bundleURL = URL(fileURLWithPath: bundle, isDirectory: true)
             let fm = FileManager.default
             var config = try VMConfig.load(from: bundleURL)
+
+            // Request confirmation for disk removal before making any changes
+            if !removeDisk.isEmpty {
+                for diskName in removeDisk {
+                    guard config.disks.contains(where: { $0.file == diskName }) else {
+                        throw ToyVMError("No disk named '\(diskName)' in this bundle")
+                    }
+                }
+
+                // Prompt user for confirmation
+                fputs("This will permanently delete the following disk image(s):\n", stderr)
+                for diskName in removeDisk {
+                    fputs("  - \(diskName)\n", stderr)
+                }
+                fputs("Continue? (yes/no) ", stderr)
+                fflush(stderr)
+
+                guard let response = readLine(strippingNewline: true)?.lowercased(), response == "yes" else {
+                    throw ToyVMError("Disk removal cancelled.")
+                }
+            }
 
             // Kernel replacement
             if let newKernelPath = kernel {
