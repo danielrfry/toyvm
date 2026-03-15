@@ -18,6 +18,7 @@ extension ToyVM {
                 RevertSubcommand.self,
                 CommitSubcommand.self,
                 SelectSubcommand.self,
+                RenameSubcommand.self,
             ]
         )
 
@@ -302,6 +303,56 @@ extension ToyVM {
                 meta.activeBranch = name
                 try meta.save(to: bundleURL)
                 print("Active branch set to '\(name)'")
+            }
+        }
+
+        // MARK: - rename
+
+        struct RenameSubcommand: ParsableCommand {
+            static let configuration = CommandConfiguration(
+                commandName: "rename",
+                abstract: "Rename a branch"
+            )
+
+            @Argument(help: "VM name or bundle path") var vm: String
+            @Argument(help: "Current branch name") var oldName: String
+            @Argument(help: "New branch name") var newName: String
+
+            mutating func run() throws {
+                let bundleURL = try resolveBundlePath(vm)
+                var meta = try BundleMeta.load(from: bundleURL)
+
+                guard meta.branches[oldName] != nil else {
+                    throw ToyVMError("Branch '\(oldName)' does not exist")
+                }
+                guard meta.branches[newName] == nil else {
+                    throw ToyVMError("Branch '\(newName)' already exists")
+                }
+
+                // Rename the branch directory
+                let oldURL = VMConfig.branchURL(in: bundleURL, branch: oldName)
+                let newURL = VMConfig.branchURL(in: bundleURL, branch: newName)
+                try FileManager.default.moveItem(at: oldURL, to: newURL)
+
+                // Update metadata
+                let branchInfo = meta.branches[oldName]!
+                meta.branches.removeValue(forKey: oldName)
+                meta.branches[newName] = branchInfo
+
+                // Update children's parent references
+                for (childName, childInfo) in meta.branches {
+                    if childInfo.parent == oldName {
+                        meta.branches[childName] = BranchInfo(parent: newName)
+                    }
+                }
+
+                // Update active branch if it was the renamed branch
+                if meta.activeBranch == oldName {
+                    meta.activeBranch = newName
+                }
+
+                try meta.save(to: bundleURL)
+                print("Renamed branch '\(oldName)' to '\(newName)'")
             }
         }
     }
