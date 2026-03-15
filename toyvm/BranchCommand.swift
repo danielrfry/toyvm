@@ -57,11 +57,12 @@ extension ToyVM {
         struct CreateSubcommand: ParsableCommand {
             static let configuration = CommandConfiguration(
                 commandName: "create",
-                abstract: "Create a new branch from the active branch"
+                abstract: "Create a new branch from an existing branch"
             )
 
             @Argument(help: "VM name or bundle path") var vm: String
             @Argument(help: "Name for the new branch") var name: String
+            @Option(name: .long, help: "Branch to create from (defaults to active branch)") var from: String?
 
             func run() throws {
                 let bundleURL = try resolveBundlePath(vm)
@@ -70,7 +71,10 @@ extension ToyVM {
                 guard meta.branches[name] == nil else {
                     throw ToyVMError("Branch '\(name)' already exists")
                 }
-                let parent = meta.activeBranch
+                let parent = from ?? meta.activeBranch
+                guard meta.branches[parent] != nil else {
+                    throw ToyVMError("Parent branch '\(parent)' does not exist")
+                }
                 let srcURL = VMConfig.branchURL(in: bundleURL, branch: parent)
                 let dstURL = VMConfig.branchURL(in: bundleURL, branch: name)
 
