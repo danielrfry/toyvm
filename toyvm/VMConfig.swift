@@ -180,3 +180,22 @@ func nextDiskFilename(existing: [DiskConfig], format: DiskFormat) -> String {
         index += 1
     }
 }
+
+/// Resolve a user-supplied bundle string to a filesystem path. If the input is a bare name
+/// (no path separators and not ending with .bundle), it is interpreted as a VM name and
+/// resolved to ~/.toyvm/<name>.bundle. If createParentIfNeeded is true, ~/.toyvm will be
+/// created when required (used by 'create').
+func resolveBundlePath(_ input: String, createParentIfNeeded: Bool = false) throws -> URL {
+    let fm = FileManager.default
+    // Treat as explicit path if it contains a path separator or already ends with .bundle
+    if input.contains("/") || input.hasSuffix(".bundle") {
+        return URL(fileURLWithPath: input, isDirectory: true)
+    }
+    // Otherwise treat as VM name under ~/.toyvm
+    let home = fm.homeDirectoryForCurrentUser
+    let dir = home.appendingPathComponent(".toyvm", isDirectory: true)
+    if createParentIfNeeded && !fm.fileExists(atPath: dir.path) {
+        try fm.createDirectory(at: dir, withIntermediateDirectories: true)
+    }
+    return dir.appendingPathComponent(input + ".bundle", isDirectory: true)
+}

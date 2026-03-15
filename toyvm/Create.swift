@@ -59,7 +59,7 @@ extension ToyVM {
         var kernelCommandLine: [String] = []
 
         mutating func run() throws {
-            let bundleURL = URL(fileURLWithPath: bundle, isDirectory: true)
+            let bundleURL = try resolveBundlePath(bundle, createParentIfNeeded: true)
             let fm = FileManager.default
             var bundleCreated = false
 

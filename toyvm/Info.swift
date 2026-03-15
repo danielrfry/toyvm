@@ -16,7 +16,7 @@ extension ToyVM {
         var bundle: String
 
         func run() throws {
-            let bundleURL = URL(fileURLWithPath: bundle, isDirectory: true)
+            let bundleURL = try resolveBundlePath(bundle)
             let config = try VMConfig.load(from: bundleURL)
 
             print("Kernel:      \(config.kernel)")
