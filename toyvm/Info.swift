@@ -36,8 +36,9 @@ extension ToyVM {
                 print("Disks:")
                 for disk in config.disks {
                     let rwLabel = disk.readOnly ? "ro" : "rw"
+                    let fmtLabel = disk.format == .raw ? "raw" : disk.format.rawValue
                     let size = diskSize(bundleURL.appendingPathComponent(disk.file))
-                    print("  [\(rwLabel)] \(disk.file)\(size.map { " (\($0))" } ?? "")")
+                    print("  [\(rwLabel), \(fmtLabel)] \(disk.file)\(size.map { " (\($0))" } ?? "")")
                 }
             }
 

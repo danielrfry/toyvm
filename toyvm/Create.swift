@@ -28,7 +28,7 @@ extension ToyVM {
         @Option(name: [.customShort("i"), .long], help: "Path to an initrd image to copy into the bundle")
         var initrd: String?
 
-        @Option(name: [.customShort("d"), .long], help: "Create a read/write disk image of the given size (e.g. 20G, 512M)")
+        @Option(name: [.customShort("d"), .long], help: "Create a read/write disk image of the given size (e.g. 20G, 512M, asif:20G)")
         var disk: [String] = []
 
         @Option(name: [.customShort("r"), .customLong("disk-ro")], help: "As --disk but marks the disk image as read-only")
@@ -83,16 +83,18 @@ extension ToyVM {
                 // Create disk images (r/w first, then r/o — matching start command ordering)
                 var diskConfigs: [DiskConfig] = []
                 var diskIndex = 0
-                for sizeStr in disk {
-                    let name = "disk\(diskIndex).img"
-                    try createSparseFile(at: bundleURL.appendingPathComponent(name), size: parseSize(sizeStr))
-                    diskConfigs.append(DiskConfig(file: name, readOnly: false))
+                for spec in disk {
+                    let (format, size) = try parseDiskSpec(spec)
+                    let name = "disk\(diskIndex).\(format.fileExtension)"
+                    try createDisk(at: bundleURL.appendingPathComponent(name), size: size, format: format)
+                    diskConfigs.append(DiskConfig(file: name, readOnly: false, format: format))
                     diskIndex += 1
                 }
-                for sizeStr in diskRO {
-                    let name = "disk\(diskIndex).img"
-                    try createSparseFile(at: bundleURL.appendingPathComponent(name), size: parseSize(sizeStr))
-                    diskConfigs.append(DiskConfig(file: name, readOnly: true))
+                for spec in diskRO {
+                    let (format, size) = try parseDiskSpec(spec)
+                    let name = "disk\(diskIndex).\(format.fileExtension)"
+                    try createDisk(at: bundleURL.appendingPathComponent(name), size: size, format: format)
+                    diskConfigs.append(DiskConfig(file: name, readOnly: true, format: format))
                     diskIndex += 1
                 }
 

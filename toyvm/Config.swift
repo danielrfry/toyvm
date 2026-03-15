@@ -35,7 +35,7 @@ extension ToyVM {
 
         // MARK: - Disks
 
-        @Option(name: [.customShort("d"), .long], help: "Add a read/write disk image of the given size (e.g. 20G, 512M)")
+        @Option(name: [.customShort("d"), .long], help: "Add a read/write disk image of the given size (e.g. 20G, 512M, asif:20G)")
         var disk: [String] = []
 
         @Option(name: [.customShort("r"), .customLong("disk-ro")], help: "As --disk but adds a read-only disk image")
@@ -177,15 +177,17 @@ extension ToyVM {
             }
 
             // Add disks
-            for sizeStr in disk {
-                let name = nextDiskFilename(existing: config.disks)
-                try createSparseFile(at: bundleURL.appendingPathComponent(name), size: parseSize(sizeStr))
-                config.disks.append(DiskConfig(file: name, readOnly: false))
+            for spec in disk {
+                let (format, size) = try parseDiskSpec(spec)
+                let name = nextDiskFilename(existing: config.disks, format: format)
+                try createDisk(at: bundleURL.appendingPathComponent(name), size: size, format: format)
+                config.disks.append(DiskConfig(file: name, readOnly: false, format: format))
             }
-            for sizeStr in diskRO {
-                let name = nextDiskFilename(existing: config.disks)
-                try createSparseFile(at: bundleURL.appendingPathComponent(name), size: parseSize(sizeStr))
-                config.disks.append(DiskConfig(file: name, readOnly: true))
+            for spec in diskRO {
+                let (format, size) = try parseDiskSpec(spec)
+                let name = nextDiskFilename(existing: config.disks, format: format)
+                try createDisk(at: bundleURL.appendingPathComponent(name), size: size, format: format)
+                config.disks.append(DiskConfig(file: name, readOnly: true, format: format))
             }
 
             // Remove shares

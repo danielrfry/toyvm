@@ -22,6 +22,32 @@ struct DiskConfig: Codable {
     /// Path to the disk image, relative to the bundle directory.
     var file: String
     var readOnly: Bool
+    var format: DiskFormat
+
+    init(file: String, readOnly: Bool, format: DiskFormat = .raw) {
+        self.file = file
+        self.readOnly = readOnly
+        self.format = format
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        file = try c.decode(String.self, forKey: .file)
+        readOnly = try c.decode(Bool.self, forKey: .readOnly)
+        format = try c.decodeIfPresent(DiskFormat.self, forKey: .format) ?? .raw
+    }
+}
+
+enum DiskFormat: String, Codable {
+    case raw
+    case asif
+
+    var fileExtension: String {
+        switch self {
+        case .raw:  return "img"
+        case .asif: return "asif"
+        }
+    }
 }
 
 struct ShareConfig: Codable {
@@ -69,12 +95,69 @@ func parseSize(_ s: String) throws -> UInt64 {
     throw ToyVMError("Invalid size '\(s)': expected a positive integer optionally followed by K, M, G, or T")
 }
 
-/// Creates a sparse file of the given size using truncation (no data written to disk).
-func createSparseFile(at url: URL, size: UInt64) throws {
+/// Parses a disk specification of the form `[format:]size` (e.g. "20G", "asif:20G", "raw:512M").
+func parseDiskSpec(_ s: String) throws -> (format: DiskFormat, size: UInt64) {
+    if let colonIdx = s.firstIndex(of: ":") {
+        let formatStr = String(s[s.startIndex..<colonIdx])
+        let sizeStr = String(s[s.index(after: colonIdx)...])
+        guard let format = DiskFormat(rawValue: formatStr.lowercased()) else {
+            throw ToyVMError("Unknown disk format '\(formatStr)': expected 'raw' or 'asif'")
+        }
+        return (format, try parseSize(sizeStr))
+    }
+    return (.raw, try parseSize(s))
+}
+
+/// Creates a sparse raw disk image file of the given size using truncation.
+func createRawDisk(at url: URL, size: UInt64) throws {
     FileManager.default.createFile(atPath: url.path, contents: nil)
     let fh = try FileHandle(forWritingTo: url)
     defer { try? fh.close() }
     try fh.truncate(atOffset: size)
+}
+
+/// Creates an ASIF-format disk image of the given size using diskutil.
+func createASIFDisk(at url: URL, size: UInt64) throws {
+    // diskutil appends .asif automatically, so strip the extension from the target path
+    let basePath = url.deletingPathExtension().path
+    let process = Process()
+    process.executableURL = URL(fileURLWithPath: "/usr/sbin/diskutil")
+    process.arguments = [
+        "image", "create", "blank",
+        "--fs", "none",
+        "--format", "ASIF",
+        "--size", diskutilSizeString(size),
+        basePath,
+    ]
+    process.standardOutput = FileHandle.nullDevice
+    process.standardError = FileHandle.nullDevice
+    try process.run()
+    process.waitUntilExit()
+    guard process.terminationStatus == 0 else {
+        throw ToyVMError("diskutil failed to create ASIF disk image at \(url.path)")
+    }
+}
+
+/// Creates a disk image file in the given format.
+func createDisk(at url: URL, size: UInt64, format: DiskFormat) throws {
+    switch format {
+    case .raw:  try createRawDisk(at: url, size: size)
+    case .asif: try createASIFDisk(at: url, size: size)
+    }
+}
+
+/// Formats a byte count as a size string suitable for diskutil (e.g. "20g", "512m").
+private func diskutilSizeString(_ bytes: UInt64) -> String {
+    let units: [(UInt64, String)] = [
+        (1024 * 1024 * 1024 * 1024, "t"),
+        (1024 * 1024 * 1024,         "g"),
+        (1024 * 1024,                "m"),
+        (1024,                       "k"),
+    ]
+    for (factor, suffix) in units {
+        if bytes % factor == 0 { return "\(bytes / factor)\(suffix)" }
+    }
+    return "\(bytes)"
 }
 
 /// Parses a `[tag:]path` share argument. If no tag prefix is present, uses "share".
@@ -85,13 +168,13 @@ func parseShareArg(_ arg: String) -> (tag: String, path: String) {
     return ("share", arg)
 }
 
-/// Returns the next available disk filename in the bundle (e.g. "disk3.img").
-func nextDiskFilename(existing: [DiskConfig]) -> String {
-    let names = Set(existing.map { $0.file })
+/// Returns the next available disk filename in the bundle for the given format (e.g. "disk3.asif").
+func nextDiskFilename(existing: [DiskConfig], format: DiskFormat) -> String {
+    let basenames = Set(existing.map { URL(fileURLWithPath: $0.file).deletingPathExtension().lastPathComponent })
     var index = 0
     while true {
-        let name = "disk\(index).img"
-        if !names.contains(name) { return name }
+        let base = "disk\(index)"
+        if !basenames.contains(base) { return "\(base).\(format.fileExtension)" }
         index += 1
     }
 }
