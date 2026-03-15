@@ -65,19 +65,18 @@ extension ToyVM {
 
         mutating func run() throws {
             // Load bundle config if a bundle string was given (accept bare VM names)
-            var bundleURL: URL? = nil
-            var branchURL: URL? = nil
             var bundleConfig: VMConfig? = nil
+            var branchURL: URL? = nil
             if let b = bundle {
-                bundleURL = try resolveBundlePath(b, createParentIfNeeded: false)
-                let meta = try BundleMeta.load(from: bundleURL!)
-                if meta.branches[meta.activeBranch]?.readOnly == true {
+                let bundleURL = try resolveBundlePath(b, createParentIfNeeded: false)
+                let vmBundle = try VMBundle.load(from: bundleURL)
+                if vmBundle.activeBranchInfo?.readOnly == true {
                     throw ToyVMError(
-                        "Branch '\(meta.activeBranch)' is read-only; the VM cannot be started on a read-only branch."
+                        "Branch '\(vmBundle.meta.activeBranch)' is read-only; the VM cannot be started on a read-only branch."
                     )
                 }
-                branchURL = VMConfig.branchURL(in: bundleURL!, branch: meta.activeBranch)
-                bundleConfig = try VMConfig.load(from: branchURL!)
+                branchURL = vmBundle.activeBranchURL
+                bundleConfig = vmBundle.config
             }
 
             // Resolve kernel path: CLI option takes precedence, then active branch

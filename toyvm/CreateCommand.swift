@@ -64,105 +64,48 @@ extension ToyVM {
 
         mutating func run() throws {
             let bundleURL = try resolveBundlePath(bundle, createParentIfNeeded: true)
-            let fm = FileManager.default
-            var bundleCreated = false
 
-            do {
-                try fm.createDirectory(at: bundleURL, withIntermediateDirectories: false)
-                bundleCreated = true
-
-                // Create branches directory and the root "main" branch subdirectory
-                let branchesDir = bundleURL.appendingPathComponent(VMConfig.branchesDir)
-                try fm.createDirectory(at: branchesDir, withIntermediateDirectories: false)
-                let rootBranch = "main"
-                let branchURL = VMConfig.branchURL(in: bundleURL, branch: rootBranch)
-                try fm.createDirectory(at: branchURL, withIntermediateDirectories: false)
-
-                // Create kernel, initrd, and disks subdirectories inside the branch
-                let kernelDir = branchURL.appendingPathComponent(VMConfig.kernelDir)
-                let initrdDir = branchURL.appendingPathComponent(VMConfig.initrdDir)
-                let disksDir = branchURL.appendingPathComponent(VMConfig.disksDir)
-                try fm.createDirectory(at: kernelDir, withIntermediateDirectories: false)
-                try fm.createDirectory(at: initrdDir, withIntermediateDirectories: false)
-                try fm.createDirectory(at: disksDir, withIntermediateDirectories: false)
-
-                // Copy kernel
-                let kernelSrc = URL(fileURLWithPath: kernel)
-                let kernelFilename = kernelSrc.lastPathComponent
-                try fm.copyItem(at: kernelSrc, to: kernelDir.appendingPathComponent(kernelFilename))
-
-                // Copy initrd
-                var initrdFilename: String? = nil
-                if let initrdPath = initrd {
-                    let initrdSrc = URL(fileURLWithPath: initrdPath)
-                    initrdFilename = initrdSrc.lastPathComponent
-                    try fm.copyItem(at: initrdSrc, to: initrdDir.appendingPathComponent(initrdFilename!))
-                }
-
-                // Create disk images
-                var diskConfigs: [DiskConfig] = []
-                var diskIndex = 0
-                for spec in disk {
-                    let (format, size) = try parseDiskSpec(spec)
-                    let name = "disk\(diskIndex).\(format.fileExtension)"
-                    try createDisk(at: disksDir.appendingPathComponent(name), size: size, format: format)
-                    diskConfigs.append(DiskConfig(file: name, readOnly: false, format: format))
-                    diskIndex += 1
-                }
-                for spec in diskRO {
-                    let (format, size) = try parseDiskSpec(spec)
-                    let name = "disk\(diskIndex).\(format.fileExtension)"
-                    try createDisk(at: disksDir.appendingPathComponent(name), size: size, format: format)
-                    diskConfigs.append(DiskConfig(file: name, readOnly: true, format: format))
-                    diskIndex += 1
-                }
-
-                // Collect directory shares, validating tags and detecting duplicates
-                var shareConfigs: [ShareConfig] = []
-                var seenTags = Set<String>()
-                for arg in share {
-                    let (tag, path) = parseShareArg(arg)
-                    try VZVirtioFileSystemDeviceConfiguration.validateTag(tag)
-                    guard seenTags.insert(tag).inserted else {
-                        throw ToyVMError("Duplicate share tag: \(tag)")
-                    }
-                    shareConfigs.append(ShareConfig(tag: tag, path: path, readOnly: false))
-                }
-                for arg in shareRO {
-                    let (tag, path) = parseShareArg(arg)
-                    try VZVirtioFileSystemDeviceConfiguration.validateTag(tag)
-                    guard seenTags.insert(tag).inserted else {
-                        throw ToyVMError("Duplicate share tag: \(tag)")
-                    }
-                    shareConfigs.append(ShareConfig(tag: tag, path: path, readOnly: true))
-                }
-
-                let cmdLine = kernelCommandLine.isEmpty ? ["console=hvc0"] : kernelCommandLine
-                let config = VMConfig(
-                    cpus: cpus,
-                    memoryGB: memory,
-                    audio: audio,
-                    network: !noNet,
-                    rosetta: enableRosetta,
-                    kernel: kernelFilename,
-                    initrd: initrdFilename,
-                    kernelCommandLine: cmdLine,
-                    disks: diskConfigs,
-                    shares: shareConfigs
-                )
-                try config.save(to: branchURL)
-
-                // Write bundle-level metadata
-                let bundleMeta = BundleMeta(rootBranch: rootBranch)
-                try bundleMeta.save(to: bundleURL)
-
-                print("Created VM bundle: \(bundle)")
-            } catch {
-                if bundleCreated {
-                    try? fm.removeItem(at: bundleURL)
-                }
-                throw error
+            // Parse disk specs
+            var diskSpecs: [(format: DiskFormat, size: UInt64, readOnly: Bool)] = []
+            for spec in disk {
+                let (format, size) = try parseDiskSpec(spec)
+                diskSpecs.append((format, size, false))
             }
+            for spec in diskRO {
+                let (format, size) = try parseDiskSpec(spec)
+                diskSpecs.append((format, size, true))
+            }
+
+            // Parse and validate share specs (tag validation requires Virtualization.framework)
+            var shareConfigs: [ShareConfig] = []
+            var seenTags = Set<String>()
+            for (arg, readOnly) in share.map({ ($0, false) }) + shareRO.map({ ($0, true) }) {
+                let (tag, path) = parseShareArg(arg)
+                try VZVirtioFileSystemDeviceConfiguration.validateTag(tag)
+                guard seenTags.insert(tag).inserted else {
+                    throw ToyVMError("Duplicate share tag: \(tag)")
+                }
+                shareConfigs.append(ShareConfig(tag: tag, path: path, readOnly: readOnly))
+            }
+
+            var options = CreateOptions()
+            options.cpus = cpus
+            options.memoryGB = memory
+            options.audio = audio
+            options.network = !noNet
+            options.rosetta = enableRosetta
+            options.kernelCommandLine = kernelCommandLine.isEmpty ? ["console=hvc0"] : kernelCommandLine
+            options.disks = diskSpecs
+            options.shares = shareConfigs
+
+            try VMBundle.create(
+                at: bundleURL,
+                kernelPath: URL(fileURLWithPath: kernel),
+                initrdPath: initrd.map { URL(fileURLWithPath: $0) },
+                options: options
+            )
+
+            print("Created VM bundle: \(bundle)")
         }
     }
 }

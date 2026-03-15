@@ -4,7 +4,6 @@
 //
 
 import ArgumentParser
-import Darwin
 import Foundation
 #if canImport(ToyVMCore)
 import ToyVMCore
@@ -113,13 +112,10 @@ extension ToyVM {
 
         mutating func run() throws {
             let bundleURL = try resolveBundlePath(bundle)
-            var meta = try BundleMeta.load(from: bundleURL)
-            let branchURL = VMConfig.branchURL(in: bundleURL, branch: meta.activeBranch)
-            let fm = FileManager.default
-            var config = try VMConfig.load(from: branchURL)
+            var bundle = try VMBundle.load(from: bundleURL)
 
             // Check if branch is read-only before allowing any modifications (other than toggling read-only itself)
-            let branchIsReadOnly = meta.branches[meta.activeBranch]?.readOnly ?? false
+            let branchIsReadOnly = bundle.activeBranchInfo?.readOnly ?? false
             let hasConfigChanges = kernel != nil || initrd != nil || removeInitrd
                 || !removeDisk.isEmpty || !disk.isEmpty || !diskRO.isEmpty
                 || !removeShare.isEmpty || !share.isEmpty || !shareRO.isEmpty
@@ -127,22 +123,19 @@ extension ToyVM {
                 || enableAudio || disableAudio || enableNet || disableNet
                 || enableRosetta || disableRosetta || cmdline != nil
             if branchIsReadOnly && hasConfigChanges {
-                throw ToyVMError("Branch '\(meta.activeBranch)' is read-only; configuration changes are not permitted.")
+                throw ToyVMError("Branch '\(bundle.meta.activeBranch)' is read-only; configuration changes are not permitted.")
             }
 
             // Request confirmation for disk removal before making any changes
             if !removeDisk.isEmpty {
                 for diskName in removeDisk {
-                    guard config.disks.contains(where: { $0.file == diskName }) else {
+                    guard bundle.config.disks.contains(where: { $0.file == diskName }) else {
                         throw ToyVMError("No disk named '\(diskName)' in this bundle")
                     }
                 }
-
-                // Prompt user for confirmation
                 var msg = "This will permanently delete the following disk image(s):\n"
                 for diskName in removeDisk { msg += "  - \(diskName)\n" }
                 msg += "Continue? (yes/no) "
-
                 guard confirm(msg) else {
                     throw ToyVMError("Disk removal cancelled.")
                 }
@@ -150,127 +143,74 @@ extension ToyVM {
 
             // Kernel replacement
             if let newKernelPath = kernel {
-                let src = URL(fileURLWithPath: newKernelPath)
-                let newFilename = src.lastPathComponent
-                let kernelDir = branchURL.appendingPathComponent(VMConfig.kernelDir)
-                let oldFilename = config.kernel
-                let oldPath = kernelDir.appendingPathComponent(oldFilename)
-                let newPath = kernelDir.appendingPathComponent(newFilename)
-                if newFilename != oldFilename {
-                    try fm.copyItem(at: src, to: newPath)
-                    try fm.removeItem(at: oldPath)
-                } else {
-                    _ = try fm.replaceItemAt(newPath, withItemAt: src)
-                }
-                config.kernel = newFilename
+                try bundle.replaceKernel(from: URL(fileURLWithPath: newKernelPath))
             }
 
             // Initrd replacement / removal
             if let newInitrdPath = initrd {
-                let src = URL(fileURLWithPath: newInitrdPath)
-                let newFilename = src.lastPathComponent
-                let initrdDir = branchURL.appendingPathComponent(VMConfig.initrdDir)
-                if let oldFilename = config.initrd, oldFilename != newFilename {
-                    try fm.copyItem(at: src, to: initrdDir.appendingPathComponent(newFilename))
-                    try fm.removeItem(at: initrdDir.appendingPathComponent(oldFilename))
-                } else if config.initrd == nil {
-                    try fm.copyItem(at: src, to: initrdDir.appendingPathComponent(newFilename))
-                } else {
-                    let dest = initrdDir.appendingPathComponent(newFilename)
-                    _ = try fm.replaceItemAt(dest, withItemAt: src)
-                }
-                config.initrd = newFilename
+                try bundle.replaceInitrd(from: URL(fileURLWithPath: newInitrdPath))
             } else if removeInitrd {
-                if let oldFilename = config.initrd {
-                    let initrdDir = branchURL.appendingPathComponent(VMConfig.initrdDir)
-                    try fm.removeItem(at: initrdDir.appendingPathComponent(oldFilename))
-                    config.initrd = nil
-                }
+                try bundle.removeInitrd()
             }
 
             // Kernel command line
             if let line = cmdline {
-                config.kernelCommandLine = line.split(separator: " ", omittingEmptySubsequences: true).map(String.init)
-                    .nonEmpty ?? ["console=hvc0"]
+                let args = line.split(separator: " ", omittingEmptySubsequences: true).map(String.init)
+                bundle.setKernelCommandLine(args)
             }
 
             // Remove disks
-            let disksDir = branchURL.appendingPathComponent(VMConfig.disksDir)
             for name in removeDisk {
-                guard let idx = config.disks.firstIndex(where: { $0.file == name }) else {
-                    throw ToyVMError("No disk named '\(name)' in this bundle")
-                }
-                try fm.removeItem(at: disksDir.appendingPathComponent(name))
-                config.disks.remove(at: idx)
+                try bundle.removeDisk(named: name)
             }
 
             // Add disks
             for spec in disk {
                 let (format, size) = try parseDiskSpec(spec)
-                let name = nextDiskFilename(existing: config.disks, format: format)
-                try createDisk(at: disksDir.appendingPathComponent(name), size: size, format: format)
-                config.disks.append(DiskConfig(file: name, readOnly: false, format: format))
+                try bundle.addDisk(format: format, size: size, readOnly: false)
             }
             for spec in diskRO {
                 let (format, size) = try parseDiskSpec(spec)
-                let name = nextDiskFilename(existing: config.disks, format: format)
-                try createDisk(at: disksDir.appendingPathComponent(name), size: size, format: format)
-                config.disks.append(DiskConfig(file: name, readOnly: true, format: format))
+                try bundle.addDisk(format: format, size: size, readOnly: true)
             }
 
             // Remove shares
             for tag in removeShare {
-                guard config.shares.contains(where: { $0.tag == tag }) else {
-                    throw ToyVMError("No share with tag '\(tag)' in this bundle")
-                }
-                config.shares.removeAll { $0.tag == tag }
+                try bundle.removeShare(tag: tag)
             }
 
-            // Add/replace shares
-            for arg in share {
+            // Add/replace shares (tag validation requires Virtualization.framework)
+            for (arg, readOnly) in share.map({ ($0, false) }) + shareRO.map({ ($0, true) }) {
                 let (tag, path) = parseShareArg(arg)
                 try VZVirtioFileSystemDeviceConfiguration.validateTag(tag)
-                config.shares.removeAll { $0.tag == tag }
-                config.shares.append(ShareConfig(tag: tag, path: path, readOnly: false))
-            }
-            for arg in shareRO {
-                let (tag, path) = parseShareArg(arg)
-                try VZVirtioFileSystemDeviceConfiguration.validateTag(tag)
-                config.shares.removeAll { $0.tag == tag }
-                config.shares.append(ShareConfig(tag: tag, path: path, readOnly: true))
+                bundle.addShare(ShareConfig(tag: tag, path: path, readOnly: readOnly))
             }
 
             // Resources
-            if let c = cpus  { config.cpus     = c }
-            if let m = memory { config.memoryGB = m }
+            if let c = cpus   { bundle.setCPUs(c) }
+            if let m = memory { bundle.setMemoryGB(m) }
 
             // Boolean toggles
-            if enableAudio   { config.audio   = true  }
-            if disableAudio  { config.audio   = false }
-            if enableNet     { config.network = true  }
-            if disableNet    { config.network = false }
-            if enableRosetta { config.rosetta = true  }
-            if disableRosetta{ config.rosetta = false }
+            if enableAudio    { bundle.setAudio(true) }
+            if disableAudio   { bundle.setAudio(false) }
+            if enableNet      { bundle.setNetwork(true) }
+            if disableNet     { bundle.setNetwork(false) }
+            if enableRosetta  { bundle.setRosetta(true) }
+            if disableRosetta { bundle.setRosetta(false) }
 
-            try config.save(to: branchURL)
+            try bundle.saveConfig()
 
             // Toggle read-only status on the branch metadata
-            var metaChanged = false
-            if setReadOnly && !(meta.branches[meta.activeBranch]?.readOnly ?? false) {
-                meta.branches[meta.activeBranch]?.readOnly = true
-                metaChanged = true
-            } else if clearReadOnly && (meta.branches[meta.activeBranch]?.readOnly ?? false) {
-                meta.branches[meta.activeBranch]?.readOnly = false
-                metaChanged = true
-            }
-            if metaChanged {
-                try meta.save(to: bundleURL)
+            if setReadOnly && !(bundle.activeBranchInfo?.readOnly ?? false) {
+                try bundle.setBranchReadOnly(true)
+            } else if clearReadOnly && (bundle.activeBranchInfo?.readOnly ?? false) {
+                try bundle.setBranchReadOnly(false)
             }
 
             // Display the configuration (after any changes)
-            let isReadOnly = meta.branches[meta.activeBranch]?.readOnly ?? false
-            print("Branch:      \(meta.activeBranch)\(isReadOnly ? " [read-only]" : "")")
-            displayConfig(config, branchURL: branchURL)
+            let isReadOnly = bundle.activeBranchInfo?.readOnly ?? false
+            print("Branch:      \(bundle.meta.activeBranch)\(isReadOnly ? " [read-only]" : "")")
+            displayConfig(bundle.config, branchURL: bundle.activeBranchURL)
         }
 
         private func displayConfig(_ config: VMConfig, branchURL: URL) {
@@ -319,9 +259,4 @@ extension ToyVM {
             return "\(logicalStr), \(onDiskStr) on disk"
         }
     }
-}
-
-private extension Array {
-    /// Returns the array if non-empty, otherwise nil.
-    var nonEmpty: Self? { isEmpty ? nil : self }
 }

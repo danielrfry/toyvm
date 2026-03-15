@@ -20,6 +20,7 @@
 		9C56E6C1A1444318AEA59160 /* ToyVMDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3B8843591644736A193283A /* ToyVMDelegate.swift */; };
 		EFD59A1396214B25871BC8F3 /* ToyVMError.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC84BC0415CD401FBC2CE0DE /* ToyVMError.swift */; };
 		0A6D3961128C4313B69503ED /* DiskInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B581B75888C46F4B4167CB6 /* DiskInfo.swift */; };
+		5DF7BE6F40124794B31F1249 /* VMBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA6988AF37714E4DA0B95480 /* VMBundle.swift */; };
 		FC2B71D4FC084E858EC3DFF2 /* ToyVM.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E8C366362A341E7B9E094FB /* ToyVM.swift */; };
 /* End PBXBuildFile section */
 
@@ -51,6 +52,7 @@
 		9B581B75888C46F4B4167CB6 /* DiskInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiskInfo.swift; sourceTree = "<group>"; };
 		9E10A52C1C074057822BA3F3 /* BranchCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BranchCommand.swift; sourceTree = "<group>"; };
 		A3B8843591644736A193283A /* ToyVMDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToyVMDelegate.swift; sourceTree = "<group>"; };
+		DA6988AF37714E4DA0B95480 /* VMBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VMBundle.swift; sourceTree = "<group>"; };
 		EC84BC0415CD401FBC2CE0DE /* ToyVMError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToyVMError.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -117,6 +119,7 @@
 				37D4731B2F6624570027142F /* VMConfig.swift */,
 				0679C9A064AC41E1B592BD32 /* BundleMeta.swift */,
 				9B581B75888C46F4B4167CB6 /* DiskInfo.swift */,
+				DA6988AF37714E4DA0B95480 /* VMBundle.swift */,
 			);
 			path = ToyVMCore;
 			sourceTree = "<group>";
@@ -195,6 +198,7 @@
 				37F379BD2F66F90F004A32AF /* Prompt.swift in Sources */,
 				EFD59A1396214B25871BC8F3 /* ToyVMError.swift in Sources */,
 				0A6D3961128C4313B69503ED /* DiskInfo.swift in Sources */,
+				5DF7BE6F40124794B31F1249 /* VMBundle.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
