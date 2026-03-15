@@ -122,11 +122,13 @@ func createASIFDisk(at url: URL, size: UInt64) throws {
     let basePath = url.deletingPathExtension().path
     let process = Process()
     process.executableURL = URL(fileURLWithPath: "/usr/sbin/diskutil")
+    // Always specify the size in bytes to diskutil to avoid unit interpretation
+    // differences between binary (1024-based) and decimal (1000-based) prefixes.
     process.arguments = [
         "image", "create", "blank",
         "--fs", "none",
         "--format", "ASIF",
-        "--size", diskutilSizeString(size),
+        "--size", String(size),
         basePath,
     ]
     process.standardOutput = FileHandle.nullDevice
