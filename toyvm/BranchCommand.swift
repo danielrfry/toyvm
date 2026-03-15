@@ -77,9 +77,11 @@ extension ToyVM {
                 try cloneBranchDirectory(from: srcURL, to: dstURL)
 
                 meta.branches[name] = BranchInfo(parent: parent)
+                // Make the newly-created branch the active branch (it will be a leaf)
+                meta.activeBranch = name
                 try meta.save(to: bundleURL)
 
-                print("Created branch '\(name)' from '\(parent)'")
+                print("Created and selected branch '\(name)' from '\(parent)'")
             }
         }
 
