@@ -21,6 +21,7 @@ struct BundleMeta: Codable {
 /// Per-branch metadata. The root branch has `parent == nil`.
 struct BranchInfo: Codable {
     var parent: String?
+    var readOnly: Bool = false
 }
 
 extension BundleMeta {

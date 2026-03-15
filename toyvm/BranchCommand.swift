@@ -113,6 +113,9 @@ extension ToyVM {
                 guard meta.branches[branchName]!.parent != nil else {
                     throw ToyVMError("The root branch cannot be deleted")
                 }
+                if meta.branches[branchName]!.readOnly {
+                    throw ToyVMError("Branch '\(branchName)' is read-only and cannot be deleted.")
+                }
 
                 let toDelete = [branchName] + meta.descendants(of: branchName)
 
@@ -183,6 +186,9 @@ extension ToyVM {
                 guard let parentName = meta.branches[branchName]!.parent else {
                     throw ToyVMError("The root branch cannot be reverted (it has no parent)")
                 }
+                if meta.branches[branchName]!.readOnly {
+                    throw ToyVMError("Branch '\(branchName)' is read-only and cannot be reverted.")
+                }
 
                 var msg = "This will discard all changes to branch '\(branchName)' and revert to the state of '\(parentName)'.\n"
                 msg += "Continue? (yes/no) "
@@ -230,6 +236,12 @@ extension ToyVM {
                 }
                 guard let parentName = meta.branches[branchName]!.parent else {
                     throw ToyVMError("The root branch cannot be committed (it has no parent)")
+                }
+                if meta.branches[branchName]!.readOnly {
+                    throw ToyVMError("Branch '\(branchName)' is read-only and cannot be committed.")
+                }
+                if meta.branches[parentName]?.readOnly == true {
+                    throw ToyVMError("Cannot commit to '\(parentName)': it is read-only.")
                 }
                 guard meta.children(of: branchName).isEmpty else {
                     throw ToyVMError(

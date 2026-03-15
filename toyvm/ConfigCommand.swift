@@ -84,6 +84,12 @@ extension ToyVM {
         @Flag(name: .customLong("disable-rosetta"), help: "Disable the Rosetta directory share")
         var disableRosetta: Bool = false
 
+        @Flag(name: .customLong("read-only"), help: "Mark the active branch as read-only")
+        var setReadOnly: Bool = false
+
+        @Flag(name: .customLong("no-read-only"), help: "Clear the read-only flag on the active branch")
+        var clearReadOnly: Bool = false
+
         mutating func validate() throws {
             if enableAudio && disableAudio {
                 throw ValidationError("--audio and --no-audio are mutually exclusive")
@@ -97,14 +103,29 @@ extension ToyVM {
             if removeInitrd && initrd != nil {
                 throw ValidationError("--initrd and --remove-initrd are mutually exclusive")
             }
+            if setReadOnly && clearReadOnly {
+                throw ValidationError("--read-only and --no-read-only are mutually exclusive")
+            }
         }
 
         mutating func run() throws {
             let bundleURL = try resolveBundlePath(bundle)
-            let meta = try BundleMeta.load(from: bundleURL)
+            var meta = try BundleMeta.load(from: bundleURL)
             let branchURL = VMConfig.branchURL(in: bundleURL, branch: meta.activeBranch)
             let fm = FileManager.default
             var config = try VMConfig.load(from: branchURL)
+
+            // Check if branch is read-only before allowing any modifications (other than toggling read-only itself)
+            let branchIsReadOnly = meta.branches[meta.activeBranch]?.readOnly ?? false
+            let hasConfigChanges = kernel != nil || initrd != nil || removeInitrd
+                || !removeDisk.isEmpty || !disk.isEmpty || !diskRO.isEmpty
+                || !removeShare.isEmpty || !share.isEmpty || !shareRO.isEmpty
+                || cpus != nil || memory != nil
+                || enableAudio || disableAudio || enableNet || disableNet
+                || enableRosetta || disableRosetta || cmdline != nil
+            if branchIsReadOnly && hasConfigChanges {
+                throw ToyVMError("Branch '\(meta.activeBranch)' is read-only; configuration changes are not permitted.")
+            }
 
             // Request confirmation for disk removal before making any changes
             if !removeDisk.isEmpty {
@@ -230,8 +251,22 @@ extension ToyVM {
 
             try config.save(to: branchURL)
 
+            // Toggle read-only status on the branch metadata
+            var metaChanged = false
+            if setReadOnly && !(meta.branches[meta.activeBranch]?.readOnly ?? false) {
+                meta.branches[meta.activeBranch]?.readOnly = true
+                metaChanged = true
+            } else if clearReadOnly && (meta.branches[meta.activeBranch]?.readOnly ?? false) {
+                meta.branches[meta.activeBranch]?.readOnly = false
+                metaChanged = true
+            }
+            if metaChanged {
+                try meta.save(to: bundleURL)
+            }
+
             // Display the configuration (after any changes)
-            print("Branch:      \(meta.activeBranch)")
+            let isReadOnly = meta.branches[meta.activeBranch]?.readOnly ?? false
+            print("Branch:      \(meta.activeBranch)\(isReadOnly ? " [read-only]" : "")")
             displayConfig(config, branchURL: branchURL)
         }
 

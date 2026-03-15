@@ -68,6 +68,11 @@ extension ToyVM {
             if let b = bundle {
                 bundleURL = try resolveBundlePath(b, createParentIfNeeded: false)
                 let meta = try BundleMeta.load(from: bundleURL!)
+                if meta.branches[meta.activeBranch]?.readOnly == true {
+                    throw ToyVMError(
+                        "Branch '\(meta.activeBranch)' is read-only; the VM cannot be started on a read-only branch."
+                    )
+                }
                 branchURL = VMConfig.branchURL(in: bundleURL!, branch: meta.activeBranch)
                 bundleConfig = try VMConfig.load(from: branchURL!)
             }
