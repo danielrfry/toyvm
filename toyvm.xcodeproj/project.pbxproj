@@ -9,10 +9,11 @@
 /* Begin PBXBuildFile section */
 		2A21A2C6A57D40608FC50458 /* ArgumentParser in Frameworks */ = {isa = PBXBuildFile; productRef = DD30C2482CDB40B1842BD25A /* ArgumentParser */; };
 		375A3A9725684A8300EEB67A /* Virtualization.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 375A3A9625684A8300EEB67A /* Virtualization.framework */; };
-		37D473182F661CFA0027142F /* Start.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37D473172F661CFA0027142F /* Start.swift */; };
-		37D4731A2F6624410027142F /* Create.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37D473192F6624410027142F /* Create.swift */; };
 		37D4731C2F6624570027142F /* VMConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37D4731B2F6624570027142F /* VMConfig.swift */; };
-		37F379B32F66BCA7004A32AF /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37F379B22F66BCA7004A32AF /* Config.swift */; };
+		37F379B72F66E422004A32AF /* ConfigCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37F379B42F66E422004A32AF /* ConfigCommand.swift */; };
+		37F379B82F66E422004A32AF /* StartCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37F379B62F66E422004A32AF /* StartCommand.swift */; };
+		37F379B92F66E422004A32AF /* CreateCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37F379B52F66E422004A32AF /* CreateCommand.swift */; };
+		37F379BB2F66E567004A32AF /* LsCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37F379BA2F66E567004A32AF /* LsCommand.swift */; };
 		9C56E6C1A1444318AEA59160 /* ToyVMDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3B8843591644736A193283A /* ToyVMDelegate.swift */; };
 		FC2B71D4FC084E858EC3DFF2 /* ToyVM.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E8C366362A341E7B9E094FB /* ToyVM.swift */; };
 /* End PBXBuildFile section */
@@ -34,10 +35,11 @@
 		375A3A9625684A8300EEB67A /* Virtualization.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Virtualization.framework; path = System/Library/Frameworks/Virtualization.framework; sourceTree = SDKROOT; };
 		375A3A9B2568500400EEB67A /* toyvm.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = toyvm.entitlements; sourceTree = "<group>"; };
 		379F73F5257405E1008AAEB7 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
-		37D473172F661CFA0027142F /* Start.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Start.swift; sourceTree = "<group>"; };
-		37D473192F6624410027142F /* Create.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Create.swift; sourceTree = "<group>"; };
 		37D4731B2F6624570027142F /* VMConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VMConfig.swift; sourceTree = "<group>"; };
-		37F379B22F66BCA7004A32AF /* Config.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Config.swift; sourceTree = "<group>"; };
+		37F379B42F66E422004A32AF /* ConfigCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigCommand.swift; sourceTree = "<group>"; };
+		37F379B52F66E422004A32AF /* CreateCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateCommand.swift; sourceTree = "<group>"; };
+		37F379B62F66E422004A32AF /* StartCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StartCommand.swift; sourceTree = "<group>"; };
+		37F379BA2F66E567004A32AF /* LsCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LsCommand.swift; sourceTree = "<group>"; };
 		8E8C366362A341E7B9E094FB /* ToyVM.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToyVM.swift; sourceTree = "<group>"; };
 		A3B8843591644736A193283A /* ToyVMDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToyVMDelegate.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -77,10 +79,11 @@
 		375A3A8C25684A5E00EEB67A /* toyvm */ = {
 			isa = PBXGroup;
 			children = (
-				37F379B22F66BCA7004A32AF /* Config.swift */,
+				37F379BA2F66E567004A32AF /* LsCommand.swift */,
+				37F379B42F66E422004A32AF /* ConfigCommand.swift */,
+				37F379B52F66E422004A32AF /* CreateCommand.swift */,
+				37F379B62F66E422004A32AF /* StartCommand.swift */,
 				37D4731B2F6624570027142F /* VMConfig.swift */,
-				37D473192F6624410027142F /* Create.swift */,
-				37D473172F661CFA0027142F /* Start.swift */,
 				8E8C366362A341E7B9E094FB /* ToyVM.swift */,
 				A3B8843591644736A193283A /* ToyVMDelegate.swift */,
 			);
@@ -158,11 +161,12 @@
 			buildActionMask = 2147483647;
 			files = (
 				9C56E6C1A1444318AEA59160 /* ToyVMDelegate.swift in Sources */,
-				37D473182F661CFA0027142F /* Start.swift in Sources */,
 				FC2B71D4FC084E858EC3DFF2 /* ToyVM.swift in Sources */,
-				37F379B32F66BCA7004A32AF /* Config.swift in Sources */,
-				37D4731A2F6624410027142F /* Create.swift in Sources */,
+				37F379B72F66E422004A32AF /* ConfigCommand.swift in Sources */,
+				37F379B82F66E422004A32AF /* StartCommand.swift in Sources */,
+				37F379B92F66E422004A32AF /* CreateCommand.swift in Sources */,
 				37D4731C2F6624570027142F /* VMConfig.swift in Sources */,
+				37F379BB2F66E567004A32AF /* LsCommand.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
