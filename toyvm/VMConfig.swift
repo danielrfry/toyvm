@@ -46,3 +46,52 @@ extension VMConfig {
         try data.write(to: bundleURL.appendingPathComponent(VMConfig.configFilename))
     }
 }
+
+/// Parses a human-readable size string (e.g. "20G", "512M", "1T") into bytes.
+func parseSize(_ s: String) throws -> UInt64 {
+    let suffixes: [(String, UInt64)] = [
+        ("T", 1024 * 1024 * 1024 * 1024),
+        ("G", 1024 * 1024 * 1024),
+        ("M", 1024 * 1024),
+        ("K", 1024),
+    ]
+    let upper = s.uppercased()
+    for (suffix, multiplier) in suffixes {
+        if upper.hasSuffix(suffix) {
+            let numStr = String(s.dropLast())
+            if let n = UInt64(numStr), n > 0 {
+                return n * multiplier
+            }
+            throw ToyVMError("Invalid size '\(s)': expected a positive integer followed by K, M, G, or T")
+        }
+    }
+    if let n = UInt64(s), n > 0 { return n }
+    throw ToyVMError("Invalid size '\(s)': expected a positive integer optionally followed by K, M, G, or T")
+}
+
+/// Creates a sparse file of the given size using truncation (no data written to disk).
+func createSparseFile(at url: URL, size: UInt64) throws {
+    FileManager.default.createFile(atPath: url.path, contents: nil)
+    let fh = try FileHandle(forWritingTo: url)
+    defer { try? fh.close() }
+    try fh.truncate(atOffset: size)
+}
+
+/// Parses a `[tag:]path` share argument. If no tag prefix is present, uses "share".
+func parseShareArg(_ arg: String) -> (tag: String, path: String) {
+    if let colonIdx = arg.firstIndex(of: ":") {
+        return (String(arg[arg.startIndex..<colonIdx]), String(arg[arg.index(after: colonIdx)...]))
+    }
+    return ("share", arg)
+}
+
+/// Returns the next available disk filename in the bundle (e.g. "disk3.img").
+func nextDiskFilename(existing: [DiskConfig]) -> String {
+    let names = Set(existing.map { $0.file })
+    var index = 0
+    while true {
+        let name = "disk\(index).img"
+        if !names.contains(name) { return name }
+        index += 1
+    }
+}
