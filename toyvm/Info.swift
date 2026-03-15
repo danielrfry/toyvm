@@ -113,11 +113,17 @@ extension ToyVM {
         private func formatSize(_ bytes: UInt64) -> String {
             let units: [(String, UInt64)] = [("T", 1024*1024*1024*1024), ("G", 1024*1024*1024), ("M", 1024*1024), ("K", 1024)]
             for (suffix, factor) in units {
-                if bytes >= factor && bytes % factor == 0 {
-                    return "\(bytes / factor)\(suffix)"
+                if bytes >= factor {
+                    let value = Double(bytes) / Double(factor)
+                    if value.truncatingRemainder(dividingBy: 1) == 0 {
+                        return "\(Int(value))\(suffix)"
+                    } else {
+                        // Show one decimal place (e.g., 1.5G)
+                        return String(format: "%.1f%@", value, suffix)
+                    }
                 }
             }
-            return "\(bytes) bytes"
+            return "\(bytes)B"
         }
     }
 }
