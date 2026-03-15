@@ -5,6 +5,9 @@
 
 import ArgumentParser
 import Foundation
+#if canImport(ToyVMCore)
+import ToyVMCore
+#endif
 
 extension ToyVM {
     struct LsCommand: ParsableCommand {

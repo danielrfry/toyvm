@@ -6,6 +6,9 @@
 import ArgumentParser
 import CoreFoundation
 import Darwin
+#if canImport(ToyVMCore)
+import ToyVMCore
+#endif
 import Virtualization
 
 extension ToyVM {

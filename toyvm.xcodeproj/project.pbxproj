@@ -18,6 +18,8 @@
 		37F379BD2F66F90F004A32AF /* Prompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37F379BC2F66F90F004A32AF /* Prompt.swift */; };
 		8A370C09C53E487698EE9054 /* BundleMeta.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0679C9A064AC41E1B592BD32 /* BundleMeta.swift */; };
 		9C56E6C1A1444318AEA59160 /* ToyVMDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3B8843591644736A193283A /* ToyVMDelegate.swift */; };
+		EFD59A1396214B25871BC8F3 /* ToyVMError.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC84BC0415CD401FBC2CE0DE /* ToyVMError.swift */; };
+		0A6D3961128C4313B69503ED /* DiskInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B581B75888C46F4B4167CB6 /* DiskInfo.swift */; };
 		FC2B71D4FC084E858EC3DFF2 /* ToyVM.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E8C366362A341E7B9E094FB /* ToyVM.swift */; };
 /* End PBXBuildFile section */
 
@@ -46,8 +48,10 @@
 		37F379BA2F66E567004A32AF /* LsCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LsCommand.swift; sourceTree = "<group>"; };
 		37F379BC2F66F90F004A32AF /* Prompt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prompt.swift; sourceTree = "<group>"; };
 		8E8C366362A341E7B9E094FB /* ToyVM.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToyVM.swift; sourceTree = "<group>"; };
+		9B581B75888C46F4B4167CB6 /* DiskInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiskInfo.swift; sourceTree = "<group>"; };
 		9E10A52C1C074057822BA3F3 /* BranchCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BranchCommand.swift; sourceTree = "<group>"; };
 		A3B8843591644736A193283A /* ToyVMDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToyVMDelegate.swift; sourceTree = "<group>"; };
+		EC84BC0415CD401FBC2CE0DE /* ToyVMError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToyVMError.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -68,6 +72,7 @@
 			children = (
 				379F73F5257405E1008AAEB7 /* README.md */,
 				375A3A9B2568500400EEB67A /* toyvm.entitlements */,
+				5EE4A16A05ED44D2B4895ADF /* ToyVMCore */,
 				375A3A8C25684A5E00EEB67A /* toyvm */,
 				375A3A8B25684A5E00EEB67A /* Products */,
 				375A3A9525684A8300EEB67A /* Frameworks */,
@@ -90,8 +95,6 @@
 				37F379B42F66E422004A32AF /* ConfigCommand.swift */,
 				37F379B52F66E422004A32AF /* CreateCommand.swift */,
 				37F379B62F66E422004A32AF /* StartCommand.swift */,
-				37D4731B2F6624570027142F /* VMConfig.swift */,
-				0679C9A064AC41E1B592BD32 /* BundleMeta.swift */,
 				9E10A52C1C074057822BA3F3 /* BranchCommand.swift */,
 				8E8C366362A341E7B9E094FB /* ToyVM.swift */,
 				A3B8843591644736A193283A /* ToyVMDelegate.swift */,
@@ -105,6 +108,17 @@
 				375A3A9625684A8300EEB67A /* Virtualization.framework */,
 			);
 			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		5EE4A16A05ED44D2B4895ADF /* ToyVMCore */ = {
+			isa = PBXGroup;
+			children = (
+				EC84BC0415CD401FBC2CE0DE /* ToyVMError.swift */,
+				37D4731B2F6624570027142F /* VMConfig.swift */,
+				0679C9A064AC41E1B592BD32 /* BundleMeta.swift */,
+				9B581B75888C46F4B4167CB6 /* DiskInfo.swift */,
+			);
+			path = ToyVMCore;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -179,6 +193,8 @@
 				8A370C09C53E487698EE9054 /* BundleMeta.swift in Sources */,
 				3267BA3FD5B340B09D4E1F93 /* BranchCommand.swift in Sources */,
 				37F379BD2F66F90F004A32AF /* Prompt.swift in Sources */,
+				EFD59A1396214B25871BC8F3 /* ToyVMError.swift in Sources */,
+				0A6D3961128C4313B69503ED /* DiskInfo.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

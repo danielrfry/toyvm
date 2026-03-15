@@ -8,10 +8,15 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-argument-parser", from: "1.3.0"),
     ],
     targets: [
+        .target(
+            name: "ToyVMCore",
+            path: "ToyVMCore"
+        ),
         .executableTarget(
             name: "toyvm",
             dependencies: [
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
+                "ToyVMCore",
             ],
             path: "toyvm"
         ),
