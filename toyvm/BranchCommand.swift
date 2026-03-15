@@ -36,8 +36,15 @@ extension ToyVM {
                 let bundleURL = try resolveBundlePath(vm)
                 let meta = try BundleMeta.load(from: bundleURL)
                 guard let root = meta.rootBranch else { return }
-                print(root + (root == meta.activeBranch ? " *" : ""))
+                print(branchLabel(root, meta: meta))
                 printChildren(of: root, meta: meta, prefix: "")
+            }
+
+            private func branchLabel(_ name: String, meta: BundleMeta) -> String {
+                var label = name
+                if meta.branches[name]?.readOnly == true { label += " [ro]" }
+                if name == meta.activeBranch { label += " *" }
+                return label
             }
 
             private func printChildren(of parent: String, meta: BundleMeta, prefix: String) {
@@ -45,8 +52,7 @@ extension ToyVM {
                 for (i, child) in kids.enumerated() {
                     let isLast = i == kids.count - 1
                     let connector = isLast ? "└── " : "├── "
-                    let marker = child == meta.activeBranch ? " *" : ""
-                    print("\(prefix)\(connector)\(child)\(marker)")
+                    print("\(prefix)\(connector)\(branchLabel(child, meta: meta))")
                     let childPrefix = prefix + (isLast ? "    " : "│   ")
                     printChildren(of: child, meta: meta, prefix: childPrefix)
                 }
