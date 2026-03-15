@@ -9,8 +9,9 @@ import Darwin
 import Virtualization
 
 extension ToyVM {
-    struct Start: ParsableCommand {
+    struct StartCommand: ParsableCommand {
         static let configuration = CommandConfiguration(
+            commandName: "start",
             abstract: "Start a VM",
             discussion: """
                 When a VM bundle is specified, configuration is loaded from the bundle. \

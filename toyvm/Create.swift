@@ -8,8 +8,9 @@ import Foundation
 import Virtualization
 
 extension ToyVM {
-    struct Create: ParsableCommand {
+    struct CreateCommand: ParsableCommand {
         static let configuration = CommandConfiguration(
+            commandName: "create",
             abstract: "Create a VM bundle",
             discussion: """
                 Creates a VM bundle directory containing the kernel, optional initrd, \

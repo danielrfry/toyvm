@@ -9,8 +9,9 @@ import Foundation
 import Virtualization
 
 extension ToyVM {
-    struct Config: ParsableCommand {
+    struct ConfigCommand: ParsableCommand {
         static let configuration = CommandConfiguration(
+            commandName: "config",
             abstract: "Display or modify the configuration of a VM bundle"
         )
 
