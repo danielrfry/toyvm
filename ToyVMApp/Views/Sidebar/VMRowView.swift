@@ -24,10 +24,19 @@ struct VMRowView: View {
                     .foregroundStyle(.secondary)
             }
             Spacer()
-            if let session, session.runner?.state.isRunning == true {
-                Image(systemName: "play.circle.fill")
-                    .foregroundStyle(.green)
-                    .help("Running")
+            if let session {
+                switch session.runner?.state {
+                case .starting, .running:
+                    Image(systemName: "play.circle.fill")
+                        .foregroundStyle(.green)
+                        .help("Running")
+                case .stopping:
+                    Image(systemName: "stop.circle.fill")
+                        .foregroundStyle(.orange)
+                        .help("Stopping")
+                default:
+                    EmptyView()
+                }
             }
         }
         .padding(.vertical, 2)

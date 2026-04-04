@@ -14,16 +14,11 @@ struct VMDetailView: View {
     let manager: VMManager
     @State private var showConfigEditor = false
 
-    private var isRunning: Bool {
-        session.runner?.state.isRunning == true
-    }
-
     private var runnerState: VMRunner.State {
         session.runner?.state ?? .stopped
     }
 
-    /// Whether to show the VM display (running or stopping).
-    private var shouldShowDisplay: Bool {
+    private var isRunningOrStopping: Bool {
         switch runnerState {
         case .starting, .running, .stopping:
             return true
@@ -32,9 +27,13 @@ struct VMDetailView: View {
         }
     }
 
+    private var isStopping: Bool {
+        runnerState == .stopping
+    }
+
     var body: some View {
         VStack(spacing: 0) {
-            if shouldShowDisplay {
+            if isRunningOrStopping {
                 VMDisplayView(session: session)
             } else {
                 configSummary
@@ -42,13 +41,14 @@ struct VMDetailView: View {
         }
         .toolbar {
             ToolbarItemGroup(placement: .primaryAction) {
-                if isRunning {
+                if isRunningOrStopping {
                     Button {
                         session.requestStop()
                     } label: {
                         Label("Stop", systemImage: "stop.fill")
                     }
                     .help("Request graceful shutdown")
+                    .disabled(isStopping)
 
                     Button {
                         session.forceStop()
@@ -56,6 +56,7 @@ struct VMDetailView: View {
                         Label("Force Stop", systemImage: "xmark.circle.fill")
                     }
                     .help("Force stop the VM immediately")
+                    .disabled(isStopping)
                 } else {
                     Button {
                         Task { await session.start() }
@@ -73,7 +74,7 @@ struct VMDetailView: View {
                 } label: {
                     Label("Configure", systemImage: "gearshape")
                 }
-                .disabled(isRunning)
+                .disabled(isRunningOrStopping)
                 .help("Edit VM configuration")
             }
         }
