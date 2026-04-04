@@ -48,6 +48,7 @@ public struct VMConfig: Codable {
     public var disks: [DiskConfig] = []
     public var shares: [ShareConfig] = []
     public var usbDisks: [USBDiskConfig] = []
+    public var automaticDisplayResize: Bool = true
 
     public init(
         cpus: Int = 2,
@@ -61,7 +62,8 @@ public struct VMConfig: Codable {
         kernelCommandLine: [String] = ["console=hvc0"],
         disks: [DiskConfig] = [],
         shares: [ShareConfig] = [],
-        usbDisks: [USBDiskConfig] = []
+        usbDisks: [USBDiskConfig] = [],
+        automaticDisplayResize: Bool = true
     ) {
         self.cpus = cpus
         self.memoryGB = memoryGB
@@ -75,6 +77,7 @@ public struct VMConfig: Codable {
         self.disks = disks
         self.shares = shares
         self.usbDisks = usbDisks
+        self.automaticDisplayResize = automaticDisplayResize
     }
 
     /// Custom decoder for backward compatibility: existing bundles without
@@ -93,6 +96,7 @@ public struct VMConfig: Codable {
         disks = try c.decodeIfPresent([DiskConfig].self, forKey: .disks) ?? []
         shares = try c.decodeIfPresent([ShareConfig].self, forKey: .shares) ?? []
         usbDisks = try c.decodeIfPresent([USBDiskConfig].self, forKey: .usbDisks) ?? []
+        automaticDisplayResize = try c.decodeIfPresent(Bool.self, forKey: .automaticDisplayResize) ?? true
     }
 }
 
