@@ -89,24 +89,6 @@ extension ToyVM {
                 throw ValidationError("--kernel is required when no VM bundle is specified")
             }
 
-            let config = VZVirtualMachineConfiguration()
-
-            // Networking: --no-net disables; bundle or default enables
-            if !noNet && (bundleConfig?.network ?? true) {
-                let netDev = VZVirtioNetworkDeviceConfiguration()
-                netDev.attachment = VZNATNetworkDeviceAttachment()
-                config.networkDevices = [netDev]
-            }
-
-            let consoleCfg = VZVirtioConsoleDeviceSerialPortConfiguration()
-            consoleCfg.attachment = VZFileHandleSerialPortAttachment(
-                fileHandleForReading: .standardInput,
-                fileHandleForWriting: .standardOutput
-            )
-            config.serialPorts = [consoleCfg]
-
-            let bootLoader = VZLinuxBootLoader(kernelURL: URL(fileURLWithPath: effectiveKernelPath))
-
             let effectiveInitrd: String?
             if let i = initrd {
                 effectiveInitrd = i
@@ -115,77 +97,66 @@ extension ToyVM {
             } else {
                 effectiveInitrd = nil
             }
-            if let initrdPath = effectiveInitrd {
-                bootLoader.initialRamdiskURL = URL(fileURLWithPath: initrdPath)
-            }
 
-            bootLoader.commandLine = cmdline
+            let effectiveCmdline = cmdline
                 ?? bundleConfig.map { $0.kernelCommandLine.joined(separator: " ") }
                 ?? "console=hvc0"
-            config.bootLoader = bootLoader
 
-            config.cpuCount = cpus ?? bundleConfig?.cpus ?? 2
-            config.memorySize = UInt64(memory ?? bundleConfig?.memoryGB ?? 2) * 1024 * 1024 * 1024
-
-            // Storage: bundle disks first (paths resolved relative to active branch), then CLI disks.
-            // When --no-persist is set, each disk image is copy-on-write cloned and the clone
-            // is used instead of the original. Clones are deleted when the program exits.
-            var clonePaths: [String] = []
-            defer {
-                for p in clonePaths {
-                    try? FileManager.default.removeItem(atPath: p)
-                }
-            }
-
-            var storageDevices: [VZStorageDeviceConfiguration] = []
+            // Build disk list: bundle disks first, then CLI-specified disks
+            var diskPaths: [(url: URL, readOnly: Bool)] = []
             if let cfg = bundleConfig, let bURL = branchURL {
                 for d in cfg.disks {
-                    let diskPath = cfg.diskURL(in: bURL, disk: d).path
-                    let effectivePath = noPersist && !d.readOnly ? try cloneDiskImage(path: diskPath, clonePaths: &clonePaths) : diskPath
-                    storageDevices.append(try makeStorageDevice(path: effectivePath, readOnly: d.readOnly))
+                    diskPaths.append((url: cfg.diskURL(in: bURL, disk: d), readOnly: d.readOnly))
                 }
             }
             for path in disk {
-                let effectivePath = noPersist ? try cloneDiskImage(path: path, clonePaths: &clonePaths) : path
-                storageDevices.append(try makeStorageDevice(path: effectivePath, readOnly: false))
+                diskPaths.append((url: URL(fileURLWithPath: path), readOnly: false))
             }
             for path in diskRO {
-                storageDevices.append(try makeStorageDevice(path: path, readOnly: true))
+                diskPaths.append((url: URL(fileURLWithPath: path), readOnly: true))
             }
-            config.storageDevices = storageDevices
 
-            // Shares: bundle shares form the base (keyed by tag); CLI shares add or replace
-            var sharedDirs: [String: VZVirtioFileSystemDeviceConfiguration] = [:]
+            // Build share list: bundle shares form the base; CLI shares add or replace (keyed by tag)
+            var shareMap: [String: ShareConfig] = [:]
             if let cfg = bundleConfig {
                 for s in cfg.shares {
-                    sharedDirs[s.tag] = try makeShareDeviceFromConfig(s)
+                    shareMap[s.tag] = s
                 }
             }
             for arg in share {
-                let cfg = try makeShareDevice(arg: arg, readOnly: false)
-                sharedDirs[cfg.tag] = cfg
+                let (tag, path) = parseShareArg(arg)
+                shareMap[tag] = ShareConfig(tag: tag, path: path, readOnly: false)
             }
             for arg in shareRO {
-                let cfg = try makeShareDevice(arg: arg, readOnly: true)
-                sharedDirs[cfg.tag] = cfg
+                let (tag, path) = parseShareArg(arg)
+                shareMap[tag] = ShareConfig(tag: tag, path: path, readOnly: true)
             }
 
-            // Audio: --audio enables; bundle config also enables; neither means disabled
-            if audio || (bundleConfig?.audio ?? false) {
-                config.audioDevices = [makeSoundDevice()]
-            }
+            let ctx = try VirtualMachineBuilder.buildConfiguration(
+                kernelURL: URL(fileURLWithPath: effectiveKernelPath),
+                initrdURL: effectiveInitrd.map { URL(fileURLWithPath: $0) },
+                commandLine: effectiveCmdline,
+                cpuCount: cpus ?? bundleConfig?.cpus ?? 2,
+                memoryGB: memory ?? bundleConfig?.memoryGB ?? 2,
+                enableNetwork: !noNet && (bundleConfig?.network ?? true),
+                enableAudio: audio || (bundleConfig?.audio ?? false),
+                enableRosetta: enableRosetta || (bundleConfig?.rosetta ?? false),
+                diskPaths: diskPaths,
+                shares: Array(shareMap.values),
+                noPersist: noPersist
+            )
+            defer { ctx.cleanup() }
 
-            // Rosetta: --enable-rosetta enables; bundle config also enables
-            if enableRosetta || (bundleConfig?.rosetta ?? false) {
-                sharedDirs["rosetta"] = try makeRosettaShareDevice()
-            }
-
-            config.directorySharingDevices = Array(sharedDirs.values)
-
-            try config.validate()
+            // Attach the console serial port to stdin/stdout (CLI-specific)
+            let consoleCfg = VZVirtioConsoleDeviceSerialPortConfiguration()
+            consoleCfg.attachment = VZFileHandleSerialPortAttachment(
+                fileHandleForReading: .standardInput,
+                fileHandleForWriting: .standardOutput
+            )
+            ctx.configuration.serialPorts = [consoleCfg]
 
             let vmDelegate = ToyVMDelegate()
-            let vm = VZVirtualMachine(configuration: config)
+            let vm = VZVirtualMachine(configuration: ctx.configuration)
             vm.delegate = vmDelegate
             vm.start { result in
                 if case .failure(let error) = result {
@@ -207,71 +178,6 @@ extension ToyVM {
                 fputs("\(error.localizedDescription)\n", stderr)
                 throw ExitCode(1)
             }
-        }
-
-        private func cloneDiskImage(path: String, clonePaths: inout [String]) throws -> String {
-            let url = URL(fileURLWithPath: path)
-            let dir = url.deletingLastPathComponent()
-            let cloneName = ".\(url.lastPathComponent).toyvm-\(UUID().uuidString)"
-            let cloneURL = dir.appendingPathComponent(cloneName)
-            guard clonefile(url.path, cloneURL.path, 0) == 0 else {
-                throw ToyVMError("Failed to clone '\(url.lastPathComponent)': \(String(cString: strerror(errno)))")
-            }
-            clonePaths.append(cloneURL.path)
-            return cloneURL.path
-        }
-
-        private func makeStorageDevice(path: String, readOnly: Bool) throws -> VZVirtioBlockDeviceConfiguration {
-            let attachment = try VZDiskImageStorageDeviceAttachment(url: URL(fileURLWithPath: path), readOnly: readOnly)
-            return VZVirtioBlockDeviceConfiguration(attachment: attachment)
-        }
-
-        private func makeShareDevice(arg: String, readOnly: Bool) throws -> VZVirtioFileSystemDeviceConfiguration {
-            let tag: String
-            let path: String
-            if let colonIdx = arg.firstIndex(of: ":") {
-                tag = String(arg[arg.startIndex..<colonIdx])
-                path = String(arg[arg.index(after: colonIdx)...])
-            } else {
-                tag = "share"
-                path = arg
-            }
-            try VZVirtioFileSystemDeviceConfiguration.validateTag(tag)
-            let cfg = VZVirtioFileSystemDeviceConfiguration(tag: tag)
-            cfg.share = VZSingleDirectoryShare(directory: VZSharedDirectory(url: URL(fileURLWithPath: path), readOnly: readOnly))
-            return cfg
-        }
-
-        private func makeShareDeviceFromConfig(_ shareCfg: ShareConfig) throws -> VZVirtioFileSystemDeviceConfiguration {
-            try VZVirtioFileSystemDeviceConfiguration.validateTag(shareCfg.tag)
-            let cfg = VZVirtioFileSystemDeviceConfiguration(tag: shareCfg.tag)
-            cfg.share = VZSingleDirectoryShare(directory: VZSharedDirectory(url: URL(fileURLWithPath: shareCfg.path), readOnly: shareCfg.readOnly))
-            return cfg
-        }
-
-        private func makeSoundDevice() -> VZVirtioSoundDeviceConfiguration {
-            let cfg = VZVirtioSoundDeviceConfiguration()
-            let inputStream = VZVirtioSoundDeviceInputStreamConfiguration()
-            inputStream.source = VZHostAudioInputStreamSource()
-            let outputStream = VZVirtioSoundDeviceOutputStreamConfiguration()
-            outputStream.sink = VZHostAudioOutputStreamSink()
-            cfg.streams = [inputStream, outputStream]
-            return cfg
-        }
-
-        private func makeRosettaShareDevice() throws -> VZVirtioFileSystemDeviceConfiguration {
-            #if arch(arm64)
-            if #available(macOS 13.0, *) {
-                let share = try VZLinuxRosettaDirectoryShare()
-                let cfg = VZVirtioFileSystemDeviceConfiguration(tag: "rosetta")
-                cfg.share = share
-                return cfg
-            } else {
-                throw ToyVMError("--enable-rosetta requires macOS 13.0 or later")
-            }
-            #else
-            throw ToyVMError("--enable-rosetta requires an Apple Silicon processor")
-            #endif
         }
     }
 }
