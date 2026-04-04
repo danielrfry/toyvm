@@ -70,7 +70,7 @@ class VMManager {
             session?.forceStop()
         }
         sessions.removeValue(forKey: bundle.bundleURL)
-        try FileManager.default.removeItem(at: bundle.bundleURL)
+        NSWorkspace.shared.recycle([bundle.bundleURL])
         if selectedBundleURL == bundle.bundleURL {
             selectedBundleURL = nil
         }
