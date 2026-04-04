@@ -60,6 +60,9 @@ extension ToyVM {
         @Flag(name: .customLong("no-net"), help: "Do not add a virtual network interface")
         var noNet: Bool = false
 
+        @Flag(name: .customLong("no-persist"), help: "Use copy-on-write clones of disk images; originals are not modified")
+        var noPersist: Bool = false
+
         @Flag(name: .customLong("enable-rosetta"), help: "Enable the Rosetta directory share in the guest OS")
         var enableRosetta: Bool = false
 
@@ -124,15 +127,27 @@ extension ToyVM {
             config.cpuCount = cpus ?? bundleConfig?.cpus ?? 2
             config.memorySize = UInt64(memory ?? bundleConfig?.memoryGB ?? 2) * 1024 * 1024 * 1024
 
-            // Storage: bundle disks first (paths resolved relative to active branch), then CLI disks
+            // Storage: bundle disks first (paths resolved relative to active branch), then CLI disks.
+            // When --no-persist is set, each disk image is copy-on-write cloned and the clone
+            // is used instead of the original. Clones are deleted when the program exits.
+            var clonePaths: [String] = []
+            defer {
+                for p in clonePaths {
+                    try? FileManager.default.removeItem(atPath: p)
+                }
+            }
+
             var storageDevices: [VZStorageDeviceConfiguration] = []
             if let cfg = bundleConfig, let bURL = branchURL {
                 for d in cfg.disks {
-                    storageDevices.append(try makeStorageDevice(path: cfg.diskURL(in: bURL, disk: d).path, readOnly: d.readOnly))
+                    let diskPath = cfg.diskURL(in: bURL, disk: d).path
+                    let effectivePath = noPersist && !d.readOnly ? try cloneDiskImage(path: diskPath, clonePaths: &clonePaths) : diskPath
+                    storageDevices.append(try makeStorageDevice(path: effectivePath, readOnly: d.readOnly))
                 }
             }
             for path in disk {
-                storageDevices.append(try makeStorageDevice(path: path, readOnly: false))
+                let effectivePath = noPersist ? try cloneDiskImage(path: path, clonePaths: &clonePaths) : path
+                storageDevices.append(try makeStorageDevice(path: effectivePath, readOnly: false))
             }
             for path in diskRO {
                 storageDevices.append(try makeStorageDevice(path: path, readOnly: true))
@@ -192,6 +207,18 @@ extension ToyVM {
                 fputs("\(error.localizedDescription)\n", stderr)
                 throw ExitCode(1)
             }
+        }
+
+        private func cloneDiskImage(path: String, clonePaths: inout [String]) throws -> String {
+            let url = URL(fileURLWithPath: path)
+            let dir = url.deletingLastPathComponent()
+            let cloneName = ".\(url.lastPathComponent).toyvm-\(UUID().uuidString)"
+            let cloneURL = dir.appendingPathComponent(cloneName)
+            guard clonefile(url.path, cloneURL.path, 0) == 0 else {
+                throw ToyVMError("Failed to clone '\(url.lastPathComponent)': \(String(cString: strerror(errno)))")
+            }
+            clonePaths.append(cloneURL.path)
+            return cloneURL.path
         }
 
         private func makeStorageDevice(path: String, readOnly: Bool) throws -> VZVirtioBlockDeviceConfiguration {

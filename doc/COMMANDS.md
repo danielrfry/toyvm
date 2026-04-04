@@ -64,6 +64,7 @@ OPTIONS:
   -m, --memory <memory>     Memory in gigabytes
   -a, --audio               Enable virtual audio device
   --no-net                  Disable the virtual network interface
+  --no-persist              Use copy-on-write clones of disk images; originals are not modified
   --enable-rosetta          Enable the Rosetta directory share in the guest OS
   -h, --help                Show help information
 ```
