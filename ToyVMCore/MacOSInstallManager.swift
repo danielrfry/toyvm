@@ -65,10 +65,15 @@ public class MacOSInstallManager: @unchecked Sendable {
             machineIdentifier: machineIdentifier.dataRepresentation
         )
 
-        // 3. Create auxiliary storage
-        let auxStorageURL = bundle.auxiliaryStorageURL
-        let _ = try VZMacAuxiliaryStorage(
-            creatingStorageAt: auxStorageURL,
+        // Enforce minimum CPU/memory from restore image requirements
+        let minCPU = requirements.minimumSupportedCPUCount
+        let minMem = requirements.minimumSupportedMemorySize
+        let effectiveCPUs = max(bundle.config.cpus, minCPU)
+        let effectiveMemory = max(UInt64(bundle.config.memoryGB) * 1024 * 1024 * 1024, minMem)
+
+        // 3. Create auxiliary storage (keep the object — do NOT re-read from URL)
+        let auxStorage = try VZMacAuxiliaryStorage(
+            creatingStorageAt: bundle.auxiliaryStorageURL,
             hardwareModel: hardwareModel,
             options: [.allowOverwrite]
         )
@@ -81,9 +86,9 @@ public class MacOSInstallManager: @unchecked Sendable {
         let ctx = try VirtualMachineBuilder.buildMacOSConfiguration(
             hardwareModelData: hardwareModel.dataRepresentation,
             machineIdentifierData: machineIdentifier.dataRepresentation,
-            auxiliaryStorageURL: auxStorageURL,
-            cpuCount: bundle.config.cpus,
-            memoryGB: bundle.config.memoryGB,
+            auxiliaryStorage: auxStorage,
+            cpuCount: effectiveCPUs,
+            memoryGB: Int(effectiveMemory / (1024 * 1024 * 1024)),
             enableNetwork: bundle.config.network,
             enableAudio: bundle.config.audio,
             diskPaths: diskPaths,

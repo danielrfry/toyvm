@@ -95,6 +95,7 @@ public enum VirtualMachineBuilder {
             let hardwareModelData = try Data(contentsOf: config.hardwareModelURL(in: branchURL))
             let machineIdentifierData = try Data(contentsOf: config.machineIdentifierURL(in: branchURL))
             let auxStorageURL = config.auxiliaryStorageURL(in: branchURL)
+            let auxStorage = VZMacAuxiliaryStorage(contentsOf: auxStorageURL)
 
             let diskPaths = config.disks.map { disk in
                 (url: config.diskURL(in: branchURL, disk: disk), readOnly: disk.readOnly)
@@ -103,7 +104,7 @@ public enum VirtualMachineBuilder {
             return try buildMacOSConfiguration(
                 hardwareModelData: hardwareModelData,
                 machineIdentifierData: machineIdentifierData,
-                auxiliaryStorageURL: auxStorageURL,
+                auxiliaryStorage: auxStorage,
                 cpuCount: config.cpus,
                 memoryGB: config.memoryGB,
                 enableNetwork: config.network,
@@ -288,12 +289,16 @@ public enum VirtualMachineBuilder {
     // MARK: - macOS boot entry point
 
     /// Build a macOS guest configuration (Apple Silicon only).
+    ///
+    /// - Parameter auxiliaryStorage: A pre-created `VZMacAuxiliaryStorage`. For initial
+    ///   installation, pass the object returned by `VZMacAuxiliaryStorage(creatingStorageAt:…)`.
+    ///   For subsequent boots, pass `VZMacAuxiliaryStorage(contentsOf:)`.
     #if arch(arm64)
     @available(macOS 13.0, *)
     public static func buildMacOSConfiguration(
         hardwareModelData: Data,
         machineIdentifierData: Data,
-        auxiliaryStorageURL: URL,
+        auxiliaryStorage: VZMacAuxiliaryStorage,
         cpuCount: Int = 2,
         memoryGB: Int = 4,
         enableNetwork: Bool = true,
@@ -321,7 +326,7 @@ public enum VirtualMachineBuilder {
         let platform = VZMacPlatformConfiguration()
         platform.hardwareModel = hardwareModel
         platform.machineIdentifier = machineIdentifier
-        platform.auxiliaryStorage = VZMacAuxiliaryStorage(contentsOf: auxiliaryStorageURL)
+        platform.auxiliaryStorage = auxiliaryStorage
         vzConfig.platform = platform
 
         // CPU & memory
