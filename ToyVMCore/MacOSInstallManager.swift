@@ -96,23 +96,10 @@ public class MacOSInstallManager: @unchecked Sendable {
             usbDisks: bundle.config.usbDisks
         )
 
-        // 5. Start the VM
-        let vm = VZVirtualMachine(configuration: ctx.configuration)
-
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            vm.start { result in
-                switch result {
-                case .success:
-                    continuation.resume()
-                case .failure(let error):
-                    continuation.resume(throwing: error)
-                }
-            }
-        }
-
-        // 6. Install macOS
+        // 5. Install macOS
         state = .installing
 
+        let vm = VZVirtualMachine(configuration: ctx.configuration)
         let installer = VZMacOSInstaller(virtualMachine: vm, restoringFromImageAt: restoreImageURL)
 
         progressObservation = installer.progress.observe(\.fractionCompleted) { [weak self] progress, _ in
@@ -133,16 +120,6 @@ public class MacOSInstallManager: @unchecked Sendable {
         }
 
         progressObservation = nil
-
-        // 7. Stop the VM
-        if vm.canRequestStop {
-            try vm.requestStop()
-        }
-        // Give it a moment to stop gracefully
-        try? await Task.sleep(nanoseconds: 2_000_000_000)
-        if vm.state != .stopped {
-            try await vm.stop()
-        }
 
         state = .completed
         installProgress = 1.0
