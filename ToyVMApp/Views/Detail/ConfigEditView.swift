@@ -21,7 +21,6 @@ struct ConfigEditView: View {
     @State private var kernelCommandLine: String
     @State private var bootMode: BootMode
     @State private var usbDisks: [USBDiskConfig]
-    @State private var automaticDisplayResize: Bool
     @State private var errorMessage: String?
 
     init(session: VMSession) {
@@ -35,7 +34,6 @@ struct ConfigEditView: View {
         _kernelCommandLine = State(initialValue: config.kernelCommandLine.joined(separator: " "))
         _bootMode = State(initialValue: config.bootMode)
         _usbDisks = State(initialValue: config.usbDisks)
-        _automaticDisplayResize = State(initialValue: config.automaticDisplayResize)
     }
 
     var body: some View {
@@ -52,11 +50,6 @@ struct ConfigEditView: View {
                     #if arch(arm64)
                     Toggle("Rosetta", isOn: $rosetta)
                     #endif
-                }
-
-                Section("Display") {
-                    Toggle("Automatic Resize", isOn: $automaticDisplayResize)
-                        .help("Automatically reconfigure guest display resolution when window is resized")
                 }
 
                 Section("Boot") {
@@ -161,7 +154,6 @@ struct ConfigEditView: View {
             session.bundle.config.rosetta = rosetta
             session.bundle.config.bootMode = bootMode
             session.bundle.config.usbDisks = usbDisks
-            session.bundle.config.automaticDisplayResize = automaticDisplayResize
 
             if bootMode == .linux {
                 let args = kernelCommandLine.trimmingCharacters(in: .whitespacesAndNewlines)

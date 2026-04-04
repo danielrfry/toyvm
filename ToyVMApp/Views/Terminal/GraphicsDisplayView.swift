@@ -17,13 +17,13 @@ struct GraphicsDisplayView: NSViewRepresentable {
     func makeNSView(context: Context) -> VZVirtualMachineView {
         let view = VZVirtualMachineView()
         view.capturesSystemKeys = true
-        view.automaticallyReconfiguresDisplay = session.bundle.config.automaticDisplayResize
+        view.automaticallyReconfiguresDisplay = session.automaticDisplayResize
         view.virtualMachine = session.runner?.virtualMachine
         return view
     }
 
     func updateNSView(_ nsView: VZVirtualMachineView, context: Context) {
         nsView.virtualMachine = session.runner?.virtualMachine
-        nsView.automaticallyReconfiguresDisplay = session.bundle.config.automaticDisplayResize
+        nsView.automaticallyReconfiguresDisplay = session.automaticDisplayResize
     }
 }

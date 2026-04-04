@@ -23,6 +23,7 @@ class VMSession {
     var runner: VMRunner?
     var displayMode: DisplayMode = .terminal
     var errorMessage: String?
+    var automaticDisplayResize: Bool = true
 
     /// Pipe pair connecting the VM serial port to the terminal emulator.
     /// inputPipe: terminal writes → VM reads
