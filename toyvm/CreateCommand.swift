@@ -189,6 +189,8 @@ extension ToyVM {
                         fputs("\rInstalling macOS... 100%\n", stderr)
                         print("macOS installation complete.")
                     } catch {
+                        // Delete the partially-initialized bundle
+                        try? FileManager.default.removeItem(at: bundleURL)
                         progressTask.cancel()
                         fputs("\n", stderr)
                         throw error

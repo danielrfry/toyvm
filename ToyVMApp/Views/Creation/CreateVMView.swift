@@ -297,6 +297,8 @@ struct CreateVMView: View {
                         manager.selectedBundleURL = bundle.bundleURL
                         dismiss()
                     } catch {
+                        // Delete the partially-initialized bundle
+                        try? FileManager.default.removeItem(at: bundleURL)
                         errorMessage = error.localizedDescription
                         isInstalling = false
                         isCreating = false
