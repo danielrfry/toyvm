@@ -78,6 +78,8 @@ struct VMDetailView: View {
             }
         }
         .navigationTitle(VMManager.displayName(for: session.bundle))
+        .toolbar(shouldShowDisplay ? .hidden : .visible, for: .windowToolbar)
+        .persistentSystemOverlays(shouldShowDisplay ? .hidden : .automatic)
         .sheet(isPresented: $showConfigEditor) {
             ConfigEditView(session: session)
         }
