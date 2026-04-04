@@ -43,6 +43,7 @@
 		80B187595613483FAE730017 /* TerminalDisplayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F732627BD9894C7FAC63A787 /* TerminalDisplayView.swift */; };
 		2D8BA0A8ECF546A7BAD31461 /* VMDisplayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 011BC10F27564173BD3A8F5E /* VMDisplayView.swift */; };
 		A3F1B72C8D4E49E2B1C5D906 /* GraphicsDisplayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E2C41DA3B5F4A8D9F0E6B23 /* GraphicsDisplayView.swift */; };
+		A1B2C3D4E5F60718FF002200 /* FullScreenObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718FF001100 /* FullScreenObserver.swift */; };
 		D1A2B3C4E5F6071899001122 /* RestoreImageManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1A2B3C4E5F60718AABB1122 /* RestoreImageManager.swift */; };
 		D1A2B3C4E5F6071899002233 /* MacOSInstallManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1A2B3C4E5F60718AABB2233 /* MacOSInstallManager.swift */; };
 		D1A2B3C4E5F6071899003344 /* InstallationProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1A2B3C4E5F60718AABB3344 /* InstallationProgressView.swift */; };
@@ -101,6 +102,7 @@
 		D1A2B3C4E5F60718AABB1122 /* RestoreImageManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RestoreImageManager.swift; sourceTree = "<group>"; };
 		D1A2B3C4E5F60718AABB2233 /* MacOSInstallManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacOSInstallManager.swift; sourceTree = "<group>"; };
 		D1A2B3C4E5F60718AABB3344 /* InstallationProgressView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstallationProgressView.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F60718FF001100 /* FullScreenObserver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullScreenObserver.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -202,6 +204,7 @@
 			isa = PBXGroup;
 			children = (
 				C3ABAB81DB2F47B1B742EC22 /* ContentView.swift */,
+				A1B2C3D4E5F60718FF001100 /* FullScreenObserver.swift */,
 				4BA9F342E5E4486D88096802 /* Sidebar */,
 				6A762C8CDDC54C99A9BB5B6E /* Detail */,
 				3A72C9481450469782166E38 /* Creation */,
@@ -390,6 +393,7 @@
 				80B187595613483FAE730017 /* TerminalDisplayView.swift in Sources */,
 				2D8BA0A8ECF546A7BAD31461 /* VMDisplayView.swift in Sources */,
 				A3F1B72C8D4E49E2B1C5D906 /* GraphicsDisplayView.swift in Sources */,
+				A1B2C3D4E5F60718FF002200 /* FullScreenObserver.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
