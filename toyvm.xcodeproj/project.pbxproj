@@ -22,6 +22,28 @@
 		0A6D3961128C4313B69503ED /* DiskInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B581B75888C46F4B4167CB6 /* DiskInfo.swift */; };
 		5DF7BE6F40124794B31F1249 /* VMBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA6988AF37714E4DA0B95480 /* VMBundle.swift */; };
 		FC2B71D4FC084E858EC3DFF2 /* ToyVM.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E8C366362A341E7B9E094FB /* ToyVM.swift */; };
+		0BA4567B9C264081AC780741 /* VirtualMachineBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA50BB52BE7F43069CA0500D /* VirtualMachineBuilder.swift */; };
+		B7B8573279874A2CB425B36F /* VMRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8959977523246329860D3E6 /* VMRunner.swift */; };
+		233496F521F64DE7A7CD4291 /* VirtualMachineBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA50BB52BE7F43069CA0500D /* VirtualMachineBuilder.swift */; };
+		F9938EC2F4554FD29347F09A /* VMRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8959977523246329860D3E6 /* VMRunner.swift */; };
+		B0C76950D28D45CD8704FD86 /* VMConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37D4731B2F6624570027142F /* VMConfig.swift */; };
+		F9F14730DA8E4599A0806B9C /* BundleMeta.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0679C9A064AC41E1B592BD32 /* BundleMeta.swift */; };
+		CBF9AEAC1C284589A95D5BB8 /* ToyVMError.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC84BC0415CD401FBC2CE0DE /* ToyVMError.swift */; };
+		67951160F3EA4AD1A6359EEF /* DiskInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B581B75888C46F4B4167CB6 /* DiskInfo.swift */; };
+		075D5CB3F6B5427F8953D31A /* VMBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA6988AF37714E4DA0B95480 /* VMBundle.swift */; };
+		E51DDF9C282A4E078ABF8BF9 /* ToyVMAppMain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EB7F69F56EC4013B4B035B8 /* ToyVMAppMain.swift */; };
+		2B42DD60985348AFA4B53C67 /* VMManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8D41930EC264718B3B0359C /* VMManager.swift */; };
+		BDC22BC1D54C4F909776175D /* VMSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0648272BD9FF4C15A0AC3B9B /* VMSession.swift */; };
+		C5E09C66F4914339A11103C3 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3ABAB81DB2F47B1B742EC22 /* ContentView.swift */; };
+		639BE3B6449A46B78D8D1D2A /* VMListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 802C8B62A9B8416580C09547 /* VMListView.swift */; };
+		101F0627D17C41479B2F0889 /* VMRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 377D19C7491A4F449C5C298B /* VMRowView.swift */; };
+		E0D586A128B348DC91FA74F8 /* VMDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F47309864A54484B8B0A1D4 /* VMDetailView.swift */; };
+		B6209A8EA2CE4A88AA6A4838 /* ConfigEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7EAF14B5D7B45D580CF1606 /* ConfigEditView.swift */; };
+		1905E70B0A9543FF8F98D8AA /* CreateVMView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56AE1426445B43F38113383F /* CreateVMView.swift */; };
+		80B187595613483FAE730017 /* TerminalDisplayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F732627BD9894C7FAC63A787 /* TerminalDisplayView.swift */; };
+		2D8BA0A8ECF546A7BAD31461 /* VMDisplayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 011BC10F27564173BD3A8F5E /* VMDisplayView.swift */; };
+		76DAFDA9DF524638B003BFEE /* Virtualization.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 375A3A9625684A8300EEB67A /* Virtualization.framework */; };
+		E986140149F94A68A1A984EC /* SwiftTerm in Frameworks */ = {isa = PBXBuildFile; productRef = 7B2403EB1B6E48D4BA52D628 /* SwiftTerm */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -54,6 +76,21 @@
 		A3B8843591644736A193283A /* ToyVMDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToyVMDelegate.swift; sourceTree = "<group>"; };
 		DA6988AF37714E4DA0B95480 /* VMBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VMBundle.swift; sourceTree = "<group>"; };
 		EC84BC0415CD401FBC2CE0DE /* ToyVMError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToyVMError.swift; sourceTree = "<group>"; };
+		AA50BB52BE7F43069CA0500D /* VirtualMachineBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VirtualMachineBuilder.swift; sourceTree = "<group>"; };
+		E8959977523246329860D3E6 /* VMRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VMRunner.swift; sourceTree = "<group>"; };
+		9F425FD4421741C7BABED13B /* ToyVMApp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ToyVMApp.entitlements; sourceTree = "<group>"; };
+		83F6C318D52C4A46A035A1D6 /* ToyVMApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ToyVMApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		0EB7F69F56EC4013B4B035B8 /* ToyVMAppMain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToyVMAppMain.swift; sourceTree = "<group>"; };
+		C8D41930EC264718B3B0359C /* VMManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VMManager.swift; sourceTree = "<group>"; };
+		0648272BD9FF4C15A0AC3B9B /* VMSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VMSession.swift; sourceTree = "<group>"; };
+		C3ABAB81DB2F47B1B742EC22 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		802C8B62A9B8416580C09547 /* VMListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VMListView.swift; sourceTree = "<group>"; };
+		377D19C7491A4F449C5C298B /* VMRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VMRowView.swift; sourceTree = "<group>"; };
+		5F47309864A54484B8B0A1D4 /* VMDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VMDetailView.swift; sourceTree = "<group>"; };
+		F7EAF14B5D7B45D580CF1606 /* ConfigEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigEditView.swift; sourceTree = "<group>"; };
+		56AE1426445B43F38113383F /* CreateVMView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateVMView.swift; sourceTree = "<group>"; };
+		F732627BD9894C7FAC63A787 /* TerminalDisplayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalDisplayView.swift; sourceTree = "<group>"; };
+		011BC10F27564173BD3A8F5E /* VMDisplayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VMDisplayView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -66,6 +103,15 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		CF73B696400B4869992765E4 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				76DAFDA9DF524638B003BFEE /* Virtualization.framework in Frameworks */,
+				E986140149F94A68A1A984EC /* SwiftTerm in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -74,8 +120,10 @@
 			children = (
 				379F73F5257405E1008AAEB7 /* README.md */,
 				375A3A9B2568500400EEB67A /* toyvm.entitlements */,
+				9F425FD4421741C7BABED13B /* ToyVMApp.entitlements */,
 				5EE4A16A05ED44D2B4895ADF /* ToyVMCore */,
 				375A3A8C25684A5E00EEB67A /* toyvm */,
+				1FCA69CF5E6645948FA748F1 /* ToyVMApp */,
 				375A3A8B25684A5E00EEB67A /* Products */,
 				375A3A9525684A8300EEB67A /* Frameworks */,
 			);
@@ -85,6 +133,7 @@
 			isa = PBXGroup;
 			children = (
 				375A3A8A25684A5E00EEB67A /* toyvm */,
+				83F6C318D52C4A46A035A1D6 /* ToyVMApp.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -120,8 +169,68 @@
 				0679C9A064AC41E1B592BD32 /* BundleMeta.swift */,
 				9B581B75888C46F4B4167CB6 /* DiskInfo.swift */,
 				DA6988AF37714E4DA0B95480 /* VMBundle.swift */,
+				AA50BB52BE7F43069CA0500D /* VirtualMachineBuilder.swift */,
+				E8959977523246329860D3E6 /* VMRunner.swift */,
 			);
 			path = ToyVMCore;
+			sourceTree = "<group>";
+		};
+		1FCA69CF5E6645948FA748F1 /* ToyVMApp */ = {
+			isa = PBXGroup;
+			children = (
+				0EB7F69F56EC4013B4B035B8 /* ToyVMAppMain.swift */,
+				C8D41930EC264718B3B0359C /* VMManager.swift */,
+				0648272BD9FF4C15A0AC3B9B /* VMSession.swift */,
+				3DC7FFE08E4B4682ABF6A4FF /* Views */,
+			);
+			path = ToyVMApp;
+			sourceTree = "<group>";
+		};
+		3DC7FFE08E4B4682ABF6A4FF /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				C3ABAB81DB2F47B1B742EC22 /* ContentView.swift */,
+				4BA9F342E5E4486D88096802 /* Sidebar */,
+				6A762C8CDDC54C99A9BB5B6E /* Detail */,
+				3A72C9481450469782166E38 /* Creation */,
+				26EB92D1142D48CB98A9B134 /* Terminal */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		4BA9F342E5E4486D88096802 /* Sidebar */ = {
+			isa = PBXGroup;
+			children = (
+				802C8B62A9B8416580C09547 /* VMListView.swift */,
+				377D19C7491A4F449C5C298B /* VMRowView.swift */,
+			);
+			path = Sidebar;
+			sourceTree = "<group>";
+		};
+		6A762C8CDDC54C99A9BB5B6E /* Detail */ = {
+			isa = PBXGroup;
+			children = (
+				5F47309864A54484B8B0A1D4 /* VMDetailView.swift */,
+				F7EAF14B5D7B45D580CF1606 /* ConfigEditView.swift */,
+			);
+			path = Detail;
+			sourceTree = "<group>";
+		};
+		3A72C9481450469782166E38 /* Creation */ = {
+			isa = PBXGroup;
+			children = (
+				56AE1426445B43F38113383F /* CreateVMView.swift */,
+			);
+			path = Creation;
+			sourceTree = "<group>";
+		};
+		26EB92D1142D48CB98A9B134 /* Terminal */ = {
+			isa = PBXGroup;
+			children = (
+				F732627BD9894C7FAC63A787 /* TerminalDisplayView.swift */,
+				011BC10F27564173BD3A8F5E /* VMDisplayView.swift */,
+			);
+			path = Terminal;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -147,6 +256,26 @@
 			productReference = 375A3A8A25684A5E00EEB67A /* toyvm */;
 			productType = "com.apple.product-type.tool";
 		};
+		D39A425096F045A4A37F4333 /* ToyVMApp */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D8B745433C2B464D9A6A1C1A /* Build configuration list for PBXNativeTarget "ToyVMApp" */;
+			buildPhases = (
+				FB5E138E69914E1C9EB6D3F3 /* Sources */,
+				CF73B696400B4869992765E4 /* Frameworks */,
+				64A94E47ECFA48819146DF1F /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = ToyVMApp;
+			packageProductDependencies = (
+				7B2403EB1B6E48D4BA52D628 /* SwiftTerm */,
+			);
+			productName = ToyVMApp;
+			productReference = 83F6C318D52C4A46A035A1D6 /* ToyVMApp.app */;
+			productType = "com.apple.product-type.application";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -157,6 +286,9 @@
 				TargetAttributes = {
 					375A3A8925684A5E00EEB67A = {
 						CreatedOnToolsVersion = 12.2;
+					};
+					D39A425096F045A4A37F4333 = {
+						CreatedOnToolsVersion = 15.0;
 					};
 				};
 			};
@@ -171,15 +303,27 @@
 			mainGroup = 375A3A8125684A5E00EEB67A;
 			packageReferences = (
 				FA327C6280C4413BA5488472 /* XCRemoteSwiftPackageReference "swift-argument-parser" */,
+				6998D6D056A44E97B15999AD /* XCRemoteSwiftPackageReference "SwiftTerm" */,
 			);
 			productRefGroup = 375A3A8B25684A5E00EEB67A /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
 				375A3A8925684A5E00EEB67A /* toyvm */,
+				D39A425096F045A4A37F4333 /* ToyVMApp */,
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		64A94E47ECFA48819146DF1F /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		375A3A8625684A5E00EEB67A /* Sources */ = {
@@ -199,6 +343,33 @@
 				EFD59A1396214B25871BC8F3 /* ToyVMError.swift in Sources */,
 				0A6D3961128C4313B69503ED /* DiskInfo.swift in Sources */,
 				5DF7BE6F40124794B31F1249 /* VMBundle.swift in Sources */,
+				0BA4567B9C264081AC780741 /* VirtualMachineBuilder.swift in Sources */,
+				B7B8573279874A2CB425B36F /* VMRunner.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FB5E138E69914E1C9EB6D3F3 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CBF9AEAC1C284589A95D5BB8 /* ToyVMError.swift in Sources */,
+				B0C76950D28D45CD8704FD86 /* VMConfig.swift in Sources */,
+				F9F14730DA8E4599A0806B9C /* BundleMeta.swift in Sources */,
+				67951160F3EA4AD1A6359EEF /* DiskInfo.swift in Sources */,
+				075D5CB3F6B5427F8953D31A /* VMBundle.swift in Sources */,
+				233496F521F64DE7A7CD4291 /* VirtualMachineBuilder.swift in Sources */,
+				F9938EC2F4554FD29347F09A /* VMRunner.swift in Sources */,
+				E51DDF9C282A4E078ABF8BF9 /* ToyVMAppMain.swift in Sources */,
+				2B42DD60985348AFA4B53C67 /* VMManager.swift in Sources */,
+				BDC22BC1D54C4F909776175D /* VMSession.swift in Sources */,
+				C5E09C66F4914339A11103C3 /* ContentView.swift in Sources */,
+				639BE3B6449A46B78D8D1D2A /* VMListView.swift in Sources */,
+				101F0627D17C41479B2F0889 /* VMRowView.swift in Sources */,
+				E0D586A128B348DC91FA74F8 /* VMDetailView.swift in Sources */,
+				B6209A8EA2CE4A88AA6A4838 /* ConfigEditView.swift in Sources */,
+				1905E70B0A9543FF8F98D8AA /* CreateVMView.swift in Sources */,
+				80B187595613483FAE730017 /* TerminalDisplayView.swift in Sources */,
+				2D8BA0A8ECF546A7BAD31461 /* VMDisplayView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -342,6 +513,52 @@
 			};
 			name = Release;
 		};
+		C73CEFC3157C45F58AB3C112 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = ToyVMApp.entitlements;
+				CODE_SIGN_IDENTITY = "-";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEAD_CODE_STRIPPING = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSMainStoryboardFile = "";
+				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.toyvm.ToyVMApp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		489DB103F15C47679A21E375 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = ToyVMApp.entitlements;
+				CODE_SIGN_IDENTITY = "-";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEAD_CODE_STRIPPING = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSMainStoryboardFile = "";
+				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.toyvm.ToyVMApp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -363,6 +580,15 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+		D8B745433C2B464D9A6A1C1A /* Build configuration list for PBXNativeTarget "ToyVMApp" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C73CEFC3157C45F58AB3C112 /* Debug */,
+				489DB103F15C47679A21E375 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
@@ -374,6 +600,14 @@
 				minimumVersion = 1.3.0;
 			};
 		};
+		6998D6D056A44E97B15999AD /* XCRemoteSwiftPackageReference "SwiftTerm" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/migueldeicaza/SwiftTerm";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.13.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -381,6 +615,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = FA327C6280C4413BA5488472 /* XCRemoteSwiftPackageReference "swift-argument-parser" */;
 			productName = ArgumentParser;
+		};
+		7B2403EB1B6E48D4BA52D628 /* SwiftTerm */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 6998D6D056A44E97B15999AD /* XCRemoteSwiftPackageReference "SwiftTerm" */;
+			productName = SwiftTerm;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

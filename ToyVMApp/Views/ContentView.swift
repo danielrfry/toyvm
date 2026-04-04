@@ -4,7 +4,9 @@
 //
 
 import SwiftUI
+#if canImport(ToyVMCore)
 import ToyVMCore
+#endif
 
 @available(macOS 14.0, *)
 struct ContentView: View {

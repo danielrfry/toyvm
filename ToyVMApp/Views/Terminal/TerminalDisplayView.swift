@@ -5,7 +5,9 @@
 
 import SwiftUI
 import SwiftTerm
+#if canImport(ToyVMCore)
 import ToyVMCore
+#endif
 
 /// Wraps SwiftTerm's `TerminalView` (AppKit NSView) for use in SwiftUI.
 /// Connects to a VMSession's serial port pipe pair for bidirectional I/O.

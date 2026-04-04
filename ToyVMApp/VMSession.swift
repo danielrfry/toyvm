@@ -5,7 +5,9 @@
 
 import Foundation
 import Virtualization
+#if canImport(ToyVMCore)
 import ToyVMCore
+#endif
 
 /// Represents the runtime state of a single VM, including its runner,
 /// serial port pipes, and display mode.

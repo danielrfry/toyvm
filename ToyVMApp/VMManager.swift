@@ -5,7 +5,9 @@
 
 import Foundation
 import SwiftUI
+#if canImport(ToyVMCore)
 import ToyVMCore
+#endif
 
 /// Discovers and manages VM bundles stored in ~/.toyvm.
 @available(macOS 14.0, *)
