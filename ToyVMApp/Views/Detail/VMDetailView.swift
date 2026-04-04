@@ -22,9 +22,19 @@ struct VMDetailView: View {
         session.runner?.state ?? .stopped
     }
 
+    /// Whether to show the VM display (running or stopping).
+    private var shouldShowDisplay: Bool {
+        switch runnerState {
+        case .starting, .running, .stopping:
+            return true
+        default:
+            return false
+        }
+    }
+
     var body: some View {
         VStack(spacing: 0) {
-            if isRunning {
+            if shouldShowDisplay {
                 VMDisplayView(session: session)
             } else {
                 configSummary
