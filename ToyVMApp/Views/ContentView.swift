@@ -12,22 +12,8 @@ import ToyVMCore
 struct ContentView: View {
     @Bindable var manager: VMManager
 
-    private var vmIsRunningOrStopping: Bool {
-        guard let url = manager.selectedBundleURL,
-              let bundle = manager.bundles.first(where: { $0.bundleURL == url }),
-              let session = manager.sessions[bundle.bundleURL] else {
-            return false
-        }
-        switch session.runner?.state {
-        case .starting, .running, .stopping:
-            return true
-        default:
-            return false
-        }
-    }
-
     var body: some View {
-        NavigationSplitView(columnVisibility: .constant(vmIsRunningOrStopping ? .detailOnly : .all)) {
+        NavigationSplitView {
             VMListView(manager: manager)
         } detail: {
             if let url = manager.selectedBundleURL,
