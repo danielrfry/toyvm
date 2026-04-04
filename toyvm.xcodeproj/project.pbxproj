@@ -43,6 +43,11 @@
 		80B187595613483FAE730017 /* TerminalDisplayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F732627BD9894C7FAC63A787 /* TerminalDisplayView.swift */; };
 		2D8BA0A8ECF546A7BAD31461 /* VMDisplayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 011BC10F27564173BD3A8F5E /* VMDisplayView.swift */; };
 		A3F1B72C8D4E49E2B1C5D906 /* GraphicsDisplayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E2C41DA3B5F4A8D9F0E6B23 /* GraphicsDisplayView.swift */; };
+		D1A2B3C4E5F6071899001122 /* RestoreImageManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1A2B3C4E5F60718AABB1122 /* RestoreImageManager.swift */; };
+		D1A2B3C4E5F6071899002233 /* MacOSInstallManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1A2B3C4E5F60718AABB2233 /* MacOSInstallManager.swift */; };
+		D1A2B3C4E5F6071899003344 /* InstallationProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1A2B3C4E5F60718AABB3344 /* InstallationProgressView.swift */; };
+		D1A2B3C4E5F60718CC001122 /* RestoreImageManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1A2B3C4E5F60718AABB1122 /* RestoreImageManager.swift */; };
+		D1A2B3C4E5F60718CC002233 /* MacOSInstallManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1A2B3C4E5F60718AABB2233 /* MacOSInstallManager.swift */; };
 		76DAFDA9DF524638B003BFEE /* Virtualization.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 375A3A9625684A8300EEB67A /* Virtualization.framework */; };
 		E986140149F94A68A1A984EC /* SwiftTerm in Frameworks */ = {isa = PBXBuildFile; productRef = 7B2403EB1B6E48D4BA52D628 /* SwiftTerm */; };
 /* End PBXBuildFile section */
@@ -93,6 +98,9 @@
 		F732627BD9894C7FAC63A787 /* TerminalDisplayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalDisplayView.swift; sourceTree = "<group>"; };
 		011BC10F27564173BD3A8F5E /* VMDisplayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VMDisplayView.swift; sourceTree = "<group>"; };
 		7E2C41DA3B5F4A8D9F0E6B23 /* GraphicsDisplayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GraphicsDisplayView.swift; sourceTree = "<group>"; };
+		D1A2B3C4E5F60718AABB1122 /* RestoreImageManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RestoreImageManager.swift; sourceTree = "<group>"; };
+		D1A2B3C4E5F60718AABB2233 /* MacOSInstallManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacOSInstallManager.swift; sourceTree = "<group>"; };
+		D1A2B3C4E5F60718AABB3344 /* InstallationProgressView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstallationProgressView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -173,6 +181,8 @@
 				DA6988AF37714E4DA0B95480 /* VMBundle.swift */,
 				AA50BB52BE7F43069CA0500D /* VirtualMachineBuilder.swift */,
 				E8959977523246329860D3E6 /* VMRunner.swift */,
+				D1A2B3C4E5F60718AABB1122 /* RestoreImageManager.swift */,
+				D1A2B3C4E5F60718AABB2233 /* MacOSInstallManager.swift */,
 			);
 			path = ToyVMCore;
 			sourceTree = "<group>";
@@ -222,6 +232,7 @@
 			isa = PBXGroup;
 			children = (
 				56AE1426445B43F38113383F /* CreateVMView.swift */,
+				D1A2B3C4E5F60718AABB3344 /* InstallationProgressView.swift */,
 			);
 			path = Creation;
 			sourceTree = "<group>";
@@ -348,6 +359,8 @@
 				5DF7BE6F40124794B31F1249 /* VMBundle.swift in Sources */,
 				0BA4567B9C264081AC780741 /* VirtualMachineBuilder.swift in Sources */,
 				B7B8573279874A2CB425B36F /* VMRunner.swift in Sources */,
+				D1A2B3C4E5F60718CC001122 /* RestoreImageManager.swift in Sources */,
+				D1A2B3C4E5F60718CC002233 /* MacOSInstallManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -362,6 +375,8 @@
 				075D5CB3F6B5427F8953D31A /* VMBundle.swift in Sources */,
 				233496F521F64DE7A7CD4291 /* VirtualMachineBuilder.swift in Sources */,
 				F9938EC2F4554FD29347F09A /* VMRunner.swift in Sources */,
+				D1A2B3C4E5F6071899001122 /* RestoreImageManager.swift in Sources */,
+				D1A2B3C4E5F6071899002233 /* MacOSInstallManager.swift in Sources */,
 				E51DDF9C282A4E078ABF8BF9 /* ToyVMAppMain.swift in Sources */,
 				2B42DD60985348AFA4B53C67 /* VMManager.swift in Sources */,
 				BDC22BC1D54C4F909776175D /* VMSession.swift in Sources */,
@@ -371,6 +386,7 @@
 				E0D586A128B348DC91FA74F8 /* VMDetailView.swift in Sources */,
 				B6209A8EA2CE4A88AA6A4838 /* ConfigEditView.swift in Sources */,
 				1905E70B0A9543FF8F98D8AA /* CreateVMView.swift in Sources */,
+				D1A2B3C4E5F6071899003344 /* InstallationProgressView.swift in Sources */,
 				80B187595613483FAE730017 /* TerminalDisplayView.swift in Sources */,
 				2D8BA0A8ECF546A7BAD31461 /* VMDisplayView.swift in Sources */,
 				A3F1B72C8D4E49E2B1C5D906 /* GraphicsDisplayView.swift in Sources */,

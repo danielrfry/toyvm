@@ -11,7 +11,7 @@ import ToyVMCore
 import Virtualization
 
 extension ToyVM {
-    struct CreateCommand: ParsableCommand {
+    struct CreateCommand: AsyncParsableCommand {
         static let configuration = CommandConfiguration(
             commandName: "create",
             abstract: "Create a VM bundle",
@@ -28,6 +28,12 @@ extension ToyVM {
 
         @Flag(name: .customLong("efi"), help: "Use EFI boot mode (for graphical Linux VMs)")
         var efi: Bool = false
+
+        @Flag(name: .customLong("macos"), help: "Create a macOS VM (Apple Silicon only)")
+        var macos: Bool = false
+
+        @Option(name: .customLong("restore-image"), help: "Path to macOS restore image (.ipsw) for --macos")
+        var restoreImage: String? = nil
 
         @Option(name: [.customShort("k"), .long], help: "Path to the kernel image to copy into the bundle [required for Linux mode]")
         var kernel: String? = nil
@@ -71,11 +77,34 @@ extension ToyVM {
         @Argument(help: "Kernel command line (default: console=hvc0)")
         var kernelCommandLine: [String] = []
 
-        mutating func run() throws {
+        mutating func validate() throws {
+            if efi && macos {
+                throw ValidationError("--efi and --macos are mutually exclusive")
+            }
+            if macos {
+                #if !arch(arm64)
+                throw ValidationError("--macos requires Apple Silicon")
+                #endif
+                guard restoreImage != nil else {
+                    throw ValidationError("--macos requires --restore-image <path>")
+                }
+            }
+        }
+
+        mutating func run() async throws {
             let bundleURL = try resolveBundlePath(bundle, createParentIfNeeded: true)
 
+            let bootMode: BootMode
+            if macos {
+                bootMode = .macOS
+            } else if efi {
+                bootMode = .efi
+            } else {
+                bootMode = .linux
+            }
+
             // Validate kernel requirement based on boot mode
-            if !efi && kernel == nil {
+            if bootMode == .linux && kernel == nil {
                 throw ValidationError("--kernel is required for Linux boot mode (use --efi for EFI boot)")
             }
 
@@ -117,13 +146,13 @@ extension ToyVM {
             options.audio = audio
             options.network = !noNet
             options.rosetta = enableRosetta
-            options.bootMode = efi ? .efi : .linux
+            options.bootMode = bootMode
             options.kernelCommandLine = kernelCommandLine.isEmpty ? ["console=hvc0"] : kernelCommandLine
             options.disks = diskSpecs
             options.shares = shareConfigs
             options.usbDisks = usbDisks
 
-            try VMBundle.create(
+            var vmBundle = try VMBundle.create(
                 at: bundleURL,
                 kernelPath: kernel.map { URL(fileURLWithPath: $0) },
                 initrdPath: initrd.map { URL(fileURLWithPath: $0) },
@@ -131,7 +160,44 @@ extension ToyVM {
             )
 
             print("Created VM bundle: \(bundle)")
+
+            #if arch(arm64)
+            if bootMode == .macOS, let restoreImagePath = restoreImage {
+                if #available(macOS 14.0, *) {
+                    let installManager = MacOSInstallManager()
+                    fputs("Installing macOS...\n", stderr)
+
+                    // Observe progress on a background task
+                    let progressTask = Task {
+                        var lastPct = -1
+                        while !Task.isCancelled {
+                            try? await Task.sleep(nanoseconds: 500_000_000)
+                            let pct = Int(installManager.installProgress * 100)
+                            if pct != lastPct {
+                                lastPct = pct
+                                fputs("\rInstalling macOS... \(pct)%", stderr)
+                            }
+                        }
+                    }
+
+                    do {
+                        try await installManager.install(
+                            bundle: &vmBundle,
+                            restoreImageURL: URL(fileURLWithPath: restoreImagePath)
+                        )
+                        progressTask.cancel()
+                        fputs("\rInstalling macOS... 100%\n", stderr)
+                        print("macOS installation complete.")
+                    } catch {
+                        progressTask.cancel()
+                        fputs("\n", stderr)
+                        throw error
+                    }
+                } else {
+                    throw ToyVMError("macOS VM support requires macOS 14.0 or later")
+                }
+            }
+            #endif
         }
     }
 }
-

@@ -98,14 +98,16 @@ struct VMDetailView: View {
 
                 GroupBox("Boot") {
                     LabeledContent("Boot Mode", value: session.bundle.config.bootMode.label)
-                    if let kernel = session.bundle.config.kernel {
-                        LabeledContent("Kernel", value: kernel)
-                    }
-                    if let initrd = session.bundle.config.initrd {
-                        LabeledContent("Initrd", value: initrd)
-                    }
-                    if session.bundle.config.bootMode == .linux {
-                        LabeledContent("Command Line", value: session.bundle.config.kernelCommandLine.joined(separator: " "))
+                    if session.bundle.config.bootMode != .macOS {
+                        if let kernel = session.bundle.config.kernel {
+                            LabeledContent("Kernel", value: kernel)
+                        }
+                        if let initrd = session.bundle.config.initrd {
+                            LabeledContent("Initrd", value: initrd)
+                        }
+                        if session.bundle.config.bootMode == .linux {
+                            LabeledContent("Command Line", value: session.bundle.config.kernelCommandLine.joined(separator: " "))
+                        }
                     }
                 }
 

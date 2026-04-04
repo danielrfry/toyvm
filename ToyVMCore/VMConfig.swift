@@ -11,11 +11,14 @@ public enum BootMode: String, Codable, CaseIterable, Sendable {
     case linux
     /// EFI boot via VZEFIBootLoader with graphical display.
     case efi
+    /// macOS guest boot via VZMacOSBootLoader (Apple Silicon only).
+    case macOS
 
     public var label: String {
         switch self {
         case .linux: return "Linux"
         case .efi: return "Linux (GUI)"
+        case .macOS: return "macOS"
         }
     }
 }
@@ -145,6 +148,11 @@ extension VMConfig {
     public static let disksDir = "disks"
     public static let branchesDir = "branches"
 
+    // macOS guest artifact filenames
+    public static let hardwareModelFile = "hardware-model.bin"
+    public static let machineIdentifierFile = "machine-identifier.bin"
+    public static let auxiliaryStorageFile = "auxiliary-storage.bin"
+
     public static func load(from branchURL: URL) throws -> VMConfig {
         let data = try Data(contentsOf: branchURL.appendingPathComponent(configFilename))
         return try PropertyListDecoder().decode(VMConfig.self, from: data)
@@ -171,6 +179,21 @@ extension VMConfig {
     /// Returns the full URL to the EFI variable store in this branch.
     public func efiVariableStoreURL(in branchURL: URL) -> URL {
         return branchURL.appendingPathComponent("efi-vars.fd")
+    }
+
+    /// Returns the URL of the hardware model data file in this branch.
+    public func hardwareModelURL(in branchURL: URL) -> URL {
+        return branchURL.appendingPathComponent(VMConfig.hardwareModelFile)
+    }
+
+    /// Returns the URL of the machine identifier data file in this branch.
+    public func machineIdentifierURL(in branchURL: URL) -> URL {
+        return branchURL.appendingPathComponent(VMConfig.machineIdentifierFile)
+    }
+
+    /// Returns the URL of the auxiliary storage file in this branch.
+    public func auxiliaryStorageURL(in branchURL: URL) -> URL {
+        return branchURL.appendingPathComponent(VMConfig.auxiliaryStorageFile)
     }
 
     /// Returns the full URL to the initrd image in this branch (if one is configured).

@@ -252,19 +252,31 @@ extension ToyVM {
 
         private func displayConfig(_ config: VMConfig, branchURL: URL) {
             print("Boot mode:   \(config.bootMode.label)")
-            if let kernel = config.kernel {
-                print("Kernel:      \(kernel)")
-            }
-            if let initrd = config.initrd {
-                print("Initrd:      \(initrd)")
+            if config.bootMode != .macOS {
+                if let kernel = config.kernel {
+                    print("Kernel:      \(kernel)")
+                }
+                if let initrd = config.initrd {
+                    print("Initrd:      \(initrd)")
+                }
             }
             print("CPUs:        \(config.cpus)")
             print("Memory:      \(config.memoryGB) GB")
             print("Network:     \(config.network ? "yes" : "no")")
             print("Audio:       \(config.audio ? "yes" : "no")")
-            print("Rosetta:     \(config.rosetta ? "yes" : "no")")
+            if config.bootMode != .macOS {
+                print("Rosetta:     \(config.rosetta ? "yes" : "no")")
+            }
             if config.bootMode == .linux {
                 print("Kernel args: \(config.kernelCommandLine.joined(separator: " "))")
+            }
+            if config.bootMode == .macOS {
+                let hwModelExists = FileManager.default.fileExists(
+                    atPath: config.hardwareModelURL(in: branchURL).path)
+                let auxStorageExists = FileManager.default.fileExists(
+                    atPath: config.auxiliaryStorageURL(in: branchURL).path)
+                print("Hardware:    \(hwModelExists ? "configured" : "not configured")")
+                print("Aux storage: \(auxStorageExists ? "present" : "missing")")
             }
 
             if config.disks.isEmpty {

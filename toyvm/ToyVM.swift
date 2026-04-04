@@ -10,7 +10,7 @@ import ToyVMCore
 #endif
 
 @main
-struct ToyVM: ParsableCommand {
+struct ToyVM: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "toyvm",
         abstract: "Toy Linux VM using Virtualization.framework",

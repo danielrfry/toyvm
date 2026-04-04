@@ -490,4 +490,25 @@ public struct VMBundle {
     public var efiVariableStoreURL: URL {
         config.efiVariableStoreURL(in: activeBranchURL)
     }
+
+    /// Returns the URL of the hardware model data file in the active branch.
+    public var hardwareModelURL: URL {
+        config.hardwareModelURL(in: activeBranchURL)
+    }
+
+    /// Returns the URL of the machine identifier data file in the active branch.
+    public var machineIdentifierURL: URL {
+        config.machineIdentifierURL(in: activeBranchURL)
+    }
+
+    /// Returns the URL of the auxiliary storage file in the active branch.
+    public var auxiliaryStorageURL: URL {
+        config.auxiliaryStorageURL(in: activeBranchURL)
+    }
+
+    /// Saves macOS hardware model and machine identifier data to the active branch.
+    public func saveMacOSArtifacts(hardwareModel: Data, machineIdentifier: Data) throws {
+        try hardwareModel.write(to: hardwareModelURL)
+        try machineIdentifier.write(to: machineIdentifierURL)
+    }
 }

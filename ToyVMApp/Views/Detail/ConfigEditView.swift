@@ -53,20 +53,24 @@ struct ConfigEditView: View {
                 }
 
                 Section("Boot") {
-                    Picker("Boot Mode", selection: $bootMode) {
-                        ForEach(BootMode.allCases, id: \.self) { mode in
-                            Text(mode.label).tag(mode)
+                    if session.bundle.config.bootMode == .macOS {
+                        LabeledContent("Boot Mode", value: "macOS")
+                    } else {
+                        Picker("Boot Mode", selection: $bootMode) {
+                            ForEach(BootMode.allCases.filter({ $0 != .macOS }), id: \.self) { mode in
+                                Text(mode.label).tag(mode)
+                            }
                         }
-                    }
-                    if let kernel = session.bundle.config.kernel {
-                        LabeledContent("Kernel", value: kernel)
-                    }
-                    if let initrd = session.bundle.config.initrd {
-                        LabeledContent("Initrd", value: initrd)
-                    }
-                    if bootMode == .linux {
-                        TextField("Kernel Command Line", text: $kernelCommandLine)
-                            .textFieldStyle(.roundedBorder)
+                        if let kernel = session.bundle.config.kernel {
+                            LabeledContent("Kernel", value: kernel)
+                        }
+                        if let initrd = session.bundle.config.initrd {
+                            LabeledContent("Initrd", value: initrd)
+                        }
+                        if bootMode == .linux {
+                            TextField("Kernel Command Line", text: $kernelCommandLine)
+                                .textFieldStyle(.roundedBorder)
+                        }
                     }
                 }
 

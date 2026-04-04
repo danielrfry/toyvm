@@ -86,6 +86,36 @@ public enum VirtualMachineBuilder {
                 usbDisks: config.usbDisks,
                 noPersist: noPersist
             )
+
+        case .macOS:
+            #if arch(arm64)
+            guard #available(macOS 13.0, *) else {
+                throw ToyVMError("macOS VM support requires macOS 13.0 or later")
+            }
+            let hardwareModelData = try Data(contentsOf: config.hardwareModelURL(in: branchURL))
+            let machineIdentifierData = try Data(contentsOf: config.machineIdentifierURL(in: branchURL))
+            let auxStorageURL = config.auxiliaryStorageURL(in: branchURL)
+
+            let diskPaths = config.disks.map { disk in
+                (url: config.diskURL(in: branchURL, disk: disk), readOnly: disk.readOnly)
+            }
+
+            return try buildMacOSConfiguration(
+                hardwareModelData: hardwareModelData,
+                machineIdentifierData: machineIdentifierData,
+                auxiliaryStorageURL: auxStorageURL,
+                cpuCount: config.cpus,
+                memoryGB: config.memoryGB,
+                enableNetwork: config.network,
+                enableAudio: config.audio,
+                diskPaths: diskPaths,
+                shares: config.shares,
+                usbDisks: config.usbDisks,
+                noPersist: noPersist
+            )
+            #else
+            throw ToyVMError("macOS VMs require Apple Silicon")
+            #endif
         }
     }
 
@@ -254,6 +284,104 @@ public enum VirtualMachineBuilder {
 
         return VMStartContext(configuration: vzConfig, cleanupPaths: cleanupPaths, hasGraphicsDevice: hasGraphics)
     }
+
+    // MARK: - macOS boot entry point
+
+    /// Build a macOS guest configuration (Apple Silicon only).
+    #if arch(arm64)
+    @available(macOS 13.0, *)
+    public static func buildMacOSConfiguration(
+        hardwareModelData: Data,
+        machineIdentifierData: Data,
+        auxiliaryStorageURL: URL,
+        cpuCount: Int = 2,
+        memoryGB: Int = 4,
+        enableNetwork: Bool = true,
+        enableAudio: Bool = false,
+        diskPaths: [(url: URL, readOnly: Bool)] = [],
+        shares: [ShareConfig] = [],
+        usbDisks: [USBDiskConfig] = [],
+        noPersist: Bool = false
+    ) throws -> VMStartContext {
+        guard let hardwareModel = VZMacHardwareModel(dataRepresentation: hardwareModelData) else {
+            throw ToyVMError("Invalid hardware model data")
+        }
+        guard let machineIdentifier = VZMacMachineIdentifier(dataRepresentation: machineIdentifierData) else {
+            throw ToyVMError("Invalid machine identifier data")
+        }
+
+        let vzConfig = VZVirtualMachineConfiguration()
+        var cleanupPaths: [String] = []
+
+        // macOS boot loader
+        let bootLoader = VZMacOSBootLoader()
+        vzConfig.bootLoader = bootLoader
+
+        // Platform configuration
+        let platform = VZMacPlatformConfiguration()
+        platform.hardwareModel = hardwareModel
+        platform.machineIdentifier = machineIdentifier
+        platform.auxiliaryStorage = VZMacAuxiliaryStorage(contentsOf: auxiliaryStorageURL)
+        vzConfig.platform = platform
+
+        // CPU & memory
+        vzConfig.cpuCount = cpuCount
+        vzConfig.memorySize = UInt64(memoryGB) * 1024 * 1024 * 1024
+
+        // Graphics display + input devices
+        var hasGraphics = false
+        let graphics = VZMacGraphicsDeviceConfiguration()
+        graphics.displays = [
+            VZMacGraphicsDisplayConfiguration(widthInPixels: 1920, heightInPixels: 1200, pixelsPerInch: 144)
+        ]
+        vzConfig.graphicsDevices = [graphics]
+        vzConfig.keyboards = [VZUSBKeyboardConfiguration()]
+        if #available(macOS 14.0, *) {
+            vzConfig.pointingDevices = [VZMacTrackpadConfiguration()]
+        } else {
+            vzConfig.pointingDevices = [VZUSBScreenCoordinatePointingDeviceConfiguration()]
+        }
+        hasGraphics = true
+
+        // Networking
+        if enableNetwork {
+            let netDev = VZVirtioNetworkDeviceConfiguration()
+            netDev.attachment = VZNATNetworkDeviceAttachment()
+            vzConfig.networkDevices = [netDev]
+        }
+
+        // Storage devices
+        var storageDevices: [VZStorageDeviceConfiguration] = []
+        for disk in diskPaths {
+            let effectivePath: String
+            if noPersist && !disk.readOnly {
+                effectivePath = try cloneDiskImage(path: disk.url.path, cleanupPaths: &cleanupPaths)
+            } else {
+                effectivePath = disk.url.path
+            }
+            storageDevices.append(try makeStorageDevice(path: effectivePath, readOnly: disk.readOnly))
+        }
+        try appendUSBStorageDevices(usbDisks: usbDisks, to: &storageDevices)
+        vzConfig.storageDevices = storageDevices
+
+        // Directory shares
+        var sharedDirs: [String: VZVirtioFileSystemDeviceConfiguration] = [:]
+        for share in shares {
+            sharedDirs[share.tag] = try makeShareDevice(share: share)
+        }
+
+        // Audio
+        if enableAudio {
+            vzConfig.audioDevices = [makeSoundDevice()]
+        }
+
+        vzConfig.directorySharingDevices = Array(sharedDirs.values)
+
+        try vzConfig.validate()
+
+        return VMStartContext(configuration: vzConfig, cleanupPaths: cleanupPaths, hasGraphicsDevice: hasGraphics)
+    }
+    #endif
 
     // MARK: - Device helpers
 
