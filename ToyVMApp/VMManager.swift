@@ -20,11 +20,18 @@ class VMManager {
     var errorMessage: String?
 
     private let vmDirectory: URL
+    private var directoryMonitorSource: DispatchSourceFileSystemObject?
+    private var directoryMonitorFD: Int32 = -1
 
     init() {
         let home = FileManager.default.homeDirectoryForCurrentUser
         self.vmDirectory = home.appendingPathComponent(".toyvm", isDirectory: true)
         refresh()
+        startDirectoryMonitor()
+    }
+
+    deinit {
+        stopDirectoryMonitor()
     }
 
     /// Scan ~/.toyvm for .bundle directories and load them.
@@ -84,5 +91,41 @@ class VMManager {
             return String(filename.dropLast(".bundle".count))
         }
         return filename
+    }
+
+    // MARK: - Directory Monitoring
+
+    private func startDirectoryMonitor() {
+        let fm = FileManager.default
+        // Ensure the directory exists
+        if !fm.fileExists(atPath: vmDirectory.path) {
+            try? fm.createDirectory(at: vmDirectory, withIntermediateDirectories: true)
+        }
+
+        let fd = open(vmDirectory.path, O_EVTONLY)
+        guard fd >= 0 else { return }
+        directoryMonitorFD = fd
+
+        let source = DispatchSource.makeFileSystemObjectSource(
+            fileDescriptor: fd,
+            eventMask: [.write, .rename, .delete],
+            queue: .main
+        )
+        source.setEventHandler { [weak self] in
+            self?.refresh()
+        }
+        source.setCancelHandler { [weak self] in
+            if let fd = self?.directoryMonitorFD, fd >= 0 {
+                close(fd)
+                self?.directoryMonitorFD = -1
+            }
+        }
+        source.resume()
+        directoryMonitorSource = source
+    }
+
+    private func stopDirectoryMonitor() {
+        directoryMonitorSource?.cancel()
+        directoryMonitorSource = nil
     }
 }
