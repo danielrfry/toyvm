@@ -92,6 +92,21 @@ extension ToyVM {
         @Flag(name: .customLong("no-read-only"), help: "Clear the read-only flag on the active branch")
         var clearReadOnly: Bool = false
 
+        @Flag(name: .customLong("efi"), help: "Switch to EFI boot mode")
+        var setEFI: Bool = false
+
+        @Flag(name: .customLong("no-efi"), help: "Switch to Linux (direct kernel) boot mode")
+        var clearEFI: Bool = false
+
+        @Option(name: .customLong("usb"), help: "Add a USB disk image (read-write)")
+        var addUSB: [String] = []
+
+        @Option(name: .customLong("usb-ro"), help: "Add a USB disk image (read-only)")
+        var addUSBRO: [String] = []
+
+        @Option(name: .customLong("remove-usb"), help: "Remove a USB disk by index (0-based)")
+        var removeUSB: [Int] = []
+
         mutating func validate() throws {
             if enableAudio && disableAudio {
                 throw ValidationError("--audio and --no-audio are mutually exclusive")
@@ -108,6 +123,9 @@ extension ToyVM {
             if setReadOnly && clearReadOnly {
                 throw ValidationError("--read-only and --no-read-only are mutually exclusive")
             }
+            if setEFI && clearEFI {
+                throw ValidationError("--efi and --no-efi are mutually exclusive")
+            }
         }
 
         mutating func run() throws {
@@ -122,6 +140,8 @@ extension ToyVM {
                 || cpus != nil || memory != nil
                 || enableAudio || disableAudio || enableNet || disableNet
                 || enableRosetta || disableRosetta || cmdline != nil
+                || setEFI || clearEFI
+                || !addUSB.isEmpty || !addUSBRO.isEmpty || !removeUSB.isEmpty
             if branchIsReadOnly && hasConfigChanges {
                 throw ToyVMError("Branch '\(bundle.meta.activeBranch)' is read-only; configuration changes are not permitted.")
             }
@@ -198,6 +218,23 @@ extension ToyVM {
             if enableRosetta  { bundle.setRosetta(true) }
             if disableRosetta { bundle.setRosetta(false) }
 
+            // Boot mode
+            if setEFI   { bundle.setBootMode(.efi) }
+            if clearEFI { bundle.setBootMode(.linux) }
+
+            // Remove USB disks (process indices in descending order to avoid shifting)
+            for idx in removeUSB.sorted().reversed() {
+                try bundle.removeUSBDisk(at: idx)
+            }
+
+            // Add USB disks
+            for path in addUSB {
+                bundle.addUSBDisk(USBDiskConfig(path: path, readOnly: false))
+            }
+            for path in addUSBRO {
+                bundle.addUSBDisk(USBDiskConfig(path: path, readOnly: true))
+            }
+
             try bundle.saveConfig()
 
             // Toggle read-only status on the branch metadata
@@ -214,7 +251,10 @@ extension ToyVM {
         }
 
         private func displayConfig(_ config: VMConfig, branchURL: URL) {
-            print("Kernel:      \(config.kernel)")
+            print("Boot mode:   \(config.bootMode.label)")
+            if let kernel = config.kernel {
+                print("Kernel:      \(kernel)")
+            }
             if let initrd = config.initrd {
                 print("Initrd:      \(initrd)")
             }
@@ -223,7 +263,9 @@ extension ToyVM {
             print("Network:     \(config.network ? "yes" : "no")")
             print("Audio:       \(config.audio ? "yes" : "no")")
             print("Rosetta:     \(config.rosetta ? "yes" : "no")")
-            print("Kernel args: \(config.kernelCommandLine.joined(separator: " "))")
+            if config.bootMode == .linux {
+                print("Kernel args: \(config.kernelCommandLine.joined(separator: " "))")
+            }
 
             if config.disks.isEmpty {
                 print("Disks:       (none)")
@@ -235,6 +277,16 @@ extension ToyVM {
                     let url = config.diskURL(in: branchURL, disk: disk)
                     let sizeDesc = diskSizeDescription(url: url, format: disk.format)
                     print("  [\(rwLabel), \(fmtLabel)] \(disk.file)\(sizeDesc.map { " (\($0))" } ?? "")")
+                }
+            }
+
+            if config.usbDisks.isEmpty {
+                print("USB disks:   (none)")
+            } else {
+                print("USB disks:")
+                for (idx, usbDisk) in config.usbDisks.enumerated() {
+                    let rwLabel = usbDisk.readOnly ? "ro" : "rw"
+                    print("  [\(idx), \(rwLabel)] \(usbDisk.path)")
                 }
             }
 

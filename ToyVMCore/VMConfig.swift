@@ -5,17 +5,46 @@
 
 import Foundation
 
+/// Boot mode for the virtual machine.
+public enum BootMode: String, Codable, CaseIterable, Sendable {
+    /// Direct kernel boot via VZLinuxBootLoader with serial console.
+    case linux
+    /// EFI boot via VZEFIBootLoader with graphical display.
+    case efi
+
+    public var label: String {
+        switch self {
+        case .linux: return "Linux"
+        case .efi: return "Linux (GUI)"
+        }
+    }
+}
+
+/// Configuration for a USB mass storage device (e.g. an ISO installer image).
+public struct USBDiskConfig: Codable, Equatable, Sendable {
+    /// Absolute path to the disk or ISO image on the host.
+    public var path: String
+    public var readOnly: Bool
+
+    public init(path: String, readOnly: Bool = true) {
+        self.path = path
+        self.readOnly = readOnly
+    }
+}
+
 public struct VMConfig: Codable {
     public var cpus: Int = 2
     public var memoryGB: Int = 2
     public var audio: Bool = false
     public var network: Bool = true
     public var rosetta: Bool = false
-    public var kernel: String
+    public var bootMode: BootMode = .linux
+    public var kernel: String?
     public var initrd: String?
     public var kernelCommandLine: [String] = ["console=hvc0"]
     public var disks: [DiskConfig] = []
     public var shares: [ShareConfig] = []
+    public var usbDisks: [USBDiskConfig] = []
 
     public init(
         cpus: Int = 2,
@@ -23,22 +52,44 @@ public struct VMConfig: Codable {
         audio: Bool = false,
         network: Bool = true,
         rosetta: Bool = false,
-        kernel: String,
+        bootMode: BootMode = .linux,
+        kernel: String? = nil,
         initrd: String? = nil,
         kernelCommandLine: [String] = ["console=hvc0"],
         disks: [DiskConfig] = [],
-        shares: [ShareConfig] = []
+        shares: [ShareConfig] = [],
+        usbDisks: [USBDiskConfig] = []
     ) {
         self.cpus = cpus
         self.memoryGB = memoryGB
         self.audio = audio
         self.network = network
         self.rosetta = rosetta
+        self.bootMode = bootMode
         self.kernel = kernel
         self.initrd = initrd
         self.kernelCommandLine = kernelCommandLine
         self.disks = disks
         self.shares = shares
+        self.usbDisks = usbDisks
+    }
+
+    /// Custom decoder for backward compatibility: existing bundles without
+    /// bootMode or usbDisks decode with sensible defaults.
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        cpus = try c.decodeIfPresent(Int.self, forKey: .cpus) ?? 2
+        memoryGB = try c.decodeIfPresent(Int.self, forKey: .memoryGB) ?? 2
+        audio = try c.decodeIfPresent(Bool.self, forKey: .audio) ?? false
+        network = try c.decodeIfPresent(Bool.self, forKey: .network) ?? true
+        rosetta = try c.decodeIfPresent(Bool.self, forKey: .rosetta) ?? false
+        bootMode = try c.decodeIfPresent(BootMode.self, forKey: .bootMode) ?? .linux
+        kernel = try c.decodeIfPresent(String.self, forKey: .kernel)
+        initrd = try c.decodeIfPresent(String.self, forKey: .initrd)
+        kernelCommandLine = try c.decodeIfPresent([String].self, forKey: .kernelCommandLine) ?? ["console=hvc0"]
+        disks = try c.decodeIfPresent([DiskConfig].self, forKey: .disks) ?? []
+        shares = try c.decodeIfPresent([ShareConfig].self, forKey: .shares) ?? []
+        usbDisks = try c.decodeIfPresent([USBDiskConfig].self, forKey: .usbDisks) ?? []
     }
 }
 
@@ -111,9 +162,15 @@ extension VMConfig {
         return bundleURL.appendingPathComponent(branchesDir).appendingPathComponent(branch)
     }
 
-    /// Returns the full URL to the kernel image in this branch.
-    public func kernelURL(in branchURL: URL) -> URL {
+    /// Returns the full URL to the kernel image in this branch, or nil if no kernel is configured.
+    public func kernelURL(in branchURL: URL) -> URL? {
+        guard let kernel else { return nil }
         return branchURL.appendingPathComponent(VMConfig.kernelDir).appendingPathComponent(kernel)
+    }
+
+    /// Returns the full URL to the EFI variable store in this branch.
+    public func efiVariableStoreURL(in branchURL: URL) -> URL {
+        return branchURL.appendingPathComponent("efi-vars.fd")
     }
 
     /// Returns the full URL to the initrd image in this branch (if one is configured).

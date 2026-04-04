@@ -19,6 +19,8 @@ struct ConfigEditView: View {
     @State private var network: Bool
     @State private var rosetta: Bool
     @State private var kernelCommandLine: String
+    @State private var bootMode: BootMode
+    @State private var usbDisks: [USBDiskConfig]
     @State private var errorMessage: String?
 
     init(session: VMSession) {
@@ -30,6 +32,8 @@ struct ConfigEditView: View {
         _network = State(initialValue: config.network)
         _rosetta = State(initialValue: config.rosetta)
         _kernelCommandLine = State(initialValue: config.kernelCommandLine.joined(separator: " "))
+        _bootMode = State(initialValue: config.bootMode)
+        _usbDisks = State(initialValue: config.usbDisks)
     }
 
     var body: some View {
@@ -49,12 +53,21 @@ struct ConfigEditView: View {
                 }
 
                 Section("Boot") {
-                    LabeledContent("Kernel", value: session.bundle.config.kernel)
+                    Picker("Boot Mode", selection: $bootMode) {
+                        ForEach(BootMode.allCases, id: \.self) { mode in
+                            Text(mode.label).tag(mode)
+                        }
+                    }
+                    if let kernel = session.bundle.config.kernel {
+                        LabeledContent("Kernel", value: kernel)
+                    }
                     if let initrd = session.bundle.config.initrd {
                         LabeledContent("Initrd", value: initrd)
                     }
-                    TextField("Kernel Command Line", text: $kernelCommandLine)
-                        .textFieldStyle(.roundedBorder)
+                    if bootMode == .linux {
+                        TextField("Kernel Command Line", text: $kernelCommandLine)
+                            .textFieldStyle(.roundedBorder)
+                    }
                 }
 
                 if !session.bundle.config.disks.isEmpty {
@@ -63,6 +76,32 @@ struct ConfigEditView: View {
                             LabeledContent(disk.file) {
                                 Text("\(disk.format.rawValue), \(disk.readOnly ? "ro" : "rw")")
                             }
+                        }
+                    }
+                }
+
+                Section("USB Disks") {
+                    if usbDisks.isEmpty {
+                        Text("No USB disks configured")
+                            .foregroundStyle(.secondary)
+                    } else {
+                        ForEach(Array(usbDisks.enumerated()), id: \.offset) { idx, usbDisk in
+                            LabeledContent(URL(fileURLWithPath: usbDisk.path).lastPathComponent) {
+                                HStack {
+                                    Text(usbDisk.readOnly ? "read-only" : "read/write")
+                                    Button(role: .destructive) {
+                                        usbDisks.remove(at: idx)
+                                    } label: {
+                                        Image(systemName: "trash")
+                                    }
+                                    .buttonStyle(.borderless)
+                                }
+                            }
+                        }
+                    }
+                    Button("Add USB Disk…") {
+                        chooseFile(title: "Select ISO or Disk Image") { url in
+                            usbDisks.append(USBDiskConfig(path: url.path, readOnly: true))
                         }
                     }
                 }
@@ -109,16 +148,31 @@ struct ConfigEditView: View {
             session.bundle.config.audio = audio
             session.bundle.config.network = network
             session.bundle.config.rosetta = rosetta
+            session.bundle.config.bootMode = bootMode
+            session.bundle.config.usbDisks = usbDisks
 
-            let args = kernelCommandLine.trimmingCharacters(in: .whitespacesAndNewlines)
-            session.bundle.config.kernelCommandLine = args.isEmpty
-                ? ["console=hvc0"]
-                : args.components(separatedBy: " ").filter { !$0.isEmpty }
+            if bootMode == .linux {
+                let args = kernelCommandLine.trimmingCharacters(in: .whitespacesAndNewlines)
+                session.bundle.config.kernelCommandLine = args.isEmpty
+                    ? ["console=hvc0"]
+                    : args.components(separatedBy: " ").filter { !$0.isEmpty }
+            }
 
             try session.bundle.saveConfig()
             dismiss()
         } catch {
             errorMessage = error.localizedDescription
+        }
+    }
+
+    private func chooseFile(title: String, completion: @escaping (URL) -> Void) {
+        let panel = NSOpenPanel()
+        panel.title = title
+        panel.allowsMultipleSelection = false
+        panel.canChooseDirectories = false
+        panel.canChooseFiles = true
+        if panel.runModal() == .OK, let url = panel.url {
+            completion(url)
         }
     }
 }

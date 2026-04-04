@@ -14,6 +14,7 @@ struct CreateVMView: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var vmName = ""
+    @State private var bootMode: BootMode = .linux
     @State private var kernelPath = ""
     @State private var initrdPath = ""
     @State private var cpus = 2
@@ -22,6 +23,7 @@ struct CreateVMView: View {
     @State private var audio = false
     @State private var network = true
     @State private var rosetta = false
+    @State private var usbDiskPath = ""
     @State private var errorMessage: String?
     @State private var isCreating = false
 
@@ -31,24 +33,45 @@ struct CreateVMView: View {
                 Section("General") {
                     TextField("Name", text: $vmName)
                         .textFieldStyle(.roundedBorder)
+                    Picker("Boot Mode", selection: $bootMode) {
+                        ForEach(BootMode.allCases, id: \.self) { mode in
+                            Text(mode.label).tag(mode)
+                        }
+                    }
                 }
 
-                Section("Boot Images") {
-                    HStack {
-                        TextField("Kernel", text: $kernelPath)
-                            .textFieldStyle(.roundedBorder)
-                        Button("Browse…") {
-                            chooseFile(title: "Select Kernel Image") { url in
-                                kernelPath = url.path
+                if bootMode == .linux {
+                    Section("Boot Images") {
+                        HStack {
+                            TextField("Kernel", text: $kernelPath)
+                                .textFieldStyle(.roundedBorder)
+                            Button("Browse…") {
+                                chooseFile(title: "Select Kernel Image") { url in
+                                    kernelPath = url.path
+                                }
+                            }
+                        }
+                        HStack {
+                            TextField("Initrd (optional)", text: $initrdPath)
+                                .textFieldStyle(.roundedBorder)
+                            Button("Browse…") {
+                                chooseFile(title: "Select Initrd Image") { url in
+                                    initrdPath = url.path
+                                }
                             }
                         }
                     }
-                    HStack {
-                        TextField("Initrd (optional)", text: $initrdPath)
-                            .textFieldStyle(.roundedBorder)
-                        Button("Browse…") {
-                            chooseFile(title: "Select Initrd Image") { url in
-                                initrdPath = url.path
+                }
+
+                if bootMode == .efi {
+                    Section("Installation Media") {
+                        HStack {
+                            TextField("USB Disk / ISO (optional)", text: $usbDiskPath)
+                                .textFieldStyle(.roundedBorder)
+                            Button("Browse…") {
+                                chooseFile(title: "Select ISO or Disk Image") { url in
+                                    usbDiskPath = url.path
+                                }
                             }
                         }
                     }
@@ -91,7 +114,7 @@ struct CreateVMView: View {
                     create()
                 }
                 .keyboardShortcut(.defaultAction)
-                .disabled(vmName.isEmpty || kernelPath.isEmpty || isCreating)
+                .disabled(vmName.isEmpty || (bootMode == .linux && kernelPath.isEmpty) || isCreating)
             }
             .padding()
         }
@@ -105,8 +128,10 @@ struct CreateVMView: View {
         do {
             let bundleURL = try resolveBundlePath(vmName, createParentIfNeeded: true)
 
-            guard FileManager.default.fileExists(atPath: kernelPath) else {
-                throw ToyVMError("Kernel file not found: \(kernelPath)")
+            if bootMode == .linux {
+                guard FileManager.default.fileExists(atPath: kernelPath) else {
+                    throw ToyVMError("Kernel file not found: \(kernelPath)")
+                }
             }
 
             var options = CreateOptions()
@@ -115,6 +140,7 @@ struct CreateVMView: View {
             options.audio = audio
             options.network = network
             options.rosetta = rosetta
+            options.bootMode = bootMode
 
             let trimmedDisk = diskSizeText.trimmingCharacters(in: .whitespacesAndNewlines)
             if !trimmedDisk.isEmpty {
@@ -122,11 +148,18 @@ struct CreateVMView: View {
                 options.disks = [(format: format, size: size, readOnly: false)]
             }
 
+            // USB disk for EFI mode
+            let trimmedUSB = usbDiskPath.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !trimmedUSB.isEmpty {
+                options.usbDisks = [USBDiskConfig(path: trimmedUSB, readOnly: true)]
+            }
+
+            let kernelURL: URL? = bootMode == .linux ? URL(fileURLWithPath: kernelPath) : nil
             let initrd: URL? = initrdPath.isEmpty ? nil : URL(fileURLWithPath: initrdPath)
 
             let bundle = try VMBundle.create(
                 at: bundleURL,
-                kernelPath: URL(fileURLWithPath: kernelPath),
+                kernelPath: kernelURL,
                 initrdPath: initrd,
                 options: options
             )

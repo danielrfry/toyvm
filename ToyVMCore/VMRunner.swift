@@ -39,7 +39,8 @@ public class VMRunner {
     }
 
     public private(set) var state: State = .stopped
-    private var vm: VZVirtualMachine?
+    /// The running VM instance, available for VZVirtualMachineView binding.
+    public private(set) var virtualMachine: VZVirtualMachine?
     private var delegate: Delegate?
 
     public init() {}
@@ -66,14 +67,14 @@ public class VMRunner {
 
         let vm = VZVirtualMachine(configuration: configuration)
         vm.delegate = delegate
-        self.vm = vm
+        self.virtualMachine = vm
 
         do {
             try await vm.start()
             state = .running
         } catch {
             state = .error(error.localizedDescription)
-            self.vm = nil
+            self.virtualMachine = nil
             self.delegate = nil
             throw error
         }
@@ -82,19 +83,19 @@ public class VMRunner {
     /// Request a graceful shutdown via the guest OS.
     @MainActor
     public func requestStop() throws {
-        guard let vm, state == .running else {
+        guard let virtualMachine, state == .running else {
             throw ToyVMError("VM is not running")
         }
         state = .stopping
-        try vm.requestStop()
+        try virtualMachine.requestStop()
     }
 
     /// Force-stop the VM immediately.
     @MainActor
     public func forceStop() {
-        guard let vm else { return }
+        guard let virtualMachine else { return }
         state = .stopping
-        vm.stop { [weak self] error in
+        virtualMachine.stop { [weak self] error in
             if let error {
                 self?.state = .error(error.localizedDescription)
             } else {

@@ -97,11 +97,16 @@ struct VMDetailView: View {
                 }
 
                 GroupBox("Boot") {
-                    LabeledContent("Kernel", value: session.bundle.config.kernel)
+                    LabeledContent("Boot Mode", value: session.bundle.config.bootMode.label)
+                    if let kernel = session.bundle.config.kernel {
+                        LabeledContent("Kernel", value: kernel)
+                    }
                     if let initrd = session.bundle.config.initrd {
                         LabeledContent("Initrd", value: initrd)
                     }
-                    LabeledContent("Command Line", value: session.bundle.config.kernelCommandLine.joined(separator: " "))
+                    if session.bundle.config.bootMode == .linux {
+                        LabeledContent("Command Line", value: session.bundle.config.kernelCommandLine.joined(separator: " "))
+                    }
                 }
 
                 GroupBox("Branch") {
@@ -116,6 +121,16 @@ struct VMDetailView: View {
                         ForEach(session.bundle.config.disks, id: \.file) { disk in
                             LabeledContent(disk.file) {
                                 Text("\(disk.format.rawValue), \(disk.readOnly ? "read-only" : "read/write")")
+                            }
+                        }
+                    }
+                }
+
+                if !session.bundle.config.usbDisks.isEmpty {
+                    GroupBox("USB Disks") {
+                        ForEach(Array(session.bundle.config.usbDisks.enumerated()), id: \.offset) { _, usbDisk in
+                            LabeledContent(URL(fileURLWithPath: usbDisk.path).lastPathComponent) {
+                                Text(usbDisk.readOnly ? "read-only" : "read/write")
                             }
                         }
                     }

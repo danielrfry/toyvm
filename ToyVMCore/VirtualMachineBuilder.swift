@@ -12,6 +12,8 @@ public struct VMStartContext {
     public let configuration: VZVirtualMachineConfiguration
     /// Paths to copy-on-write clone files created for --no-persist mode.
     public let cleanupPaths: [String]
+    /// Whether the configuration includes a graphics display device (for GUI display routing).
+    public let hasGraphicsDevice: Bool
 
     public func cleanup() {
         for path in cleanupPaths {
@@ -36,32 +38,60 @@ public enum VirtualMachineBuilder {
         let config = bundle.config
         let branchURL = bundle.activeBranchURL
 
-        let kernelURL = config.kernelURL(in: branchURL)
-        let initrdURL = config.initrdURL(in: branchURL)
-        let cmdline = config.kernelCommandLine.joined(separator: " ")
+        switch config.bootMode {
+        case .linux:
+            guard let kernelURL = config.kernelURL(in: branchURL) else {
+                throw ToyVMError("Linux boot mode requires a kernel image")
+            }
+            let initrdURL = config.initrdURL(in: branchURL)
+            let cmdline = config.kernelCommandLine.joined(separator: " ")
 
-        let diskPaths = config.disks.map { disk in
-            (url: config.diskURL(in: branchURL, disk: disk), readOnly: disk.readOnly)
+            let diskPaths = config.disks.map { disk in
+                (url: config.diskURL(in: branchURL, disk: disk), readOnly: disk.readOnly)
+            }
+
+            return try buildConfiguration(
+                kernelURL: kernelURL,
+                initrdURL: initrdURL,
+                commandLine: cmdline,
+                cpuCount: config.cpus,
+                memoryGB: config.memoryGB,
+                enableNetwork: config.network,
+                enableAudio: config.audio,
+                enableRosetta: config.rosetta,
+                diskPaths: diskPaths,
+                shares: config.shares,
+                usbDisks: config.usbDisks,
+                noPersist: noPersist
+            )
+
+        case .efi:
+            guard #available(macOS 13.0, *) else {
+                throw ToyVMError("EFI boot mode requires macOS 13.0 or later")
+            }
+            let efiVarStoreURL = config.efiVariableStoreURL(in: branchURL)
+            let diskPaths = config.disks.map { disk in
+                (url: config.diskURL(in: branchURL, disk: disk), readOnly: disk.readOnly)
+            }
+
+            return try buildEFIConfiguration(
+                efiVariableStoreURL: efiVarStoreURL,
+                cpuCount: config.cpus,
+                memoryGB: config.memoryGB,
+                enableNetwork: config.network,
+                enableAudio: config.audio,
+                enableRosetta: config.rosetta,
+                diskPaths: diskPaths,
+                shares: config.shares,
+                usbDisks: config.usbDisks,
+                noPersist: noPersist
+            )
         }
-
-        return try buildConfiguration(
-            kernelURL: kernelURL,
-            initrdURL: initrdURL,
-            commandLine: cmdline,
-            cpuCount: config.cpus,
-            memoryGB: config.memoryGB,
-            enableNetwork: config.network,
-            enableAudio: config.audio,
-            enableRosetta: config.rosetta,
-            diskPaths: diskPaths,
-            shares: config.shares,
-            noPersist: noPersist
-        )
     }
 
-    // MARK: - Explicit parameter entry point
+    // MARK: - Explicit parameter entry point (Linux boot)
 
-    /// Build a configuration with full control over all parameters.
+    /// Build a Linux boot configuration with full control over all parameters.
     public static func buildConfiguration(
         kernelURL: URL,
         initrdURL: URL? = nil,
@@ -73,6 +103,7 @@ public enum VirtualMachineBuilder {
         enableRosetta: Bool = false,
         diskPaths: [(url: URL, readOnly: Bool)] = [],
         shares: [ShareConfig] = [],
+        usbDisks: [USBDiskConfig] = [],
         noPersist: Bool = false
     ) throws -> VMStartContext {
         let vzConfig = VZVirtualMachineConfiguration()
@@ -97,7 +128,7 @@ public enum VirtualMachineBuilder {
             vzConfig.networkDevices = [netDev]
         }
 
-        // Storage devices
+        // Storage devices (VirtIO block + USB mass storage)
         var storageDevices: [VZStorageDeviceConfiguration] = []
         for disk in diskPaths {
             let effectivePath: String
@@ -108,6 +139,7 @@ public enum VirtualMachineBuilder {
             }
             storageDevices.append(try makeStorageDevice(path: effectivePath, readOnly: disk.readOnly))
         }
+        try appendUSBStorageDevices(usbDisks: usbDisks, to: &storageDevices)
         vzConfig.storageDevices = storageDevices
 
         // Directory shares
@@ -130,7 +162,97 @@ public enum VirtualMachineBuilder {
 
         try vzConfig.validate()
 
-        return VMStartContext(configuration: vzConfig, cleanupPaths: cleanupPaths)
+        return VMStartContext(configuration: vzConfig, cleanupPaths: cleanupPaths, hasGraphicsDevice: false)
+    }
+
+    // MARK: - EFI boot entry point
+
+    /// Build an EFI boot configuration with graphics display, keyboard, and pointing device.
+    @available(macOS 13.0, *)
+    public static func buildEFIConfiguration(
+        efiVariableStoreURL: URL,
+        cpuCount: Int = 2,
+        memoryGB: Int = 2,
+        enableNetwork: Bool = true,
+        enableAudio: Bool = false,
+        enableRosetta: Bool = false,
+        diskPaths: [(url: URL, readOnly: Bool)] = [],
+        shares: [ShareConfig] = [],
+        usbDisks: [USBDiskConfig] = [],
+        noPersist: Bool = false
+    ) throws -> VMStartContext {
+        let vzConfig = VZVirtualMachineConfiguration()
+        var cleanupPaths: [String] = []
+
+        // EFI boot loader with variable store
+        let efiBootLoader = VZEFIBootLoader()
+        if FileManager.default.fileExists(atPath: efiVariableStoreURL.path) {
+            efiBootLoader.variableStore = VZEFIVariableStore(url: efiVariableStoreURL)
+        } else {
+            efiBootLoader.variableStore = try VZEFIVariableStore(
+                creatingVariableStoreAt: efiVariableStoreURL)
+        }
+        vzConfig.bootLoader = efiBootLoader
+
+        // CPU & memory
+        vzConfig.cpuCount = cpuCount
+        vzConfig.memorySize = UInt64(memoryGB) * 1024 * 1024 * 1024
+
+        // Graphics display + input devices
+        var hasGraphics = false
+        if #available(macOS 14.0, *) {
+            let graphics = VZVirtioGraphicsDeviceConfiguration()
+            graphics.scanouts = [
+                VZVirtioGraphicsScanoutConfiguration(widthInPixels: 1920, heightInPixels: 1080)
+            ]
+            vzConfig.graphicsDevices = [graphics]
+            vzConfig.keyboards = [VZUSBKeyboardConfiguration()]
+            vzConfig.pointingDevices = [VZUSBScreenCoordinatePointingDeviceConfiguration()]
+            hasGraphics = true
+        }
+
+        // Networking
+        if enableNetwork {
+            let netDev = VZVirtioNetworkDeviceConfiguration()
+            netDev.attachment = VZNATNetworkDeviceAttachment()
+            vzConfig.networkDevices = [netDev]
+        }
+
+        // Storage devices (VirtIO block + USB mass storage)
+        var storageDevices: [VZStorageDeviceConfiguration] = []
+        for disk in diskPaths {
+            let effectivePath: String
+            if noPersist && !disk.readOnly {
+                effectivePath = try cloneDiskImage(path: disk.url.path, cleanupPaths: &cleanupPaths)
+            } else {
+                effectivePath = disk.url.path
+            }
+            storageDevices.append(try makeStorageDevice(path: effectivePath, readOnly: disk.readOnly))
+        }
+        try appendUSBStorageDevices(usbDisks: usbDisks, to: &storageDevices)
+        vzConfig.storageDevices = storageDevices
+
+        // Directory shares
+        var sharedDirs: [String: VZVirtioFileSystemDeviceConfiguration] = [:]
+        for share in shares {
+            sharedDirs[share.tag] = try makeShareDevice(share: share)
+        }
+
+        // Audio
+        if enableAudio {
+            vzConfig.audioDevices = [makeSoundDevice()]
+        }
+
+        // Rosetta
+        if enableRosetta {
+            sharedDirs["rosetta"] = try makeRosettaShareDevice()
+        }
+
+        vzConfig.directorySharingDevices = Array(sharedDirs.values)
+
+        try vzConfig.validate()
+
+        return VMStartContext(configuration: vzConfig, cleanupPaths: cleanupPaths, hasGraphicsDevice: hasGraphics)
     }
 
     // MARK: - Device helpers
@@ -192,5 +314,21 @@ public enum VirtualMachineBuilder {
         #else
         throw ToyVMError("Rosetta requires an Apple Silicon processor")
         #endif
+    }
+
+    /// Appends USB mass storage devices for the given USB disk configs.
+    public static func appendUSBStorageDevices(
+        usbDisks: [USBDiskConfig],
+        to storageDevices: inout [VZStorageDeviceConfiguration]
+    ) throws {
+        guard !usbDisks.isEmpty else { return }
+        guard #available(macOS 13.0, *) else {
+            throw ToyVMError("USB mass storage devices require macOS 13.0 or later")
+        }
+        for usbDisk in usbDisks {
+            let attachment = try VZDiskImageStorageDeviceAttachment(
+                url: URL(fileURLWithPath: usbDisk.path), readOnly: usbDisk.readOnly)
+            storageDevices.append(VZUSBMassStorageDeviceConfiguration(attachment: attachment))
+        }
     }
 }

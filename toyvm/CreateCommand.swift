@@ -26,8 +26,11 @@ extension ToyVM {
         @Argument(help: "Path to the VM bundle directory to create")
         var bundle: String
 
-        @Option(name: [.customShort("k"), .long], help: "Path to the kernel image to copy into the bundle [required]")
-        var kernel: String
+        @Flag(name: .customLong("efi"), help: "Use EFI boot mode (for graphical Linux VMs)")
+        var efi: Bool = false
+
+        @Option(name: [.customShort("k"), .long], help: "Path to the kernel image to copy into the bundle [required for Linux mode]")
+        var kernel: String? = nil
 
         @Option(name: [.customShort("i"), .long], help: "Path to an initrd image to copy into the bundle")
         var initrd: String?
@@ -43,6 +46,12 @@ extension ToyVM {
 
         @Option(name: [.customShort("t"), .customLong("share-ro")], help: "As --share but adds a read-only directory share")
         var shareRO: [String] = []
+
+        @Option(name: .customLong("usb"), help: "Configure a USB disk image (read-write)")
+        var usbDisk: [String] = []
+
+        @Option(name: .customLong("usb-ro"), help: "Configure a USB disk image (read-only, e.g. .iso installer)")
+        var usbDiskRO: [String] = []
 
         @Option(name: [.customShort("p"), .long], help: "Number of CPUs to make available to the VM")
         var cpus: Int = 2
@@ -64,6 +73,11 @@ extension ToyVM {
 
         mutating func run() throws {
             let bundleURL = try resolveBundlePath(bundle, createParentIfNeeded: true)
+
+            // Validate kernel requirement based on boot mode
+            if !efi && kernel == nil {
+                throw ValidationError("--kernel is required for Linux boot mode (use --efi for EFI boot)")
+            }
 
             // Parse disk specs
             var diskSpecs: [(format: DiskFormat, size: UInt64, readOnly: Bool)] = []
@@ -88,19 +102,30 @@ extension ToyVM {
                 shareConfigs.append(ShareConfig(tag: tag, path: path, readOnly: readOnly))
             }
 
+            // Parse USB disk paths
+            var usbDisks: [USBDiskConfig] = []
+            for path in usbDisk {
+                usbDisks.append(USBDiskConfig(path: path, readOnly: false))
+            }
+            for path in usbDiskRO {
+                usbDisks.append(USBDiskConfig(path: path, readOnly: true))
+            }
+
             var options = CreateOptions()
             options.cpus = cpus
             options.memoryGB = memory
             options.audio = audio
             options.network = !noNet
             options.rosetta = enableRosetta
+            options.bootMode = efi ? .efi : .linux
             options.kernelCommandLine = kernelCommandLine.isEmpty ? ["console=hvc0"] : kernelCommandLine
             options.disks = diskSpecs
             options.shares = shareConfigs
+            options.usbDisks = usbDisks
 
             try VMBundle.create(
                 at: bundleURL,
-                kernelPath: URL(fileURLWithPath: kernel),
+                kernelPath: kernel.map { URL(fileURLWithPath: $0) },
                 initrdPath: initrd.map { URL(fileURLWithPath: $0) },
                 options: options
             )

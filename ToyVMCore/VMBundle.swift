@@ -14,9 +14,11 @@ public struct CreateOptions {
     public var audio: Bool = false
     public var network: Bool = true
     public var rosetta: Bool = false
+    public var bootMode: BootMode = .linux
     public var kernelCommandLine: [String] = ["console=hvc0"]
     public var disks: [(format: DiskFormat, size: UInt64, readOnly: Bool)] = []
     public var shares: [ShareConfig] = []
+    public var usbDisks: [USBDiskConfig] = []
     public var rootBranchName: String = "main"
 
     public init() {}
@@ -64,16 +66,17 @@ public struct VMBundle {
 
     // MARK: - Creating
 
-    /// Creates a new VM bundle at the given URL with the specified kernel, optional
-    /// initrd, and options. Returns the newly created bundle.
+    /// Creates a new VM bundle at the given URL with the specified options.
+    /// For Linux boot mode, kernelPath is required. For EFI boot mode, it is optional.
+    /// Returns the newly created bundle.
     ///
     /// - Throws if the bundle directory already exists or any file operation fails.
     ///   On failure, any partially-created bundle directory is removed.
     @discardableResult
     public static func create(
         at bundleURL: URL,
-        kernelPath: URL,
-        initrdPath: URL?,
+        kernelPath: URL? = nil,
+        initrdPath: URL? = nil,
         options: CreateOptions = CreateOptions()
     ) throws -> VMBundle {
         let fm = FileManager.default
@@ -94,9 +97,12 @@ public struct VMBundle {
                 try fm.createDirectory(at: dir, withIntermediateDirectories: false)
             }
 
-            // Copy kernel
-            let kernelFilename = kernelPath.lastPathComponent
-            try fm.copyItem(at: kernelPath, to: kernelDir.appendingPathComponent(kernelFilename))
+            // Copy kernel (required for .linux, optional for .efi)
+            var kernelFilename: String? = nil
+            if let src = kernelPath {
+                kernelFilename = src.lastPathComponent
+                try fm.copyItem(at: src, to: kernelDir.appendingPathComponent(kernelFilename!))
+            }
 
             // Copy initrd
             var initrdFilename: String? = nil
@@ -119,11 +125,13 @@ public struct VMBundle {
                 audio: options.audio,
                 network: options.network,
                 rosetta: options.rosetta,
+                bootMode: options.bootMode,
                 kernel: kernelFilename,
                 initrd: initrdFilename,
                 kernelCommandLine: options.kernelCommandLine,
                 disks: diskConfigs,
-                shares: options.shares
+                shares: options.shares,
+                usbDisks: options.usbDisks
             )
             try config.save(to: branchURL)
 
@@ -371,15 +379,18 @@ public struct VMBundle {
     public mutating func replaceKernel(from url: URL) throws {
         let newFilename = url.lastPathComponent
         let kernelDir = activeBranchURL.appendingPathComponent(VMConfig.kernelDir)
-        let oldFilename = config.kernel
-        let oldPath = kernelDir.appendingPathComponent(oldFilename)
-        let newPath = kernelDir.appendingPathComponent(newFilename)
         let fm = FileManager.default
-        if newFilename != oldFilename {
-            try fm.copyItem(at: url, to: newPath)
-            try fm.removeItem(at: oldPath)
+        let newPath = kernelDir.appendingPathComponent(newFilename)
+        if let oldFilename = config.kernel {
+            let oldPath = kernelDir.appendingPathComponent(oldFilename)
+            if newFilename != oldFilename {
+                try fm.copyItem(at: url, to: newPath)
+                try fm.removeItem(at: oldPath)
+            } else {
+                _ = try fm.replaceItemAt(newPath, withItemAt: url)
+            }
         } else {
-            _ = try fm.replaceItemAt(newPath, withItemAt: url)
+            try fm.copyItem(at: url, to: newPath)
         }
         config.kernel = newFilename
     }
@@ -460,4 +471,23 @@ public struct VMBundle {
     public mutating func setAudio(_ enabled: Bool) { config.audio = enabled }
     public mutating func setNetwork(_ enabled: Bool) { config.network = enabled }
     public mutating func setRosetta(_ enabled: Bool) { config.rosetta = enabled }
+    public mutating func setBootMode(_ mode: BootMode) { config.bootMode = mode }
+
+    /// Adds a USB disk to the configuration. Call `saveConfig()` to persist.
+    public mutating func addUSBDisk(_ usbDisk: USBDiskConfig) {
+        config.usbDisks.append(usbDisk)
+    }
+
+    /// Removes the USB disk at the given index. Call `saveConfig()` to persist.
+    public mutating func removeUSBDisk(at index: Int) throws {
+        guard config.usbDisks.indices.contains(index) else {
+            throw ToyVMError("USB disk index \(index) out of range")
+        }
+        config.usbDisks.remove(at: index)
+    }
+
+    /// Returns the URL of the EFI variable store in the active branch.
+    public var efiVariableStoreURL: URL {
+        config.efiVariableStoreURL(in: activeBranchURL)
+    }
 }

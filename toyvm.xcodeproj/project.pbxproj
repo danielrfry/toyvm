@@ -42,6 +42,7 @@
 		1905E70B0A9543FF8F98D8AA /* CreateVMView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56AE1426445B43F38113383F /* CreateVMView.swift */; };
 		80B187595613483FAE730017 /* TerminalDisplayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F732627BD9894C7FAC63A787 /* TerminalDisplayView.swift */; };
 		2D8BA0A8ECF546A7BAD31461 /* VMDisplayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 011BC10F27564173BD3A8F5E /* VMDisplayView.swift */; };
+		A3F1B72C8D4E49E2B1C5D906 /* GraphicsDisplayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E2C41DA3B5F4A8D9F0E6B23 /* GraphicsDisplayView.swift */; };
 		76DAFDA9DF524638B003BFEE /* Virtualization.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 375A3A9625684A8300EEB67A /* Virtualization.framework */; };
 		E986140149F94A68A1A984EC /* SwiftTerm in Frameworks */ = {isa = PBXBuildFile; productRef = 7B2403EB1B6E48D4BA52D628 /* SwiftTerm */; };
 /* End PBXBuildFile section */
@@ -91,6 +92,7 @@
 		56AE1426445B43F38113383F /* CreateVMView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateVMView.swift; sourceTree = "<group>"; };
 		F732627BD9894C7FAC63A787 /* TerminalDisplayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalDisplayView.swift; sourceTree = "<group>"; };
 		011BC10F27564173BD3A8F5E /* VMDisplayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VMDisplayView.swift; sourceTree = "<group>"; };
+		7E2C41DA3B5F4A8D9F0E6B23 /* GraphicsDisplayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GraphicsDisplayView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -229,6 +231,7 @@
 			children = (
 				F732627BD9894C7FAC63A787 /* TerminalDisplayView.swift */,
 				011BC10F27564173BD3A8F5E /* VMDisplayView.swift */,
+				7E2C41DA3B5F4A8D9F0E6B23 /* GraphicsDisplayView.swift */,
 			);
 			path = Terminal;
 			sourceTree = "<group>";
@@ -370,6 +373,7 @@
 				1905E70B0A9543FF8F98D8AA /* CreateVMView.swift in Sources */,
 				80B187595613483FAE730017 /* TerminalDisplayView.swift in Sources */,
 				2D8BA0A8ECF546A7BAD31461 /* VMDisplayView.swift in Sources */,
+				A3F1B72C8D4E49E2B1C5D906 /* GraphicsDisplayView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -5,8 +5,8 @@
 
 import SwiftUI
 
-/// Abstraction layer for VM display. Currently shows the terminal emulator;
-/// in future, can switch to VZVirtualMachineView for graphical guests.
+/// Abstraction layer for VM display. Routes to terminal emulator for
+/// Linux boot mode or VZVirtualMachineView for EFI/graphical boot mode.
 @available(macOS 14.0, *)
 struct VMDisplayView: View {
     let session: VMSession
@@ -16,11 +16,7 @@ struct VMDisplayView: View {
         case .terminal:
             TerminalDisplayView(session: session)
         case .graphics:
-            ContentUnavailableView(
-                "Graphics Display",
-                systemImage: "display",
-                description: Text("Graphical display support is not yet implemented. Use terminal mode for now.")
-            )
+            GraphicsDisplayView(session: session)
         }
     }
 }

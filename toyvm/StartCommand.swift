@@ -48,6 +48,12 @@ extension ToyVM {
         @Option(name: [.customShort("t"), .customLong("share-ro")], help: "As --share but adds a read-only directory share")
         var shareRO: [String] = []
 
+        @Option(name: .customLong("usb"), help: "Attach a USB disk image (read-write)")
+        var usb: [String] = []
+
+        @Option(name: .customLong("usb-ro"), help: "Attach a USB disk image (read-only, e.g. .iso installer)")
+        var usbRO: [String] = []
+
         @Option(name: [.customShort("p"), .long], help: "Number of CPUs to make available to the VM")
         var cpus: Int? = nil
 
@@ -67,24 +73,59 @@ extension ToyVM {
         var enableRosetta: Bool = false
 
         mutating func run() throws {
+            // Collect CLI USB disks
+            var cliUSBDisks: [USBDiskConfig] = []
+            for path in usb {
+                cliUSBDisks.append(USBDiskConfig(path: path, readOnly: false))
+            }
+            for path in usbRO {
+                cliUSBDisks.append(USBDiskConfig(path: path, readOnly: true))
+            }
+
             // Load bundle config if a bundle string was given (accept bare VM names)
             var bundleConfig: VMConfig? = nil
             var branchURL: URL? = nil
+            var vmBundle: VMBundle? = nil
             if let b = bundle {
                 let bundleURL = try resolveBundlePath(b, createParentIfNeeded: false)
-                let vmBundle = try VMBundle.load(from: bundleURL)
-                if vmBundle.activeBranchInfo?.readOnly == true {
+                let loaded = try VMBundle.load(from: bundleURL)
+                if loaded.activeBranchInfo?.readOnly == true {
                     throw ToyVMError(
-                        "Branch '\(vmBundle.meta.activeBranch)' is read-only; the VM cannot be started on a read-only branch."
+                        "Branch '\(loaded.meta.activeBranch)' is read-only; the VM cannot be started on a read-only branch."
                     )
                 }
-                branchURL = vmBundle.activeBranchURL
-                bundleConfig = vmBundle.config
+                branchURL = loaded.activeBranchURL
+                bundleConfig = loaded.config
+                vmBundle = loaded
             }
+
+            // For EFI mode bundles, use the bundle-based builder directly
+            if let vmBundle, vmBundle.config.bootMode == .efi {
+                // Merge CLI USB disks with bundle config
+                var bundleCopy = vmBundle
+                for usbDisk in cliUSBDisks {
+                    bundleCopy.addUSBDisk(usbDisk)
+                }
+                let ctx = try VirtualMachineBuilder.buildConfiguration(
+                    from: bundleCopy, noPersist: noPersist)
+                defer { ctx.cleanup() }
+
+                // Attach the console serial port to stdin/stdout (CLI-specific)
+                let consoleCfg = VZVirtioConsoleDeviceSerialPortConfiguration()
+                consoleCfg.attachment = VZFileHandleSerialPortAttachment(
+                    fileHandleForReading: .standardInput,
+                    fileHandleForWriting: .standardOutput
+                )
+                ctx.configuration.serialPorts = [consoleCfg]
+
+                return try runVM(configuration: ctx.configuration)
+            }
+
+            // Linux boot mode (direct kernel or bundle-based)
 
             // Resolve kernel path: CLI option takes precedence, then active branch
             guard let effectiveKernelPath = kernel
-                    ?? bundleConfig.flatMap({ cfg in branchURL.map { cfg.kernelURL(in: $0).path } })
+                    ?? bundleConfig.flatMap({ cfg in branchURL.flatMap { cfg.kernelURL(in: $0)?.path } })
             else {
                 throw ValidationError("--kernel is required when no VM bundle is specified")
             }
@@ -132,6 +173,10 @@ extension ToyVM {
                 shareMap[tag] = ShareConfig(tag: tag, path: path, readOnly: true)
             }
 
+            // Merge USB disks from bundle config and CLI
+            var allUSBDisks = bundleConfig?.usbDisks ?? []
+            allUSBDisks.append(contentsOf: cliUSBDisks)
+
             let ctx = try VirtualMachineBuilder.buildConfiguration(
                 kernelURL: URL(fileURLWithPath: effectiveKernelPath),
                 initrdURL: effectiveInitrd.map { URL(fileURLWithPath: $0) },
@@ -143,6 +188,7 @@ extension ToyVM {
                 enableRosetta: enableRosetta || (bundleConfig?.rosetta ?? false),
                 diskPaths: diskPaths,
                 shares: Array(shareMap.values),
+                usbDisks: allUSBDisks,
                 noPersist: noPersist
             )
             defer { ctx.cleanup() }
@@ -155,8 +201,12 @@ extension ToyVM {
             )
             ctx.configuration.serialPorts = [consoleCfg]
 
+            try runVM(configuration: ctx.configuration)
+        }
+
+        private func runVM(configuration: VZVirtualMachineConfiguration) throws {
             let vmDelegate = ToyVMDelegate()
-            let vm = VZVirtualMachine(configuration: ctx.configuration)
+            let vm = VZVirtualMachine(configuration: configuration)
             vm.delegate = vmDelegate
             vm.start { result in
                 if case .failure(let error) = result {

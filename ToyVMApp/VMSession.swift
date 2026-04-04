@@ -57,6 +57,9 @@ class VMSession {
             let ctx = try VirtualMachineBuilder.buildConfiguration(from: bundle)
             self.startContext = ctx
 
+            // Determine display mode from boot configuration
+            displayMode = ctx.hasGraphicsDevice ? .graphics : .terminal
+
             // Create pipe pair for serial ↔ terminal
             let input = Pipe()
             let output = Pipe()
