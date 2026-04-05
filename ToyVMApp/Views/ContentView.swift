@@ -52,16 +52,18 @@ struct ContentView: View {
             // Invisible helper to track full screen state of the hosting window
             FullScreenTracker(observer: fullScreenObserver)
         }
-        .background(vmIsActive ? Color.black : Color.clear)
+        .background(fullScreenObserver.isFullScreen && vmIsActive ? Color.black : Color.clear)
         .windowToolbarFullScreenVisibility(vmIsActive ? .onHover : .visible)
         .onChange(of: vmIsActive) { _, isActive in
-            if isActive {
-                columnVisibility = .detailOnly
+            // Auto-adjust sidebar only when in fullscreen
+            if fullScreenObserver.isFullScreen {
+                columnVisibility = isActive ? .detailOnly : .all
             }
         }
         .onChange(of: fullScreenObserver.isFullScreen) { _, isFullScreen in
-            if isFullScreen && vmIsActive {
-                columnVisibility = .detailOnly
+            // When entering fullscreen, adjust sidebar based on VM state
+            if isFullScreen {
+                columnVisibility = vmIsActive ? .detailOnly : .all
             }
         }
         .sheet(isPresented: $manager.showCreateSheet) {
