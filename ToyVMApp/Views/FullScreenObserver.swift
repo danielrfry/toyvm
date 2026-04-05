@@ -7,7 +7,7 @@ import AppKit
 import SwiftUI
 
 /// Monitors the full screen state of the hosting window via NSWindow notifications.
-@available(macOS 14.0, *)
+@available(macOS 15.0, *)
 @Observable
 final class FullScreenObserver {
     var isFullScreen = false
@@ -49,7 +49,7 @@ final class FullScreenObserver {
 
 /// A view modifier that finds the hosting NSWindow and feeds its full screen
 /// state into a binding.
-@available(macOS 14.0, *)
+@available(macOS 15.0, *)
 struct FullScreenTracker: NSViewRepresentable {
     let observer: FullScreenObserver
 

@@ -10,7 +10,7 @@ import ToyVMCore
 #endif
 
 /// NSViewRepresentable wrapping `VZVirtualMachineView` for graphical VM display.
-@available(macOS 14.0, *)
+@available(macOS 15.0, *)
 struct GraphicsDisplayView: NSViewRepresentable {
     let session: VMSession
 

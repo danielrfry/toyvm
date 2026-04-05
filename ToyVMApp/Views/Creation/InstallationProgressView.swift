@@ -9,7 +9,7 @@ import ToyVMCore
 #endif
 
 #if arch(arm64)
-@available(macOS 14.0, *)
+@available(macOS 15.0, *)
 struct InstallationProgressView: View {
     let installManager: MacOSInstallManager
     let onCancel: () -> Void

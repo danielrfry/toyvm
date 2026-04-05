@@ -10,7 +10,7 @@ import ToyVMCore
 #endif
 
 /// Discovers and manages VM bundles stored in ~/.toyvm.
-@available(macOS 14.0, *)
+@available(macOS 15.0, *)
 @Observable
 class VMManager {
     var bundles: [VMBundle] = []

@@ -5,7 +5,7 @@
 
 import SwiftUI
 
-@available(macOS 14.0, *)
+@available(macOS 15.0, *)
 @main
 struct ToyVMAppMain: App {
     @State private var manager = VMManager()

@@ -8,7 +8,7 @@ import SwiftUI
 import ToyVMCore
 #endif
 
-@available(macOS 14.0, *)
+@available(macOS 15.0, *)
 struct VMListView: View {
     @Bindable var manager: VMManager
     @State private var bundleToDelete: VMBundle?

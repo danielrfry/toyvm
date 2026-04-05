@@ -11,7 +11,7 @@ import ToyVMCore
 
 /// Represents the runtime state of a single VM, including its runner,
 /// serial port pipes, and display mode.
-@available(macOS 14.0, *)
+@available(macOS 15.0, *)
 @Observable
 class VMSession {
     enum DisplayMode {

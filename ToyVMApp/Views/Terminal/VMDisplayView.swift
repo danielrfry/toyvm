@@ -7,7 +7,7 @@ import SwiftUI
 
 /// Abstraction layer for VM display. Routes to terminal emulator for
 /// Linux boot mode or VZVirtualMachineView for EFI/graphical boot mode.
-@available(macOS 14.0, *)
+@available(macOS 15.0, *)
 struct VMDisplayView: View {
     let session: VMSession
 

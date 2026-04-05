@@ -11,7 +11,7 @@ import ToyVMCore
 
 /// Wraps SwiftTerm's `TerminalView` (AppKit NSView) for use in SwiftUI.
 /// Connects to a VMSession's serial port pipe pair for bidirectional I/O.
-@available(macOS 14.0, *)
+@available(macOS 15.0, *)
 struct TerminalDisplayView: NSViewRepresentable {
     let session: VMSession
 
