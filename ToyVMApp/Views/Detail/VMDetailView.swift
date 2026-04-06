@@ -295,6 +295,12 @@ struct VMDetailView: View {
         .help("Attach or detach USB storage devices")
     }
 
+    /// Whether directory shares can be modified while the VM is running.
+    /// Only macOS guests support hot-plug via VZMultipleDirectoryShare.
+    private var sharesAreEditable: Bool {
+        !isRunningOrStopping || session.bundle.config.bootMode == .macOS
+    }
+
     private var sharesMenu: some View {
         Menu {
             if !session.bundle.config.shares.isEmpty {
@@ -309,11 +315,13 @@ struct VMDetailView: View {
                         } label: {
                             Label("Edit…", systemImage: "pencil")
                         }
+                        .disabled(!sharesAreEditable)
                         Button(role: .destructive) {
                             shareToRemove = share
                         } label: {
                             Label("Remove", systemImage: "trash")
                         }
+                        .disabled(!sharesAreEditable)
                     }
                 }
                 Divider()
@@ -325,6 +333,7 @@ struct VMDetailView: View {
             } label: {
                 Label("Add Share…", systemImage: "plus")
             }
+            .disabled(!sharesAreEditable)
         } label: {
             Label("Directory Shares", systemImage: "folder.badge.plus")
         }
