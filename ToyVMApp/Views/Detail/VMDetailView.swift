@@ -17,6 +17,9 @@ struct VMDetailView: View {
     @State private var showConfigEditor = false
     @State private var showBranchSheet = false
     @State private var deviceToDetach: VMSession.AttachedUSBDevice?
+    @State private var showShareSheet = false
+    @State private var editingShare: ShareConfig?
+    @State private var shareToRemove: ShareConfig?
 
     private var runnerState: VMRunner.State {
         session.runner?.state ?? .stopped
@@ -59,6 +62,10 @@ struct VMDetailView: View {
                 if isRunningOrStopping && !isStopping {
                     usbMenu
                 }
+            }
+
+            ToolbarItem(placement: .automatic) {
+                sharesMenu
             }
 
             ToolbarItemGroup(placement: .primaryAction) {
@@ -136,6 +143,31 @@ struct VMDetailView: View {
             Button("Cancel", role: .cancel) {}
         } message: { device in
             Text("Detach '\(device.filename)' from the virtual machine?")
+        }
+        .sheet(isPresented: $showShareSheet) {
+            ShareEditSheet(session: session, existing: editingShare) {
+                editingShare = nil
+            }
+        }
+        .confirmationDialog(
+            "Remove Directory Share",
+            isPresented: .init(
+                get: { shareToRemove != nil },
+                set: { if !$0 { shareToRemove = nil } }
+            ),
+            presenting: shareToRemove
+        ) { share in
+            Button("Remove", role: .destructive) {
+                do {
+                    try session.bundle.removeShare(tag: share.tag)
+                    try session.bundle.saveConfig()
+                } catch {
+                    session.errorMessage = error.localizedDescription
+                }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: { share in
+            Text("Remove the directory share '\(share.tag)'?")
         }
     }
 
@@ -260,6 +292,45 @@ struct VMDetailView: View {
             Label("USB Devices", systemImage: "externaldrive.badge.plus")
         }
         .help("Attach or detach USB storage devices")
+    }
+
+    private var sharesMenu: some View {
+        Menu {
+            if !session.bundle.config.shares.isEmpty {
+                ForEach(session.bundle.config.shares, id: \.tag) { share in
+                    Menu(share.tag) {
+                        Text("\(share.path)")
+                        Text(share.readOnly ? "Read-only" : "Read/write")
+                        Divider()
+                        Button {
+                            editingShare = share
+                            showShareSheet = true
+                        } label: {
+                            Label("Edit…", systemImage: "pencil")
+                        }
+                        .disabled(isRunningOrStopping)
+                        Button(role: .destructive) {
+                            shareToRemove = share
+                        } label: {
+                            Label("Remove", systemImage: "trash")
+                        }
+                        .disabled(isRunningOrStopping)
+                    }
+                }
+                Divider()
+            }
+
+            Button {
+                editingShare = nil
+                showShareSheet = true
+            } label: {
+                Label("Add Share…", systemImage: "plus")
+            }
+            .disabled(isRunningOrStopping)
+        } label: {
+            Label("Directory Shares", systemImage: "folder.badge.plus")
+        }
+        .help("Manage directory shares")
     }
 
     private func attachUSBDisk() {
