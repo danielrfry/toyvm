@@ -3,6 +3,7 @@
 //  ToyVMApp
 //
 
+import AppKit
 import Foundation
 import Virtualization
 import SwiftTerm
@@ -17,7 +18,7 @@ import ToyVMCore
 class VMSession {
     enum DisplayMode {
         case terminal
-        case graphics  // Future: VZVirtualMachineView
+        case graphics
     }
 
     var bundle: VMBundle
@@ -26,23 +27,23 @@ class VMSession {
     var errorMessage: String?
     var automaticDisplayResize: Bool = true
 
-    /// Retained terminal view instance, so scroll buffer and state survive
-    /// navigation away from the VM and back.
-    var terminalView: TerminalView?
+    /// Terminal emulator view. Created on first terminal-mode start and kept
+    /// alive for the lifetime of the session so the scroll buffer is preserved.
+    private(set) var terminalView: TerminalView?
 
-    /// Pipe pair connecting the VM serial port to the terminal emulator.
-    /// inputPipe: terminal writes → VM reads
-    /// outputPipe: VM writes → terminal reads
-    private(set) var inputPipe: Pipe?
-    private(set) var outputPipe: Pipe?
+    /// Pipes are private — I/O is wired entirely within VMSession.
+    private var inputPipe: Pipe?
+    private var outputPipe: Pipe?
 
     private var startContext: VMStartContext?
+    private var terminalCoordinator: TerminalCoordinator?
 
     init(bundle: VMBundle) {
         self.bundle = bundle
     }
 
-    /// Reload bundle configuration from disk.
+    // MARK: - Lifecycle
+
     func reloadBundle() {
         do {
             bundle = try VMBundle.load(from: bundle.bundleURL)
@@ -51,7 +52,6 @@ class VMSession {
         }
     }
 
-    /// Start the VM using the bundle's active branch configuration.
     @MainActor
     func start() async {
         guard runner?.state.isRunning != true else { return }
@@ -63,14 +63,23 @@ class VMSession {
             let ctx = try VirtualMachineBuilder.buildConfiguration(from: bundle)
             self.startContext = ctx
 
-            // Determine display mode from boot configuration
             displayMode = ctx.hasGraphicsDevice ? .graphics : .terminal
 
-            // Create pipe pair for serial ↔ terminal
             let input = Pipe()
             let output = Pipe()
             inputPipe = input
             outputPipe = output
+
+            if displayMode == .terminal {
+                setupTerminalIfNeeded()
+                // Wire the output pipe to the terminal for the lifetime of this run.
+                output.fileHandleForReading.readabilityHandler = { [weak self] handle in
+                    let data = handle.availableData
+                    guard !data.isEmpty else { return }
+                    let bytes = ArraySlice([UInt8](data))
+                    DispatchQueue.main.async { self?.terminalView?.feed(byteArray: bytes) }
+                }
+            }
 
             let consoleCfg = VZVirtioConsoleDeviceSerialPortConfiguration()
             consoleCfg.attachment = VZFileHandleSerialPortAttachment(
@@ -89,7 +98,6 @@ class VMSession {
         }
     }
 
-    /// Request graceful shutdown.
     @MainActor
     func requestStop() {
         do {
@@ -99,7 +107,6 @@ class VMSession {
         }
     }
 
-    /// Force-stop the VM immediately.
     @MainActor
     func forceStop() {
         runner?.forceStop()
@@ -107,9 +114,57 @@ class VMSession {
     }
 
     private func cleanup() {
+        outputPipe?.fileHandleForReading.readabilityHandler = nil
         startContext?.cleanup()
         startContext = nil
         inputPipe = nil
         outputPipe = nil
+    }
+
+    // MARK: - Terminal setup
+
+    /// Creates the TerminalView and its coordinator on first use. Subsequent
+    /// calls are no-ops, preserving the existing view and its scroll buffer.
+    @MainActor
+    private func setupTerminalIfNeeded() {
+        guard terminalView == nil else { return }
+
+        let tv = TerminalView(frame: .zero)
+        tv.configureNativeColors()
+        tv.getTerminal().resize(cols: 120, rows: 40)
+
+        let coord = TerminalCoordinator(session: self)
+        tv.terminalDelegate = coord
+
+        terminalCoordinator = coord
+        terminalView = tv
+    }
+
+    // MARK: - Terminal coordinator
+
+    /// Handles keyboard input from the terminal view and forwards it to the
+    /// VM's serial input pipe. Lives on VMSession so it persists across
+    /// SwiftUI view recreation.
+    private class TerminalCoordinator: NSObject, TerminalViewDelegate {
+        weak var session: VMSession?
+
+        init(session: VMSession) {
+            self.session = session
+        }
+
+        func send(source: TerminalView, data: ArraySlice<UInt8>) {
+            session?.inputPipe?.fileHandleForWriting.write(Data(data))
+        }
+
+        func clipboardCopy(source: TerminalView, content: Data) {
+            NSPasteboard.general.clearContents()
+            NSPasteboard.general.setData(content, forType: .string)
+        }
+
+        func scrolled(source: TerminalView, position: Double) {}
+        func setTerminalTitle(source: TerminalView, title: String) {}
+        func sizeChanged(source: TerminalView, newCols: Int, newRows: Int) {}
+        func hostCurrentDirectoryUpdate(source: TerminalView, directory: String?) {}
+        func rangeChanged(source: TerminalView, startY: Int, endY: Int) {}
     }
 }
