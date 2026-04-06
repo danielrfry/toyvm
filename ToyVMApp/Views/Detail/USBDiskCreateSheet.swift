@@ -72,7 +72,7 @@ struct USBDiskCreateSheet: View {
                 Button("Cancel") { dismiss() }
                     .keyboardShortcut(.cancelAction)
                 Spacer()
-                Button("Create") { createDisk() }
+                Button("Create") { performCreate() }
                     .keyboardShortcut(.defaultAction)
                     .disabled(sizeText.isEmpty || locationURL == nil || isCreating)
             }
@@ -92,7 +92,7 @@ struct USBDiskCreateSheet: View {
         locationURL = url
     }
 
-    private func createDisk() {
+    private func performCreate() {
         guard let url = locationURL else { return }
         isCreating = true
         errorMessage = nil
@@ -100,10 +100,10 @@ struct USBDiskCreateSheet: View {
         Task {
             do {
                 let size = try parseSize(sizeText)
-                try ToyVMCore.createDisk(at: url, size: size, format: format)
+                try createDisk(at: url, size: size, format: format)
 
                 if initialise {
-                    try ToyVMCore.initialiseDisk(at: url)
+                    try initialiseDisk(at: url)
                 }
 
                 try await session.attachUSBDisk(url: url, readOnly: readOnly)
