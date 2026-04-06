@@ -20,6 +20,7 @@ struct VMDetailView: View {
     @State private var showShareSheet = false
     @State private var editingShare: ShareConfig?
     @State private var shareToRemove: ShareConfig?
+    @State private var showUSBDiskCreateSheet = false
 
     private var runnerState: VMRunner.State {
         session.runner?.state ?? .stopped
@@ -148,6 +149,9 @@ struct VMDetailView: View {
             ShareEditSheet(session: session, existing: editingShare) {
                 editingShare = nil
             }
+        }
+        .sheet(isPresented: $showUSBDiskCreateSheet) {
+            USBDiskCreateSheet(session: session)
         }
         .confirmationDialog(
             "Remove Directory Share",
@@ -288,6 +292,12 @@ struct VMDetailView: View {
                 attachUSBDisk()
             } label: {
                 Label("Add USB Device…", systemImage: "plus")
+            }
+
+            Button {
+                showUSBDiskCreateSheet = true
+            } label: {
+                Label("Create USB Disk Image…", systemImage: "plus.rectangle.on.folder")
             }
         } label: {
             Label("USB Devices", systemImage: "externaldrive.badge.plus")

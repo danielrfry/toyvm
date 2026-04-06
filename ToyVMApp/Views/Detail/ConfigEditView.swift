@@ -4,6 +4,7 @@
 //
 
 import SwiftUI
+import AppKit
 #if canImport(ToyVMCore)
 import ToyVMCore
 #endif
@@ -22,6 +23,8 @@ struct ConfigEditView: View {
     @State private var bootMode: BootMode
     @State private var usbDisks: [USBDiskConfig]
     @State private var errorMessage: String?
+    @State private var showDiskCreateSheet = false
+    @State private var diskToRemove: DiskConfig?
 
     init(session: VMSession) {
         self.session = session
@@ -78,9 +81,24 @@ struct ConfigEditView: View {
                     Section("Disks") {
                         ForEach(session.bundle.config.disks, id: \.file) { disk in
                             LabeledContent(disk.file) {
-                                Text("\(disk.format.rawValue), \(disk.readOnly ? "ro" : "rw")")
+                                HStack {
+                                    Text("\(disk.format.rawValue), \(disk.readOnly ? "ro" : "rw")")
+                                    Button(role: .destructive) {
+                                        diskToRemove = disk
+                                    } label: {
+                                        Image(systemName: "trash")
+                                    }
+                                    .buttonStyle(.borderless)
+                                }
                             }
                         }
+                        Button("Add Disk…") { showDiskCreateSheet = true }
+                    }
+                } else {
+                    Section("Disks") {
+                        Text("No disks configured")
+                            .foregroundStyle(.secondary)
+                        Button("Add Disk…") { showDiskCreateSheet = true }
                     }
                 }
 
@@ -143,6 +161,29 @@ struct ConfigEditView: View {
             .padding()
         }
         .frame(minWidth: 450, minHeight: 400)
+        .sheet(isPresented: $showDiskCreateSheet) {
+            DiskCreateSheet(session: session)
+        }
+        .confirmationDialog(
+            "Remove Disk",
+            isPresented: .init(
+                get: { diskToRemove != nil },
+                set: { if !$0 { diskToRemove = nil } }
+            ),
+            presenting: diskToRemove
+        ) { disk in
+            Button("Remove", role: .destructive) {
+                do {
+                    try session.bundle.removeDisk(named: disk.file)
+                    try session.bundle.saveConfig()
+                } catch {
+                    errorMessage = error.localizedDescription
+                }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: { disk in
+            Text("Remove '\(disk.file)'? The disk image will be permanently deleted.")
+        }
     }
 
     private func save() {

@@ -283,6 +283,53 @@ public func createDisk(at url: URL, size: UInt64, format: DiskFormat) throws {
     }
 }
 
+/// Initialises a disk image with a GPT partition scheme containing a single ExFAT partition.
+/// Works by mounting the image with hdiutil, partitioning with diskutil, then ejecting.
+public func initialiseDisk(at url: URL) throws {
+    // Mount the disk image without auto-mounting its volumes
+    let hdiutil = Process()
+    hdiutil.executableURL = URL(fileURLWithPath: "/usr/bin/hdiutil")
+    hdiutil.arguments = ["attach", "-nomount", url.path]
+    let pipe = Pipe()
+    hdiutil.standardOutput = pipe
+    hdiutil.standardError = FileHandle.nullDevice
+    try hdiutil.run()
+    hdiutil.waitUntilExit()
+    guard hdiutil.terminationStatus == 0 else {
+        throw ToyVMError("hdiutil failed to mount disk image")
+    }
+
+    let outputData = pipe.fileHandleForReading.readDataToEndOfFile()
+    guard let output = String(data: outputData, encoding: .utf8),
+          let deviceNode = output.components(separatedBy: .whitespaces).first(where: { $0.hasPrefix("/dev/disk") }) else {
+        throw ToyVMError("Could not determine device node from hdiutil output")
+    }
+
+    // Partition with GPT + single ExFAT partition
+    let diskutil = Process()
+    diskutil.executableURL = URL(fileURLWithPath: "/usr/sbin/diskutil")
+    diskutil.arguments = ["partitionDisk", deviceNode, "GPT", "ExFAT", "toyvm", "0b"]
+    diskutil.standardOutput = FileHandle.nullDevice
+    diskutil.standardError = FileHandle.nullDevice
+    try diskutil.run()
+    diskutil.waitUntilExit()
+
+    let partitionSuccess = diskutil.terminationStatus == 0
+
+    // Always eject, even if partitioning failed
+    let eject = Process()
+    eject.executableURL = URL(fileURLWithPath: "/usr/sbin/diskutil")
+    eject.arguments = ["eject", deviceNode]
+    eject.standardOutput = FileHandle.nullDevice
+    eject.standardError = FileHandle.nullDevice
+    try eject.run()
+    eject.waitUntilExit()
+
+    if !partitionSuccess {
+        throw ToyVMError("diskutil failed to partition disk image")
+    }
+}
+
 /// Parses a `[tag:]path` share argument. If no tag prefix is present, uses "share".
 public func parseShareArg(_ arg: String) -> (tag: String, path: String) {
     if let colonIdx = arg.firstIndex(of: ":") {
