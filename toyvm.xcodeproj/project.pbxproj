@@ -19,6 +19,8 @@
 		3267BA3FD5B340B09D4E1F93 /* BranchCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E10A52C1C074057822BA3F3 /* BranchCommand.swift */; };
 		375A3A9725684A8300EEB67A /* Virtualization.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 375A3A9625684A8300EEB67A /* Virtualization.framework */; };
 		379D2F392F83C6B800B30354 /* TerminalLayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379D2F382F83C6B800B30354 /* TerminalLayerView.swift */; };
+		379D2F3E2F83D04600B30354 /* BranchManagementSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379D2F3B2F83D04600B30354 /* BranchManagementSheet.swift */; };
+		379D2F3F2F83D04600B30354 /* BranchTreeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379D2F3C2F83D04600B30354 /* BranchTreeView.swift */; };
 		37D4731C2F6624570027142F /* VMConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37D4731B2F6624570027142F /* VMConfig.swift */; };
 		37F379B72F66E422004A32AF /* ConfigCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37F379B42F66E422004A32AF /* ConfigCommand.swift */; };
 		37F379B82F66E422004A32AF /* StartCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37F379B62F66E422004A32AF /* StartCommand.swift */; };
@@ -76,6 +78,8 @@
 		375A3A9B2568500400EEB67A /* toyvm.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = toyvm.entitlements; sourceTree = "<group>"; };
 		377D19C7491A4F449C5C298B /* VMRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VMRowView.swift; sourceTree = "<group>"; };
 		379D2F382F83C6B800B30354 /* TerminalLayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalLayerView.swift; sourceTree = "<group>"; };
+		379D2F3B2F83D04600B30354 /* BranchManagementSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BranchManagementSheet.swift; sourceTree = "<group>"; };
+		379D2F3C2F83D04600B30354 /* BranchTreeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BranchTreeView.swift; sourceTree = "<group>"; };
 		379F73F5257405E1008AAEB7 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		37D4731B2F6624570027142F /* VMConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VMConfig.swift; sourceTree = "<group>"; };
 		37F379B42F66E422004A32AF /* ConfigCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigCommand.swift; sourceTree = "<group>"; };
@@ -197,6 +201,15 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
+		379D2F3D2F83D04600B30354 /* Branch */ = {
+			isa = PBXGroup;
+			children = (
+				379D2F3B2F83D04600B30354 /* BranchManagementSheet.swift */,
+				379D2F3C2F83D04600B30354 /* BranchTreeView.swift */,
+			);
+			path = Branch;
+			sourceTree = "<group>";
+		};
 		3A72C9481450469782166E38 /* Creation */ = {
 			isa = PBXGroup;
 			children = (
@@ -211,6 +224,7 @@
 			children = (
 				C3ABAB81DB2F47B1B742EC22 /* ContentView.swift */,
 				A1B2C3D4E5F60718FF001100 /* FullScreenObserver.swift */,
+				379D2F3D2F83D04600B30354 /* Branch */,
 				4BA9F342E5E4486D88096802 /* Sidebar */,
 				6A762C8CDDC54C99A9BB5B6E /* Detail */,
 				3A72C9481450469782166E38 /* Creation */,
@@ -379,6 +393,8 @@
 				F9F14730DA8E4599A0806B9C /* BundleMeta.swift in Sources */,
 				67951160F3EA4AD1A6359EEF /* DiskInfo.swift in Sources */,
 				075D5CB3F6B5427F8953D31A /* VMBundle.swift in Sources */,
+				379D2F3E2F83D04600B30354 /* BranchManagementSheet.swift in Sources */,
+				379D2F3F2F83D04600B30354 /* BranchTreeView.swift in Sources */,
 				233496F521F64DE7A7CD4291 /* VirtualMachineBuilder.swift in Sources */,
 				F9938EC2F4554FD29347F09A /* VMRunner.swift in Sources */,
 				D1A2B3C4E5F6071899001122 /* RestoreImageManager.swift in Sources */,

@@ -13,6 +13,7 @@ struct VMDetailView: View {
     @Bindable var session: VMSession
     let manager: VMManager
     @State private var showConfigEditor = false
+    @State private var showBranchSheet = false
 
     private var runnerState: VMRunner.State {
         session.runner?.state ?? .stopped
@@ -93,6 +94,9 @@ struct VMDetailView: View {
         .sheet(isPresented: $showConfigEditor) {
             ConfigEditView(session: session)
         }
+        .sheet(isPresented: $showBranchSheet) {
+            BranchManagementSheet(session: session)
+        }
         .alert("Error", isPresented: .init(
             get: { session.errorMessage != nil },
             set: { if !$0 { session.errorMessage = nil } }
@@ -134,9 +138,16 @@ struct VMDetailView: View {
                 }
 
                 GroupBox("Branch") {
-                    LabeledContent("Active Branch", value: session.bundle.meta.activeBranch)
-                    if session.bundle.activeBranchInfo?.readOnly == true {
-                        LabeledContent("Read-Only", value: "Yes")
+                    HStack {
+                        LabeledContent("Active Branch", value: session.bundle.meta.activeBranch)
+                        if session.bundle.activeBranchInfo?.readOnly == true {
+                            Image(systemName: "lock.fill")
+                                .foregroundStyle(.secondary)
+                                .help("Read-only")
+                        }
+                        Spacer()
+                        Button("Manage…") { showBranchSheet = true }
+                            .disabled(isRunningOrStopping)
                     }
                 }
 

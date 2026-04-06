@@ -372,6 +372,15 @@ public struct VMBundle {
         try saveMeta()
     }
 
+    /// Sets or clears the read-only flag on the specified branch.
+    public mutating func setBranchReadOnly(_ readOnly: Bool, branch: String) throws {
+        guard meta.branches[branch] != nil else {
+            throw ToyVMError("Branch '\(branch)' not found in metadata")
+        }
+        meta.branches[branch]!.readOnly = readOnly
+        try saveMeta()
+    }
+
     // MARK: - Config file operations
 
     /// Replaces the kernel image file with the one at the given URL.
