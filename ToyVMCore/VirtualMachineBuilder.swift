@@ -191,6 +191,11 @@ public enum VirtualMachineBuilder {
 
         vzConfig.directorySharingDevices = Array(sharedDirs.values)
 
+        // XHCI USB controller for runtime hot-plug
+        if #available(macOS 15.0, *) {
+            vzConfig.usbControllers = [VZXHCIControllerConfiguration()]
+        }
+
         try vzConfig.validate()
 
         return VMStartContext(configuration: vzConfig, cleanupPaths: cleanupPaths, hasGraphicsDevice: false)
@@ -280,6 +285,11 @@ public enum VirtualMachineBuilder {
         }
 
         vzConfig.directorySharingDevices = Array(sharedDirs.values)
+
+        // XHCI USB controller for runtime hot-plug
+        if #available(macOS 15.0, *) {
+            vzConfig.usbControllers = [VZXHCIControllerConfiguration()]
+        }
 
         try vzConfig.validate()
 
@@ -381,6 +391,11 @@ public enum VirtualMachineBuilder {
         }
 
         vzConfig.directorySharingDevices = Array(sharedDirs.values)
+
+        // XHCI USB controller for runtime hot-plug
+        if #available(macOS 15.0, *) {
+            vzConfig.usbControllers = [VZXHCIControllerConfiguration()]
+        }
 
         try vzConfig.validate()
 

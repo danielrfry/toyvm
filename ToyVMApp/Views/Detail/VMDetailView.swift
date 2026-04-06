@@ -4,6 +4,8 @@
 //
 
 import SwiftUI
+import AppKit
+import UniformTypeIdentifiers
 #if canImport(ToyVMCore)
 import ToyVMCore
 #endif
@@ -14,6 +16,7 @@ struct VMDetailView: View {
     let manager: VMManager
     @State private var showConfigEditor = false
     @State private var showBranchSheet = false
+    @State private var deviceToDetach: VMSession.AttachedUSBDevice?
 
     private var runnerState: VMRunner.State {
         session.runner?.state ?? .stopped
@@ -52,6 +55,12 @@ struct VMDetailView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(showsOpaqueBackground ? Color(nsColor: .windowBackgroundColor) : Color.clear)
         .toolbar {
+            ToolbarItem(placement: .automatic) {
+                if isRunningOrStopping && !isStopping {
+                    usbMenu
+                }
+            }
+
             ToolbarItemGroup(placement: .primaryAction) {
                 if isRunningOrStopping {
                     Button {
@@ -106,6 +115,27 @@ struct VMDetailView: View {
             if let msg = session.errorMessage {
                 Text(msg)
             }
+        }
+        .confirmationDialog(
+            "Detach USB Device",
+            isPresented: .init(
+                get: { deviceToDetach != nil },
+                set: { if !$0 { deviceToDetach = nil } }
+            ),
+            presenting: deviceToDetach
+        ) { device in
+            Button("Detach", role: .destructive) {
+                Task {
+                    do {
+                        try await session.detachUSBDevice(id: device.id)
+                    } catch {
+                        session.errorMessage = error.localizedDescription
+                    }
+                }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: { device in
+            Text("Detach '\(device.filename)' from the virtual machine?")
         }
     }
 
@@ -202,6 +232,63 @@ struct VMDetailView: View {
         case .error(let msg):
             Label("Error: \(msg)", systemImage: "exclamationmark.triangle.fill")
                 .foregroundStyle(.red)
+        }
+    }
+
+    private var usbMenu: some View {
+        Menu {
+            if !session.attachedUSBDevices.isEmpty {
+                ForEach(session.attachedUSBDevices) { device in
+                    Button {
+                        deviceToDetach = device
+                    } label: {
+                        Label(
+                            device.filename,
+                            systemImage: device.readOnly ? "lock.fill" : "externaldrive.fill"
+                        )
+                    }
+                }
+                Divider()
+            }
+            
+            Button {
+                attachUSBDisk()
+            } label: {
+                Label("Add USB Device…", systemImage: "plus")
+            }
+        } label: {
+            Label("USB Devices", systemImage: "externaldrive.badge.plus")
+        }
+        .help("Attach or detach USB storage devices")
+    }
+
+    private func attachUSBDisk() {
+        let panel = NSOpenPanel()
+        panel.title = "Select Disk Image"
+        panel.allowedContentTypes = [
+            UTType(filenameExtension: "img"),
+            UTType(filenameExtension: "iso"),
+            UTType(filenameExtension: "raw"),
+            UTType(filenameExtension: "asif"),
+        ].compactMap { $0 }
+        panel.allowsOtherFileTypes = true
+        panel.canChooseDirectories = false
+        panel.allowsMultipleSelection = false
+
+        let accessoryView = NSButton(checkboxWithTitle: "Read-only", target: nil, action: nil)
+        accessoryView.state = .on
+        panel.accessoryView = accessoryView
+        panel.isAccessoryViewDisclosed = true
+
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        let readOnly = accessoryView.state == .on
+
+        Task {
+            do {
+                try await session.attachUSBDisk(url: url, readOnly: readOnly)
+            } catch {
+                session.errorMessage = error.localizedDescription
+            }
         }
     }
 }
