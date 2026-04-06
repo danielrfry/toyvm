@@ -308,13 +308,11 @@ struct VMDetailView: View {
                         } label: {
                             Label("Edit…", systemImage: "pencil")
                         }
-                        .disabled(isRunningOrStopping)
                         Button(role: .destructive) {
                             shareToRemove = share
                         } label: {
                             Label("Remove", systemImage: "trash")
                         }
-                        .disabled(isRunningOrStopping)
                     }
                 }
                 Divider()
@@ -326,7 +324,6 @@ struct VMDetailView: View {
             } label: {
                 Label("Add Share…", systemImage: "plus")
             }
-            .disabled(isRunningOrStopping)
         } label: {
             Label("Directory Shares", systemImage: "folder.badge.plus")
         }

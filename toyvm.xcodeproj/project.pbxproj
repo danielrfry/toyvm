@@ -21,6 +21,7 @@
 		379D2F392F83C6B800B30354 /* TerminalLayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379D2F382F83C6B800B30354 /* TerminalLayerView.swift */; };
 		379D2F3E2F83D04600B30354 /* BranchManagementSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379D2F3B2F83D04600B30354 /* BranchManagementSheet.swift */; };
 		379D2F3F2F83D04600B30354 /* BranchTreeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379D2F3C2F83D04600B30354 /* BranchTreeView.swift */; };
+		379D2F412F83DFEB00B30354 /* ShareEditSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379D2F402F83DFEB00B30354 /* ShareEditSheet.swift */; };
 		37D4731C2F6624570027142F /* VMConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37D4731B2F6624570027142F /* VMConfig.swift */; };
 		37F379B72F66E422004A32AF /* ConfigCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37F379B42F66E422004A32AF /* ConfigCommand.swift */; };
 		37F379B82F66E422004A32AF /* StartCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37F379B62F66E422004A32AF /* StartCommand.swift */; };
@@ -80,6 +81,7 @@
 		379D2F382F83C6B800B30354 /* TerminalLayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalLayerView.swift; sourceTree = "<group>"; };
 		379D2F3B2F83D04600B30354 /* BranchManagementSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BranchManagementSheet.swift; sourceTree = "<group>"; };
 		379D2F3C2F83D04600B30354 /* BranchTreeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BranchTreeView.swift; sourceTree = "<group>"; };
+		379D2F402F83DFEB00B30354 /* ShareEditSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareEditSheet.swift; sourceTree = "<group>"; };
 		379F73F5257405E1008AAEB7 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		37D4731B2F6624570027142F /* VMConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VMConfig.swift; sourceTree = "<group>"; };
 		37F379B42F66E422004A32AF /* ConfigCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigCommand.swift; sourceTree = "<group>"; };
@@ -261,6 +263,7 @@
 		6A762C8CDDC54C99A9BB5B6E /* Detail */ = {
 			isa = PBXGroup;
 			children = (
+				379D2F402F83DFEB00B30354 /* ShareEditSheet.swift */,
 				5F47309864A54484B8B0A1D4 /* VMDetailView.swift */,
 				F7EAF14B5D7B45D580CF1606 /* ConfigEditView.swift */,
 			);
@@ -401,6 +404,7 @@
 				D1A2B3C4E5F6071899002233 /* MacOSInstallManager.swift in Sources */,
 				E51DDF9C282A4E078ABF8BF9 /* ToyVMAppMain.swift in Sources */,
 				2B42DD60985348AFA4B53C67 /* VMManager.swift in Sources */,
+				379D2F412F83DFEB00B30354 /* ShareEditSheet.swift in Sources */,
 				BDC22BC1D54C4F909776175D /* VMSession.swift in Sources */,
 				C5E09C66F4914339A11103C3 /* ContentView.swift in Sources */,
 				639BE3B6449A46B78D8D1D2A /* VMListView.swift in Sources */,
