@@ -329,7 +329,7 @@ public func initialiseDisk(at url: URL, volumeLabel: String = "Data") throws {
 
     let outputData = pipe.fileHandleForReading.readDataToEndOfFile()
     guard let output = String(data: outputData, encoding: .utf8),
-          let deviceNode = output.components(separatedBy: .whitespaces).first(where: { $0.hasPrefix("/dev/disk") }) else {
+          let deviceNode = output.components(separatedBy: .whitespacesAndNewlines).first(where: { $0.hasPrefix("/dev/disk") }) else {
         throw ToyVMError("Could not determine device node from diskutil output")
     }
 
