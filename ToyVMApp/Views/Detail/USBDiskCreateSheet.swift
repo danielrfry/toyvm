@@ -17,6 +17,7 @@ struct USBDiskCreateSheet: View {
     @State private var sizeText: String = "20G"
     @State private var format: DiskFormat = .raw
     @State private var initialise: Bool = false
+    @State private var volumeLabel: String = "Data"
     @State private var readOnly: Bool = false
     @State private var locationURL: URL?
     @State private var errorMessage: String?
@@ -49,6 +50,10 @@ struct USBDiskCreateSheet: View {
                 Toggle("Initialise (GPT + ExFAT)", isOn: $initialise)
                     .help("Format the disk with a GPT partition scheme and ExFAT filesystem")
 
+                if initialise {
+                    TextField("Volume label:", text: $volumeLabel)
+                }
+
                 Toggle("Read-only", isOn: $readOnly)
             }
             .formStyle(.grouped)
@@ -74,7 +79,7 @@ struct USBDiskCreateSheet: View {
                 Spacer()
                 Button("Create") { performCreate() }
                     .keyboardShortcut(.defaultAction)
-                    .disabled(sizeText.isEmpty || locationURL == nil || isCreating)
+                    .disabled(sizeText.isEmpty || locationURL == nil || isCreating || (initialise && volumeLabel.isEmpty))
             }
             .padding()
         }
@@ -103,7 +108,7 @@ struct USBDiskCreateSheet: View {
                 try createDisk(at: url, size: size, format: format)
 
                 if initialise {
-                    try initialiseDisk(at: url)
+                    try initialiseDisk(at: url, volumeLabel: volumeLabel.isEmpty ? "Data" : volumeLabel)
                 }
 
                 try await session.attachUSBDisk(url: url, readOnly: readOnly)

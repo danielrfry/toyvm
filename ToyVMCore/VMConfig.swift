@@ -284,31 +284,33 @@ public func createDisk(at url: URL, size: UInt64, format: DiskFormat) throws {
 }
 
 /// Initialises a disk image with a GPT partition scheme containing a single ExFAT partition.
-/// Works by mounting the image with hdiutil, partitioning with diskutil, then ejecting.
-public func initialiseDisk(at url: URL) throws {
-    // Mount the disk image without auto-mounting its volumes
-    let hdiutil = Process()
-    hdiutil.executableURL = URL(fileURLWithPath: "/usr/bin/hdiutil")
-    hdiutil.arguments = ["attach", "-nomount", url.path]
+/// Works by attaching the image with `diskutil image attach -n` (supports raw and ASIF formats),
+/// partitioning with diskutil, then ejecting.
+public func initialiseDisk(at url: URL, volumeLabel: String = "Data") throws {
+    // Attach the disk image without mounting its filesystems.
+    // diskutil image attach supports both raw and ASIF formats; hdiutil does not support ASIF.
+    let attach = Process()
+    attach.executableURL = URL(fileURLWithPath: "/usr/sbin/diskutil")
+    attach.arguments = ["image", "attach", "-n", url.path]
     let pipe = Pipe()
-    hdiutil.standardOutput = pipe
-    hdiutil.standardError = FileHandle.nullDevice
-    try hdiutil.run()
-    hdiutil.waitUntilExit()
-    guard hdiutil.terminationStatus == 0 else {
-        throw ToyVMError("hdiutil failed to mount disk image")
+    attach.standardOutput = pipe
+    attach.standardError = FileHandle.nullDevice
+    try attach.run()
+    attach.waitUntilExit()
+    guard attach.terminationStatus == 0 else {
+        throw ToyVMError("diskutil image attach failed for disk image")
     }
 
     let outputData = pipe.fileHandleForReading.readDataToEndOfFile()
     guard let output = String(data: outputData, encoding: .utf8),
           let deviceNode = output.components(separatedBy: .whitespaces).first(where: { $0.hasPrefix("/dev/disk") }) else {
-        throw ToyVMError("Could not determine device node from hdiutil output")
+        throw ToyVMError("Could not determine device node from diskutil output")
     }
 
-    // Partition with GPT + single ExFAT partition
+    // Partition with GPT + single ExFAT partition using the provided label
     let diskutil = Process()
     diskutil.executableURL = URL(fileURLWithPath: "/usr/sbin/diskutil")
-    diskutil.arguments = ["partitionDisk", deviceNode, "GPT", "ExFAT", "toyvm", "0b"]
+    diskutil.arguments = ["partitionDisk", deviceNode, "GPT", "ExFAT", volumeLabel, "0b"]
     diskutil.standardOutput = FileHandle.nullDevice
     diskutil.standardError = FileHandle.nullDevice
     try diskutil.run()

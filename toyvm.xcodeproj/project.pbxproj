@@ -22,6 +22,8 @@
 		379D2F3E2F83D04600B30354 /* BranchManagementSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379D2F3B2F83D04600B30354 /* BranchManagementSheet.swift */; };
 		379D2F3F2F83D04600B30354 /* BranchTreeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379D2F3C2F83D04600B30354 /* BranchTreeView.swift */; };
 		379D2F412F83DFEB00B30354 /* ShareEditSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379D2F402F83DFEB00B30354 /* ShareEditSheet.swift */; };
+		379D2F442F83FAA400B30354 /* DiskCreateSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379D2F422F83FAA400B30354 /* DiskCreateSheet.swift */; };
+		379D2F452F83FAA400B30354 /* USBDiskCreateSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379D2F432F83FAA400B30354 /* USBDiskCreateSheet.swift */; };
 		37D4731C2F6624570027142F /* VMConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37D4731B2F6624570027142F /* VMConfig.swift */; };
 		37F379B72F66E422004A32AF /* ConfigCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37F379B42F66E422004A32AF /* ConfigCommand.swift */; };
 		37F379B82F66E422004A32AF /* StartCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37F379B62F66E422004A32AF /* StartCommand.swift */; };
@@ -82,6 +84,8 @@
 		379D2F3B2F83D04600B30354 /* BranchManagementSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BranchManagementSheet.swift; sourceTree = "<group>"; };
 		379D2F3C2F83D04600B30354 /* BranchTreeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BranchTreeView.swift; sourceTree = "<group>"; };
 		379D2F402F83DFEB00B30354 /* ShareEditSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareEditSheet.swift; sourceTree = "<group>"; };
+		379D2F422F83FAA400B30354 /* DiskCreateSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiskCreateSheet.swift; sourceTree = "<group>"; };
+		379D2F432F83FAA400B30354 /* USBDiskCreateSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = USBDiskCreateSheet.swift; sourceTree = "<group>"; };
 		379F73F5257405E1008AAEB7 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		37D4731B2F6624570027142F /* VMConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VMConfig.swift; sourceTree = "<group>"; };
 		37F379B42F66E422004A32AF /* ConfigCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigCommand.swift; sourceTree = "<group>"; };
@@ -263,6 +267,8 @@
 		6A762C8CDDC54C99A9BB5B6E /* Detail */ = {
 			isa = PBXGroup;
 			children = (
+				379D2F422F83FAA400B30354 /* DiskCreateSheet.swift */,
+				379D2F432F83FAA400B30354 /* USBDiskCreateSheet.swift */,
 				379D2F402F83DFEB00B30354 /* ShareEditSheet.swift */,
 				5F47309864A54484B8B0A1D4 /* VMDetailView.swift */,
 				F7EAF14B5D7B45D580CF1606 /* ConfigEditView.swift */,
@@ -392,6 +398,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				CBF9AEAC1C284589A95D5BB8 /* ToyVMError.swift in Sources */,
+				379D2F442F83FAA400B30354 /* DiskCreateSheet.swift in Sources */,
+				379D2F452F83FAA400B30354 /* USBDiskCreateSheet.swift in Sources */,
 				B0C76950D28D45CD8704FD86 /* VMConfig.swift in Sources */,
 				F9F14730DA8E4599A0806B9C /* BundleMeta.swift in Sources */,
 				67951160F3EA4AD1A6359EEF /* DiskInfo.swift in Sources */,
