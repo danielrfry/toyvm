@@ -283,10 +283,36 @@ public func createDisk(at url: URL, size: UInt64, format: DiskFormat) throws {
     }
 }
 
+/// Returns an error description if the given string is not a valid ExFAT volume label, or nil if valid.
+/// ExFAT volume labels must be 1–11 characters and must not contain control characters (U+0000–U+001F)
+/// or any of: `"` `*` `/` `:` `<` `>` `?` `\` `|`
+public func exFATVolumeLabelError(_ label: String) -> String? {
+    if label.isEmpty { return "Volume label must not be empty." }
+    if label.count > 11 { return "Volume label must be 11 characters or fewer." }
+    let invalidScalars: Set<Unicode.Scalar> = [
+        "\u{0022}", "\u{002A}", "\u{002F}", "\u{003A}",
+        "\u{003C}", "\u{003E}", "\u{003F}", "\u{005C}", "\u{007C}",
+    ]
+    for scalar in label.unicodeScalars {
+        if scalar.value <= 0x001F {
+            return "Volume label must not contain control characters."
+        }
+        if invalidScalars.contains(scalar) {
+            return #"Volume label must not contain " * / : < > ? \ |"#
+        }
+    }
+    return nil
+}
+
 /// Initialises a disk image with a GPT partition scheme containing a single ExFAT partition.
 /// Works by attaching the image with `diskutil image attach -n` (supports raw and ASIF formats),
 /// partitioning with diskutil, then ejecting.
 public func initialiseDisk(at url: URL, volumeLabel: String = "Data") throws {
+    // Validate the volume label before attempting to mount the image
+    if let labelError = exFATVolumeLabelError(volumeLabel) {
+        throw ToyVMError(labelError)
+    }
+
     // Attach the disk image without mounting its filesystems.
     // diskutil image attach supports both raw and ASIF formats; hdiutil does not support ASIF.
     let attach = Process()

@@ -52,6 +52,9 @@ struct USBDiskCreateSheet: View {
 
                 if initialise {
                     TextField("Volume label:", text: $volumeLabel)
+                    if let err = volumeLabelError {
+                        Text(err).foregroundStyle(.red).font(.caption)
+                    }
                 }
 
                 Toggle("Read-only", isOn: $readOnly)
@@ -79,11 +82,16 @@ struct USBDiskCreateSheet: View {
                 Spacer()
                 Button("Create") { performCreate() }
                     .keyboardShortcut(.defaultAction)
-                    .disabled(sizeText.isEmpty || locationURL == nil || isCreating || (initialise && volumeLabel.isEmpty))
+                    .disabled(sizeText.isEmpty || locationURL == nil || isCreating || volumeLabelError != nil)
             }
             .padding()
         }
         .frame(minWidth: 400)
+    }
+
+    private var volumeLabelError: String? {
+        guard initialise else { return nil }
+        return exFATVolumeLabelError(volumeLabel)
     }
 
     private func chooseLocation() {
@@ -106,12 +114,15 @@ struct USBDiskCreateSheet: View {
             do {
                 let size = try parseSize(sizeText)
                 try createDisk(at: url, size: size, format: format)
-
-                if initialise {
-                    try initialiseDisk(at: url, volumeLabel: volumeLabel.isEmpty ? "Data" : volumeLabel)
+                do {
+                    if initialise {
+                        try initialiseDisk(at: url, volumeLabel: volumeLabel)
+                    }
+                    try await session.attachUSBDisk(url: url, readOnly: readOnly)
+                } catch {
+                    try? FileManager.default.removeItem(at: url)
+                    throw error
                 }
-
-                try await session.attachUSBDisk(url: url, readOnly: readOnly)
                 dismiss()
             } catch {
                 errorMessage = error.localizedDescription
