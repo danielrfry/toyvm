@@ -16,6 +16,18 @@ struct TerminalDisplayView: NSViewRepresentable {
     let session: VMSession
 
     func makeNSView(context: Context) -> TerminalView {
+        // Reuse an existing TerminalView from the session to preserve scroll
+        // buffer and terminal state when navigating between VMs.
+        if let existing = session.terminalView {
+            existing.terminalDelegate = context.coordinator
+            context.coordinator.terminalView = existing
+            context.coordinator.connectPipes(
+                input: session.inputPipe,
+                output: session.outputPipe
+            )
+            return existing
+        }
+
         let termView = TerminalView(frame: .zero)
         termView.terminalDelegate = context.coordinator
         termView.configureNativeColors()
@@ -29,6 +41,7 @@ struct TerminalDisplayView: NSViewRepresentable {
             output: session.outputPipe
         )
 
+        session.terminalView = termView
         return termView
     }
 
@@ -41,6 +54,8 @@ struct TerminalDisplayView: NSViewRepresentable {
     }
 
     static func dismantleNSView(_ nsView: TerminalView, coordinator: Coordinator) {
+        // Disconnect I/O but leave the view alive on the session so the
+        // terminal buffer is preserved if the user switches back.
         coordinator.disconnect()
     }
 

@@ -5,6 +5,7 @@
 
 import Foundation
 import Virtualization
+import SwiftTerm
 #if canImport(ToyVMCore)
 import ToyVMCore
 #endif
@@ -24,6 +25,10 @@ class VMSession {
     var displayMode: DisplayMode = .terminal
     var errorMessage: String?
     var automaticDisplayResize: Bool = true
+
+    /// Retained terminal view instance, so scroll buffer and state survive
+    /// navigation away from the VM and back.
+    var terminalView: TerminalView?
 
     /// Pipe pair connecting the VM serial port to the terminal emulator.
     /// inputPipe: terminal writes → VM reads
