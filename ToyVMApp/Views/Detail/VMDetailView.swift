@@ -31,14 +31,25 @@ struct VMDetailView: View {
         runnerState == .stopping
     }
 
+    /// Show an opaque background (to cover TerminalLayerView) unless the terminal
+    /// should be visible — i.e. when the VM is running/stopping in terminal mode.
+    private var showsOpaqueBackground: Bool {
+        !isRunningOrStopping || session.displayMode == .graphics
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             if isRunningOrStopping {
-                VMDisplayView(session: session)
+                if session.displayMode == .graphics {
+                    GraphicsDisplayView(session: session)
+                }
+                // Terminal mode: body is empty and transparent so TerminalLayerView shows through.
             } else {
                 configSummary
             }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(showsOpaqueBackground ? Color(nsColor: .windowBackgroundColor) : Color.clear)
         .toolbar {
             ToolbarItemGroup(placement: .primaryAction) {
                 if isRunningOrStopping {

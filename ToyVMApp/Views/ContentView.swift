@@ -37,15 +37,23 @@ struct ContentView: View {
         NavigationSplitView(columnVisibility: $columnVisibility) {
             VMListView(manager: manager)
         } detail: {
-            if let url = manager.selectedBundleURL,
-               let bundle = manager.bundles.first(where: { $0.bundleURL == url }) {
-                VMDetailView(session: manager.session(for: bundle), manager: manager)
-            } else {
-                ContentUnavailableView(
-                    "No VM Selected",
-                    systemImage: "desktopcomputer",
-                    description: Text("Select a virtual machine from the sidebar, or create a new one.")
-                )
+            ZStack {
+                // Persistent layer — keeps all terminal emulator views alive so
+                // the scroll buffer is preserved when switching between VMs.
+                TerminalLayerView(manager: manager)
+
+                if let url = manager.selectedBundleURL,
+                   let bundle = manager.bundles.first(where: { $0.bundleURL == url }) {
+                    VMDetailView(session: manager.session(for: bundle), manager: manager)
+                } else {
+                    ContentUnavailableView(
+                        "No VM Selected",
+                        systemImage: "desktopcomputer",
+                        description: Text("Select a virtual machine from the sidebar, or create a new one.")
+                    )
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(Color(nsColor: .windowBackgroundColor))
+                }
             }
         }
         .background {
