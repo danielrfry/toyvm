@@ -161,6 +161,7 @@ struct VMDetailView: View {
                 do {
                     try session.bundle.removeShare(tag: share.tag)
                     try session.bundle.saveConfig()
+                    session.updateRuntimeShares()
                 } catch {
                     session.errorMessage = error.localizedDescription
                 }

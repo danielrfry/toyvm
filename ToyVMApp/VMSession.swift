@@ -139,6 +139,24 @@ class VMSession: Identifiable {
         attachedUSBDevices.remove(at: index)
     }
 
+    // MARK: - Runtime directory share updates (macOS guests)
+
+    /// Updates the directory shares on a running macOS VM by replacing the
+    /// `VZMultipleDirectoryShare` on the automount device. No-op if the VM
+    /// is not running or is not a macOS guest.
+    @MainActor
+    func updateRuntimeShares() {
+        guard bundle.config.bootMode == .macOS,
+              runner?.state == .running,
+              let vm = runner?.virtualMachine else { return }
+
+        let automountTag = VZVirtioFileSystemDeviceConfiguration.macOSGuestAutomountTag
+        guard let device = vm.directorySharingDevices.compactMap({ $0 as? VZVirtioFileSystemDevice })
+            .first(where: { $0.tag == automountTag }) else { return }
+
+        device.share = VirtualMachineBuilder.makeMultipleDirectoryShare(shares: bundle.config.shares)
+    }
+
     private func cleanup() {
         startContext?.cleanup()
         startContext = nil

@@ -379,18 +379,20 @@ public enum VirtualMachineBuilder {
         try appendUSBStorageDevices(usbDisks: usbDisks, to: &storageDevices)
         vzConfig.storageDevices = storageDevices
 
-        // Directory shares
-        var sharedDirs: [String: VZVirtioFileSystemDeviceConfiguration] = [:]
-        for share in shares {
-            sharedDirs[share.tag] = try makeShareDevice(share: share)
-        }
+        // Directory shares — use a single automount device with VZMultipleDirectoryShare
+        // so shares can be updated at runtime and are automounted by macOS guests.
+        // Always create the device even if empty, so runtime additions are possible.
+        let automountDevice = VZVirtioFileSystemDeviceConfiguration(
+            tag: VZVirtioFileSystemDeviceConfiguration.macOSGuestAutomountTag)
+        automountDevice.share = makeMultipleDirectoryShare(shares: shares)
+        var dirSharingDevices: [VZDirectorySharingDeviceConfiguration] = [automountDevice]
 
         // Audio
         if enableAudio {
             vzConfig.audioDevices = [makeSoundDevice()]
         }
 
-        vzConfig.directorySharingDevices = Array(sharedDirs.values)
+        vzConfig.directorySharingDevices = dirSharingDevices
 
         // XHCI USB controller for runtime hot-plug
         if #available(macOS 15.0, *) {
@@ -437,6 +439,16 @@ public enum VirtualMachineBuilder {
         let (tag, path) = parseShareArg(arg)
         let share = ShareConfig(tag: tag, path: path, readOnly: readOnly)
         return try makeShareDevice(share: share)
+    }
+
+    /// Creates a `VZMultipleDirectoryShare` from an array of share configs, keyed by tag.
+    public static func makeMultipleDirectoryShare(shares: [ShareConfig]) -> VZMultipleDirectoryShare {
+        var directories: [String: VZSharedDirectory] = [:]
+        for share in shares {
+            directories[share.tag] = VZSharedDirectory(
+                url: URL(fileURLWithPath: share.path), readOnly: share.readOnly)
+        }
+        return VZMultipleDirectoryShare(directories: directories)
     }
 
     public static func makeSoundDevice() -> VZVirtioSoundDeviceConfiguration {

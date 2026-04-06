@@ -116,6 +116,8 @@ struct ShareEditSheet: View {
             return
         }
 
+        session.updateRuntimeShares()
+
         onDismiss()
         dismiss()
     }
