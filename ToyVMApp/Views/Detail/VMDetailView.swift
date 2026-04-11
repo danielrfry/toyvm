@@ -85,7 +85,6 @@ struct VMDetailView: View {
                         Label("Force Stop", systemImage: "xmark.circle.fill")
                     }
                     .help("Force stop the VM immediately")
-                    .disabled(isStopping)
                 } else {
                     Button {
                         Task { await session.start() }

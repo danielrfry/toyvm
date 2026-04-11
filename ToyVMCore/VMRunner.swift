@@ -81,12 +81,13 @@ public class VMRunner {
     }
 
     /// Request a graceful shutdown via the guest OS.
+    /// The state remains `.running` because the guest may decline the request,
+    /// and there is no callback to distinguish acceptance from cancellation.
     @MainActor
     public func requestStop() throws {
         guard let virtualMachine, state == .running else {
             throw ToyVMError("VM is not running")
         }
-        state = .stopping
         try virtualMachine.requestStop()
     }
 
