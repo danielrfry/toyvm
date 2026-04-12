@@ -15,6 +15,7 @@ struct VMDetailView: View {
     @Bindable var session: VMSession
     let manager: VMManager
     @State private var showConfigEditor = false
+    @State private var configInitialTab: ConfigTab = .system
     @State private var showBranchSheet = false
     @State private var deviceToDetach: VMSession.AttachedUSBDevice?
     @State private var showShareSheet = false
@@ -61,9 +62,7 @@ struct VMDetailView: View {
         .background(showsOpaqueBackground ? Color(nsColor: .windowBackgroundColor) : Color.clear)
         .toolbar {
             ToolbarItem(placement: .automatic) {
-                if isRunningOrStopping && !isStopping {
-                    usbMenu
-                }
+                usbMenu
             }
 
             ToolbarItem(placement: .automatic) {
@@ -99,17 +98,27 @@ struct VMDetailView: View {
 
             ToolbarItem(placement: .automatic) {
                 Button {
+                    configInitialTab = .system
                     showConfigEditor = true
                 } label: {
                     Label("Configure", systemImage: "gearshape")
                 }
-                .disabled(isRunningOrStopping)
                 .help("Edit VM configuration")
+            }
+
+            ToolbarItem(placement: .automatic) {
+                Button {
+                    showBranchSheet = true
+                } label: {
+                    Label("Branches", systemImage: "arrow.triangle.branch")
+                }
+                .disabled(isRunningOrStopping)
+                .help("Manage branches")
             }
         }
         .navigationTitle(VMManager.displayName(for: session.bundle))
         .sheet(isPresented: $showConfigEditor) {
-            ConfigEditView(session: session)
+            ConfigEditView(session: session, initialTab: configInitialTab, isRunning: isRunningOrStopping)
         }
         .sheet(isPresented: $showBranchSheet) {
             BranchManagementSheet(session: session)
@@ -187,15 +196,17 @@ struct VMDetailView: View {
             VStack(alignment: .leading, spacing: 16) {
                 statusBanner
 
-                GroupBox("System") {
+                GroupBox {
                     LabeledContent("CPUs", value: "\(session.bundle.config.cpus)")
                     LabeledContent("Memory", value: "\(session.bundle.config.memoryGB) GB")
                     LabeledContent("Network", value: session.bundle.config.network ? "Enabled" : "Disabled")
                     LabeledContent("Audio", value: session.bundle.config.audio ? "Enabled" : "Disabled")
                     LabeledContent("Rosetta", value: session.bundle.config.rosetta ? "Enabled" : "Disabled")
+                } label: {
+                    editableGroupBoxLabel("System", tab: .system)
                 }
 
-                GroupBox("Boot") {
+                GroupBox {
                     LabeledContent("Boot Mode", value: session.bundle.config.bootMode.label)
                     if session.bundle.config.bootMode != .macOS {
                         if let kernel = session.bundle.config.kernel {
@@ -208,7 +219,48 @@ struct VMDetailView: View {
                             LabeledContent("Command Line", value: session.bundle.config.kernelCommandLine.joined(separator: " "))
                         }
                     }
+                } label: {
+                    editableGroupBoxLabel("Boot", tab: .boot)
                 }
+
+                if !session.bundle.config.disks.isEmpty {
+                    GroupBox {
+                        ForEach(session.bundle.config.disks, id: \.file) { disk in
+                            LabeledContent(disk.file) {
+                                Text("\(disk.format.rawValue), \(disk.readOnly ? "read-only" : "read/write")")
+                            }
+                        }
+                    } label: {
+                        editableGroupBoxLabel("Disks", tab: .storage)
+                    }
+                }
+
+                if !session.bundle.config.usbDisks.isEmpty {
+                    GroupBox {
+                        ForEach(Array(session.bundle.config.usbDisks.enumerated()), id: \.offset) { _, usbDisk in
+                            LabeledContent(URL(fileURLWithPath: usbDisk.path).lastPathComponent) {
+                                Text(usbDisk.readOnly ? "read-only" : "read/write")
+                            }
+                        }
+                    } label: {
+                        editableGroupBoxLabel("USB Disks", tab: .storage)
+                    }
+                }
+
+                if !session.bundle.config.shares.isEmpty {
+                    GroupBox {
+                        ForEach(session.bundle.config.shares, id: \.tag) { share in
+                            LabeledContent(share.tag) {
+                                Text("\(share.path) (\(share.readOnly ? "ro" : "rw"))")
+                            }
+                        }
+                    } label: {
+                        editableGroupBoxLabel("Directory Shares", tab: .sharing)
+                    }
+                }
+
+                Divider()
+                    .padding(.vertical, 4)
 
                 GroupBox("Branch") {
                     HStack {
@@ -223,38 +275,24 @@ struct VMDetailView: View {
                             .disabled(isRunningOrStopping)
                     }
                 }
-
-                if !session.bundle.config.disks.isEmpty {
-                    GroupBox("Disks") {
-                        ForEach(session.bundle.config.disks, id: \.file) { disk in
-                            LabeledContent(disk.file) {
-                                Text("\(disk.format.rawValue), \(disk.readOnly ? "read-only" : "read/write")")
-                            }
-                        }
-                    }
-                }
-
-                if !session.bundle.config.usbDisks.isEmpty {
-                    GroupBox("USB Disks") {
-                        ForEach(Array(session.bundle.config.usbDisks.enumerated()), id: \.offset) { _, usbDisk in
-                            LabeledContent(URL(fileURLWithPath: usbDisk.path).lastPathComponent) {
-                                Text(usbDisk.readOnly ? "read-only" : "read/write")
-                            }
-                        }
-                    }
-                }
-
-                if !session.bundle.config.shares.isEmpty {
-                    GroupBox("Directory Shares") {
-                        ForEach(session.bundle.config.shares, id: \.tag) { share in
-                            LabeledContent(share.tag) {
-                                Text("\(share.path) (\(share.readOnly ? "ro" : "rw"))")
-                            }
-                        }
-                    }
-                }
             }
             .padding()
+        }
+    }
+
+    private func editableGroupBoxLabel(_ title: String, tab: ConfigTab) -> some View {
+        HStack {
+            Text(title)
+            Spacer()
+            Button {
+                configInitialTab = tab
+                showConfigEditor = true
+            } label: {
+                Label("Edit", systemImage: "pencil")
+                    .labelStyle(.iconOnly)
+                    .font(.caption)
+            }
+            .buttonStyle(.borderless)
         }
     }
 
@@ -280,30 +318,54 @@ struct VMDetailView: View {
 
     private var usbMenu: some View {
         Menu {
-            if !session.attachedUSBDevices.isEmpty {
-                ForEach(session.attachedUSBDevices) { device in
-                    Button {
-                        deviceToDetach = device
-                    } label: {
+            if isRunningOrStopping {
+                // Runtime: hot-plug controls
+                if !session.attachedUSBDevices.isEmpty {
+                    ForEach(session.attachedUSBDevices) { device in
+                        Button {
+                            deviceToDetach = device
+                        } label: {
+                            Label(
+                                device.filename,
+                                systemImage: device.readOnly ? "lock.fill" : "externaldrive.fill"
+                            )
+                        }
+                    }
+                    Divider()
+                }
+
+                Button {
+                    attachUSBDisk()
+                } label: {
+                    Label("Add USB Device…", systemImage: "plus")
+                }
+                .disabled(isStopping)
+
+                Button {
+                    showUSBDiskCreateSheet = true
+                } label: {
+                    Label("Create USB Disk Image…", systemImage: "plus.rectangle.on.folder")
+                }
+                .disabled(isStopping)
+            } else {
+                // Stopped: show static USB disk config (informational)
+                if session.bundle.config.usbDisks.isEmpty {
+                    Text("No USB disks configured")
+                } else {
+                    ForEach(Array(session.bundle.config.usbDisks.enumerated()), id: \.offset) { _, usbDisk in
                         Label(
-                            device.filename,
-                            systemImage: device.readOnly ? "lock.fill" : "externaldrive.fill"
+                            "\(URL(fileURLWithPath: usbDisk.path).lastPathComponent) (\(usbDisk.readOnly ? "ro" : "rw"))",
+                            systemImage: "externaldrive"
                         )
                     }
                 }
                 Divider()
-            }
-            
-            Button {
-                attachUSBDisk()
-            } label: {
-                Label("Add USB Device…", systemImage: "plus")
-            }
-
-            Button {
-                showUSBDiskCreateSheet = true
-            } label: {
-                Label("Create USB Disk Image…", systemImage: "plus.rectangle.on.folder")
+                Button {
+                    configInitialTab = .storage
+                    showConfigEditor = true
+                } label: {
+                    Label("Edit in Configuration…", systemImage: "gearshape")
+                }
             }
         } label: {
             Label("USB Devices", systemImage: "externaldrive.badge.plus")

@@ -41,6 +41,7 @@
 		A3F1B72C8D4E49E2B1C5D906 /* GraphicsDisplayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E2C41DA3B5F4A8D9F0E6B23 /* GraphicsDisplayView.swift */; };
 		B0C76950D28D45CD8704FD86 /* VMConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37D4731B2F6624570027142F /* VMConfig.swift */; };
 		B6209A8EA2CE4A88AA6A4838 /* ConfigEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7EAF14B5D7B45D580CF1606 /* ConfigEditView.swift */; };
+		B6209A8EA2CE4A88AA6A4839 /* SystemConfigSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7EAF14B5D7B45D580CF1607 /* SystemConfigSection.swift */; };
 		B7B8573279874A2CB425B36F /* VMRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8959977523246329860D3E6 /* VMRunner.swift */; };
 		BDC22BC1D54C4F909776175D /* VMSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0648272BD9FF4C15A0AC3B9B /* VMSession.swift */; };
 		C5E09C66F4914339A11103C3 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3ABAB81DB2F47B1B742EC22 /* ContentView.swift */; };
@@ -115,6 +116,7 @@
 		EC84BC0415CD401FBC2CE0DE /* ToyVMError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToyVMError.swift; sourceTree = "<group>"; };
 		F732627BD9894C7FAC63A787 /* TerminalDisplayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalDisplayView.swift; sourceTree = "<group>"; };
 		F7EAF14B5D7B45D580CF1606 /* ConfigEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigEditView.swift; sourceTree = "<group>"; };
+		F7EAF14B5D7B45D580CF1607 /* SystemConfigSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemConfigSection.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -272,6 +274,7 @@
 				379D2F402F83DFEB00B30354 /* ShareEditSheet.swift */,
 				5F47309864A54484B8B0A1D4 /* VMDetailView.swift */,
 				F7EAF14B5D7B45D580CF1606 /* ConfigEditView.swift */,
+				F7EAF14B5D7B45D580CF1607 /* SystemConfigSection.swift */,
 			);
 			path = Detail;
 			sourceTree = "<group>";
@@ -419,6 +422,7 @@
 				101F0627D17C41479B2F0889 /* VMRowView.swift in Sources */,
 				E0D586A128B348DC91FA74F8 /* VMDetailView.swift in Sources */,
 				B6209A8EA2CE4A88AA6A4838 /* ConfigEditView.swift in Sources */,
+				B6209A8EA2CE4A88AA6A4839 /* SystemConfigSection.swift in Sources */,
 				1905E70B0A9543FF8F98D8AA /* CreateVMView.swift in Sources */,
 				D1A2B3C4E5F6071899003344 /* InstallationProgressView.swift in Sources */,
 				80B187595613483FAE730017 /* TerminalDisplayView.swift in Sources */,

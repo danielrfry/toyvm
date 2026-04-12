@@ -129,25 +129,19 @@ struct CreateVMView: View {
                 }
                 #endif
 
-                Section("Resources") {
-                    Stepper("CPUs: \(cpus)", value: $cpus, in: 1...64)
-                    Stepper("Memory: \(memoryGB) GB", value: $memoryGB, in: 1...256)
-                }
-
                 Section("Storage") {
                     TextField("Disk size (e.g. 20G, 512M)", text: $diskSizeText)
                         .textFieldStyle(.roundedBorder)
                 }
 
-                Section("Devices") {
-                    Toggle("Network", isOn: $network)
-                    Toggle("Audio", isOn: $audio)
-                    #if arch(arm64)
-                    if bootMode != .macOS {
-                        Toggle("Rosetta", isOn: $rosetta)
-                    }
-                    #endif
-                }
+                SystemConfigSection(
+                    cpus: $cpus,
+                    memoryGB: $memoryGB,
+                    network: $network,
+                    audio: $audio,
+                    rosetta: $rosetta,
+                    hideRosetta: bootMode == .macOS
+                )
             }
             .formStyle(.grouped)
 
