@@ -21,6 +21,7 @@ struct VMDetailView: View {
     @State private var editingShare: ShareConfig?
     @State private var shareToRemove: ShareConfig?
     @State private var showUSBDiskCreateSheet = false
+    @State private var showForceStopConfirmation = false
 
     private var runnerState: VMRunner.State {
         session.runner?.state ?? .stopped
@@ -80,7 +81,7 @@ struct VMDetailView: View {
                     .disabled(isStopping)
 
                     Button {
-                        session.forceStop()
+                        showForceStopConfirmation = true
                     } label: {
                         Label("Force Stop", systemImage: "xmark.circle.fill")
                     }
@@ -112,6 +113,12 @@ struct VMDetailView: View {
         }
         .sheet(isPresented: $showBranchSheet) {
             BranchManagementSheet(session: session)
+        }
+        .alert("Force Stop Virtual Machine?", isPresented: $showForceStopConfirmation) {
+            Button("Force Stop", role: .destructive) { session.forceStop() }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("The virtual machine will be stopped immediately. Any unsaved data in the guest may be lost.")
         }
         .alert("Error", isPresented: .init(
             get: { session.errorMessage != nil },
