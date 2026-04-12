@@ -124,6 +124,9 @@ class VMSession: Identifiable {
 
         try await controller.attach(device: device)
         attachedUSBDevices.append(AttachedUSBDevice(url: url, readOnly: readOnly, device: device))
+
+        bundle.config.usbDisks.append(USBDiskConfig(path: url.path, readOnly: readOnly))
+        try bundle.saveConfig()
     }
 
     @MainActor
@@ -137,6 +140,26 @@ class VMSession: Identifiable {
         let entry = attachedUSBDevices[index]
         try await controller.detach(device: entry.device)
         attachedUSBDevices.remove(at: index)
+
+        bundle.config.usbDisks.removeAll { $0.path == entry.url.path }
+        try bundle.saveConfig()
+    }
+
+    /// Adds a USB disk to the persisted configuration without hot-plugging.
+    /// Use this when the VM is not running.
+    @MainActor
+    func addUSBDiskToConfig(url: URL, readOnly: Bool) throws {
+        bundle.config.usbDisks.append(USBDiskConfig(path: url.path, readOnly: readOnly))
+        try bundle.saveConfig()
+    }
+
+    /// Removes a USB disk from the persisted configuration by index.
+    /// Use this when the VM is not running.
+    @MainActor
+    func removeUSBDiskFromConfig(at index: Int) throws {
+        guard bundle.config.usbDisks.indices.contains(index) else { return }
+        bundle.config.usbDisks.remove(at: index)
+        try bundle.saveConfig()
     }
 
     // MARK: - Runtime directory share updates (macOS guests)

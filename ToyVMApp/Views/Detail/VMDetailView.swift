@@ -18,6 +18,7 @@ struct VMDetailView: View {
     @State private var configInitialTab: ConfigTab = .system
     @State private var showBranchSheet = false
     @State private var deviceToDetach: VMSession.AttachedUSBDevice?
+    @State private var configUSBDiskIndexToRemove: Int?
     @State private var showShareSheet = false
     @State private var editingShare: ShareConfig?
     @State private var shareToRemove: ShareConfig?
@@ -159,6 +160,34 @@ struct VMDetailView: View {
             Button("Cancel", role: .cancel) {}
         } message: { device in
             Text("Detach '\(device.filename)' from the virtual machine?")
+        }
+        .confirmationDialog(
+            "Remove USB Disk",
+            isPresented: .init(
+                get: { configUSBDiskIndexToRemove != nil },
+                set: { if !$0 { configUSBDiskIndexToRemove = nil } }
+            )
+        ) {
+            Button("Remove", role: .destructive) {
+                if let index = configUSBDiskIndexToRemove {
+                    do {
+                        try session.removeUSBDiskFromConfig(at: index)
+                    } catch {
+                        session.errorMessage = error.localizedDescription
+                    }
+                    configUSBDiskIndexToRemove = nil
+                }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            let name: String = {
+                if let index = configUSBDiskIndexToRemove,
+                   index < session.bundle.config.usbDisks.count {
+                    return URL(fileURLWithPath: session.bundle.config.usbDisks[index].path).lastPathComponent
+                }
+                return "this disk"
+            }()
+            Text("Remove '\(name)' from the virtual machine configuration?")
         }
         .sheet(isPresented: $showShareSheet) {
             ShareEditSheet(session: session, existing: editingShare) {
@@ -319,7 +348,7 @@ struct VMDetailView: View {
     private var usbMenu: some View {
         Menu {
             if isRunningOrStopping {
-                // Runtime: hot-plug controls
+                // Running: show hot-plugged devices with detach option
                 if !session.attachedUSBDevices.isEmpty {
                     ForEach(session.attachedUSBDevices) { device in
                         Button {
@@ -333,40 +362,40 @@ struct VMDetailView: View {
                     }
                     Divider()
                 }
-
-                Button {
-                    attachUSBDisk()
-                } label: {
-                    Label("Add USB Device…", systemImage: "plus")
-                }
-                .disabled(isStopping)
-
-                Button {
-                    showUSBDiskCreateSheet = true
-                } label: {
-                    Label("Create USB Disk Image…", systemImage: "plus.rectangle.on.folder")
-                }
-                .disabled(isStopping)
             } else {
-                // Stopped: show static USB disk config (informational)
-                if session.bundle.config.usbDisks.isEmpty {
-                    Text("No USB disks configured")
-                } else {
-                    ForEach(Array(session.bundle.config.usbDisks.enumerated()), id: \.offset) { _, usbDisk in
-                        Label(
-                            "\(URL(fileURLWithPath: usbDisk.path).lastPathComponent) (\(usbDisk.readOnly ? "ro" : "rw"))",
-                            systemImage: "externaldrive"
-                        )
+                // Stopped: show configured disks with remove option
+                if !session.bundle.config.usbDisks.isEmpty {
+                    ForEach(Array(session.bundle.config.usbDisks.enumerated()), id: \.offset) { idx, usbDisk in
+                        Button {
+                            configUSBDiskIndexToRemove = idx
+                        } label: {
+                            Label(
+                                "\(URL(fileURLWithPath: usbDisk.path).lastPathComponent) (\(usbDisk.readOnly ? "ro" : "rw"))",
+                                systemImage: usbDisk.readOnly ? "lock.fill" : "externaldrive.fill"
+                            )
+                        }
                     }
-                }
-                Divider()
-                Button {
-                    configInitialTab = .storage
-                    showConfigEditor = true
-                } label: {
-                    Label("Edit in Configuration…", systemImage: "gearshape")
+                    Divider()
                 }
             }
+
+            Button {
+                if isRunningOrStopping {
+                    attachUSBDisk()
+                } else {
+                    addUSBDiskToConfig()
+                }
+            } label: {
+                Label("Add USB Device…", systemImage: "plus")
+            }
+            .disabled(isStopping)
+
+            Button {
+                showUSBDiskCreateSheet = true
+            } label: {
+                Label("Create USB Disk Image…", systemImage: "plus.rectangle.on.folder")
+            }
+            .disabled(isStopping)
         } label: {
             Label("USB Devices", systemImage: "externaldrive.badge.plus")
         }
@@ -445,6 +474,34 @@ struct VMDetailView: View {
             } catch {
                 session.errorMessage = error.localizedDescription
             }
+        }
+    }
+
+    private func addUSBDiskToConfig() {
+        let panel = NSOpenPanel()
+        panel.title = "Select Disk Image"
+        panel.allowedContentTypes = [
+            UTType(filenameExtension: "img"),
+            UTType(filenameExtension: "iso"),
+            UTType(filenameExtension: "raw"),
+            UTType(filenameExtension: "asif"),
+        ].compactMap { $0 }
+        panel.allowsOtherFileTypes = true
+        panel.canChooseDirectories = false
+        panel.allowsMultipleSelection = false
+
+        let accessoryView = NSButton(checkboxWithTitle: "Read-only", target: nil, action: nil)
+        accessoryView.state = .on
+        panel.accessoryView = accessoryView
+        panel.isAccessoryViewDisclosed = true
+
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        let readOnly = accessoryView.state == .on
+
+        do {
+            try session.addUSBDiskToConfig(url: url, readOnly: readOnly)
+        } catch {
+            session.errorMessage = error.localizedDescription
         }
     }
 }

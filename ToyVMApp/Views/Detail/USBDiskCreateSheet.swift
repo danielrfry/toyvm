@@ -110,6 +110,8 @@ struct USBDiskCreateSheet: View {
         isCreating = true
         errorMessage = nil
 
+        let isRunning = session.runner?.state.isRunning == true
+
         Task {
             do {
                 let size = try parseSize(sizeText)
@@ -118,7 +120,11 @@ struct USBDiskCreateSheet: View {
                     if initialise {
                         try initialiseDisk(at: url, volumeLabel: volumeLabel)
                     }
-                    try await session.attachUSBDisk(url: url, readOnly: readOnly)
+                    if isRunning {
+                        try await session.attachUSBDisk(url: url, readOnly: readOnly)
+                    } else {
+                        try session.addUSBDiskToConfig(url: url, readOnly: readOnly)
+                    }
                 } catch {
                     try? FileManager.default.removeItem(at: url)
                     throw error
