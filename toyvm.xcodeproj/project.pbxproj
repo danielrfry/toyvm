@@ -17,6 +17,7 @@
 		2B42DD60985348AFA4B53C67 /* VMManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8D41930EC264718B3B0359C /* VMManager.swift */; };
 		2D8BA0A8ECF546A7BAD31461 /* VMDisplayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 011BC10F27564173BD3A8F5E /* VMDisplayView.swift */; };
 		3267BA3FD5B340B09D4E1F93 /* BranchCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E10A52C1C074057822BA3F3 /* BranchCommand.swift */; };
+		372C53052F8EE03F00438D55 /* ToyVM.icon in Resources */ = {isa = PBXBuildFile; fileRef = 372C53042F8EE03F00438D55 /* ToyVM.icon */; };
 		375A3A9725684A8300EEB67A /* Virtualization.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 375A3A9625684A8300EEB67A /* Virtualization.framework */; };
 		379D2F392F83C6B800B30354 /* TerminalLayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379D2F382F83C6B800B30354 /* TerminalLayerView.swift */; };
 		379D2F3E2F83D04600B30354 /* BranchManagementSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379D2F3B2F83D04600B30354 /* BranchManagementSheet.swift */; };
@@ -77,6 +78,7 @@
 		0648272BD9FF4C15A0AC3B9B /* VMSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VMSession.swift; sourceTree = "<group>"; };
 		0679C9A064AC41E1B592BD32 /* BundleMeta.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BundleMeta.swift; sourceTree = "<group>"; };
 		0EB7F69F56EC4013B4B035B8 /* ToyVMAppMain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToyVMAppMain.swift; sourceTree = "<group>"; };
+		372C53042F8EE03F00438D55 /* ToyVM.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = ToyVM.icon; sourceTree = "<group>"; };
 		375A3A8A25684A5E00EEB67A /* toyvm */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = toyvm; sourceTree = BUILT_PRODUCTS_DIR; };
 		375A3A9625684A8300EEB67A /* Virtualization.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Virtualization.framework; path = System/Library/Frameworks/Virtualization.framework; sourceTree = SDKROOT; };
 		375A3A9B2568500400EEB67A /* toyvm.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = toyvm.entitlements; sourceTree = "<group>"; };
@@ -144,6 +146,7 @@
 		1FCA69CF5E6645948FA748F1 /* ToyVMApp */ = {
 			isa = PBXGroup;
 			children = (
+				372C53042F8EE03F00438D55 /* ToyVM.icon */,
 				0EB7F69F56EC4013B4B035B8 /* ToyVMAppMain.swift */,
 				C8D41930EC264718B3B0359C /* VMManager.swift */,
 				0648272BD9FF4C15A0AC3B9B /* VMSession.swift */,
@@ -366,6 +369,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				372C53052F8EE03F00438D55 /* ToyVM.icon in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -576,6 +580,7 @@
 		489DB103F15C47679A21E375 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = ToyVM;
 				CODE_SIGN_ENTITLEMENTS = ToyVMApp.entitlements;
 				CODE_SIGN_IDENTITY = "-";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
@@ -599,6 +604,7 @@
 		C73CEFC3157C45F58AB3C112 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = ToyVM;
 				CODE_SIGN_ENTITLEMENTS = ToyVMApp.entitlements;
 				CODE_SIGN_IDENTITY = "-";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
