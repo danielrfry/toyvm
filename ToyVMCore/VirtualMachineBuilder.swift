@@ -385,7 +385,7 @@ public enum VirtualMachineBuilder {
         let automountDevice = VZVirtioFileSystemDeviceConfiguration(
             tag: VZVirtioFileSystemDeviceConfiguration.macOSGuestAutomountTag)
         automountDevice.share = makeMultipleDirectoryShare(shares: shares)
-        var dirSharingDevices: [VZDirectorySharingDeviceConfiguration] = [automountDevice]
+        let dirSharingDevices: [VZDirectorySharingDeviceConfiguration] = [automountDevice]
 
         // Audio
         if enableAudio {

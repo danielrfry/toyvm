@@ -84,10 +84,11 @@ extension ToyVM {
             if macos {
                 #if !arch(arm64)
                 throw ValidationError("--macos requires Apple Silicon")
-                #endif
+                #else
                 guard restoreImage != nil else {
                     throw ValidationError("--macos requires --restore-image <path>")
                 }
+                #endif
             }
         }
 
