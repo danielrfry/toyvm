@@ -137,3 +137,10 @@ struct USBDiskCreateSheet: View {
         }
     }
 }
+
+#if DEBUG
+@available(macOS 15.0, *)
+#Preview("Create USB Disk") {
+    USBDiskCreateSheet(session: PreviewFixtures.primarySession)
+}
+#endif

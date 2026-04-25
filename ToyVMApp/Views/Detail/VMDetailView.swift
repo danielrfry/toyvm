@@ -505,3 +505,10 @@ struct VMDetailView: View {
         }
     }
 }
+
+#if DEBUG
+@available(macOS 15.0, *)
+#Preview("Stopped") {
+    VMDetailView(session: PreviewFixtures.primarySession, manager: PreviewFixtures.manager)
+}
+#endif

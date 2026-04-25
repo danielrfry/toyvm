@@ -122,3 +122,10 @@ struct ShareEditSheet: View {
         dismiss()
     }
 }
+
+#if DEBUG
+@available(macOS 15.0, *)
+#Preview("Add Share") {
+    ShareEditSheet(session: PreviewFixtures.primarySession, existing: nil) {}
+}
+#endif

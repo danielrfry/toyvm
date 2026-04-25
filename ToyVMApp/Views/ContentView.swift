@@ -80,3 +80,15 @@ struct ContentView: View {
         .frame(minWidth: 700, minHeight: 400)
     }
 }
+
+#if DEBUG
+@available(macOS 15.0, *)
+#Preview("Selected VM") {
+    ContentView(manager: PreviewFixtures.manager)
+}
+
+@available(macOS 15.0, *)
+#Preview("Empty State") {
+    ContentView(manager: PreviewFixtures.emptyManager())
+}
+#endif

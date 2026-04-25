@@ -284,3 +284,10 @@ struct BranchManagementSheet: View {
         showError = true
     }
 }
+
+#if DEBUG
+@available(macOS 15.0, *)
+#Preview("Branch Management") {
+    BranchManagementSheet(session: PreviewFixtures.primarySession)
+}
+#endif

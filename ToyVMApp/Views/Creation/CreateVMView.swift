@@ -325,3 +325,10 @@ struct CreateVMView: View {
         }
     }
 }
+
+#if DEBUG
+@available(macOS 15.0, *)
+#Preview("Create VM") {
+    CreateVMView(manager: PreviewFixtures.emptyManager())
+}
+#endif

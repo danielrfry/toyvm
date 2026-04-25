@@ -72,3 +72,12 @@ struct InstallationProgressView: View {
     }
 }
 #endif
+
+#if DEBUG && arch(arm64)
+@available(macOS 15.0, *)
+#Preview("Installing") {
+    InstallationProgressView(
+        installManager: PreviewFixtures.installManager(state: .installing, progress: 0.67)
+    ) {}
+}
+#endif

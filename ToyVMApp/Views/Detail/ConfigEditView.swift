@@ -418,3 +418,15 @@ struct ConfigEditView: View {
         }
     }
 }
+
+#if DEBUG
+@available(macOS 15.0, *)
+#Preview("System") {
+    ConfigEditView(session: PreviewFixtures.primarySession, initialTab: .system)
+}
+
+@available(macOS 15.0, *)
+#Preview("Storage") {
+    ConfigEditView(session: PreviewFixtures.primarySession, initialTab: .storage)
+}
+#endif

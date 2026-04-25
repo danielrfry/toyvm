@@ -30,6 +30,19 @@ class VMManager {
         startDirectoryMonitor()
     }
 
+#if DEBUG
+    init(
+        previewBundles: [VMBundle],
+        selectedBundleURL: URL? = nil,
+        sessions: [URL: VMSession] = [:]
+    ) {
+        self.vmDirectory = URL(fileURLWithPath: "/preview/toyvm-manager", isDirectory: true)
+        self.bundles = previewBundles
+        self.sessions = sessions
+        self.selectedBundleURL = selectedBundleURL ?? previewBundles.first?.bundleURL
+    }
+#endif
+
     deinit {
         stopDirectoryMonitor()
     }

@@ -72,3 +72,10 @@ struct DiskCreateSheet: View {
         }
     }
 }
+
+#if DEBUG
+@available(macOS 15.0, *)
+#Preview("Create Disk") {
+    DiskCreateSheet(session: PreviewFixtures.primarySession)
+}
+#endif
