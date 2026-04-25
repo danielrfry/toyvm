@@ -228,123 +228,130 @@ struct VMDetailView: View {
 
     private var configSummary: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
-                statusBanner
+            HStack {
+                Spacer(minLength: 0)
 
-                summaryCard("System") {
-                    editButton(for: .system)
-                } content: {
-                    summaryRows {
-                        summaryRow("CPUs", value: "\(session.bundle.config.cpus)")
-                        summaryRow("Memory", value: "\(session.bundle.config.memoryGB) GB")
-                        summaryRow("Network") { stateBadge(enabled: session.bundle.config.network) }
-                        summaryRow("Audio") { stateBadge(enabled: session.bundle.config.audio) }
-                        summaryRow("Rosetta") { stateBadge(enabled: session.bundle.config.rosetta) }
+                VStack(alignment: .leading, spacing: 24) {
+                    statusBanner
+
+                    summaryCard("System") {
+                        editButton(for: .system)
+                    } content: {
+                        summaryRows {
+                            summaryRow("CPUs", value: "\(session.bundle.config.cpus)")
+                            summaryRow("Memory", value: "\(session.bundle.config.memoryGB) GB")
+                            summaryRow("Network") { stateBadge(enabled: session.bundle.config.network) }
+                            summaryRow("Audio") { stateBadge(enabled: session.bundle.config.audio) }
+                            summaryRow("Rosetta") { stateBadge(enabled: session.bundle.config.rosetta) }
+                        }
                     }
-                }
 
-                summaryCard("Boot") {
-                    editButton(for: .boot)
-                } content: {
-                    summaryRows {
-                        summaryRow("Boot Mode", value: session.bundle.config.bootMode.label)
-                        if session.bundle.config.bootMode != .macOS {
-                            if let kernel = session.bundle.config.kernel {
-                                summaryRow("Kernel", value: kernel)
-                            }
-                            if let initrd = session.bundle.config.initrd {
-                                summaryRow("Initrd", value: initrd)
-                            }
-                            if session.bundle.config.bootMode == .linux {
-                                summaryRow("Command Line", value: session.bundle.config.kernelCommandLine.joined(separator: " "))
+                    summaryCard("Boot") {
+                        editButton(for: .boot)
+                    } content: {
+                        summaryRows {
+                            summaryRow("Boot Mode", value: session.bundle.config.bootMode.label)
+                            if session.bundle.config.bootMode != .macOS {
+                                if let kernel = session.bundle.config.kernel {
+                                    summaryRow("Kernel", value: kernel)
+                                }
+                                if let initrd = session.bundle.config.initrd {
+                                    summaryRow("Initrd", value: initrd)
+                                }
+                                if session.bundle.config.bootMode == .linux {
+                                    summaryRow("Command Line", value: session.bundle.config.kernelCommandLine.joined(separator: " "))
+                                }
                             }
                         }
                     }
-                }
 
-                if hasStorageSummary {
-                    summaryCard("Storage") {
-                        editButton(for: .storage)
-                    } content: {
-                        VStack(alignment: .leading, spacing: 18) {
-                            if !session.bundle.config.disks.isEmpty {
-                                summarySubsection("Disks")
-                                VStack(alignment: .leading, spacing: 10) {
-                                    ForEach(session.bundle.config.disks, id: \.file) { disk in
-                                        summaryItem(
-                                            title: disk.file,
-                                            subtitle: disk.format.rawValue.uppercased(),
-                                            detail: disk.readOnly ? "Read-only" : "Read/write"
-                                        )
-                                    }
-                                }
-                            }
-
-                            if !session.bundle.config.usbDisks.isEmpty {
+                    if hasStorageSummary {
+                        summaryCard("Storage") {
+                            editButton(for: .storage)
+                        } content: {
+                            VStack(alignment: .leading, spacing: 18) {
                                 if !session.bundle.config.disks.isEmpty {
-                                    Divider()
+                                    summarySubsection("Disks")
+                                    VStack(alignment: .leading, spacing: 10) {
+                                        ForEach(session.bundle.config.disks, id: \.file) { disk in
+                                            summaryItem(
+                                                title: disk.file,
+                                                subtitle: disk.format.rawValue.uppercased(),
+                                                detail: disk.readOnly ? "Read-only" : "Read/write"
+                                            )
+                                        }
+                                    }
                                 }
-                                summarySubsection("USB Disks")
-                                VStack(alignment: .leading, spacing: 10) {
-                                    ForEach(Array(session.bundle.config.usbDisks.enumerated()), id: \.offset) { _, usbDisk in
-                                        summaryItem(
-                                            title: URL(fileURLWithPath: usbDisk.path).lastPathComponent,
-                                            subtitle: usbDisk.readOnly ? "Read-only" : "Read/write"
-                                        )
+
+                                if !session.bundle.config.usbDisks.isEmpty {
+                                    if !session.bundle.config.disks.isEmpty {
+                                        Divider()
+                                    }
+                                    summarySubsection("USB Disks")
+                                    VStack(alignment: .leading, spacing: 10) {
+                                        ForEach(Array(session.bundle.config.usbDisks.enumerated()), id: \.offset) { _, usbDisk in
+                                            summaryItem(
+                                                title: URL(fileURLWithPath: usbDisk.path).lastPathComponent,
+                                                subtitle: usbDisk.readOnly ? "Read-only" : "Read/write"
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if !session.bundle.config.shares.isEmpty {
+                        summaryCard("Directory Shares") {
+                            editButton(for: .sharing)
+                        } content: {
+                            VStack(alignment: .leading, spacing: 10) {
+                                ForEach(session.bundle.config.shares, id: \.tag) { share in
+                                    summaryItem(
+                                        title: share.tag,
+                                        subtitle: share.path,
+                                        detail: share.readOnly ? "Read-only" : "Read/write"
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    summaryCard("Branch") {
+                        Button("Manage…") { showBranchSheet = true }
+                            .buttonStyle(.bordered)
+                            .controlSize(.regular)
+                            .disabled(isRunningOrStopping)
+                    } content: {
+                        summaryRows {
+                            summaryRow("Active Branch") {
+                                HStack(alignment: .center, spacing: 10) {
+                                    valueText(session.bundle.meta.activeBranch)
+                                    if session.bundle.activeBranchInfo?.readOnly == true {
+                                        Label("Read-only", systemImage: "lock.fill")
+                                            .font(.caption.weight(.medium))
+                                            .foregroundStyle(.secondary)
+                                            .padding(.horizontal, 8)
+                                            .padding(.vertical, 4)
+                                            .background(
+                                                Capsule(style: .continuous)
+                                                    .fill(Color.secondary.opacity(0.12))
+                                            )
+                                            .help("Read-only")
                                     }
                                 }
                             }
                         }
                     }
                 }
+                .frame(maxWidth: 860)
 
-                if !session.bundle.config.shares.isEmpty {
-                    summaryCard("Directory Shares") {
-                        editButton(for: .sharing)
-                    } content: {
-                        VStack(alignment: .leading, spacing: 10) {
-                            ForEach(session.bundle.config.shares, id: \.tag) { share in
-                                summaryItem(
-                                    title: share.tag,
-                                    subtitle: share.path,
-                                    detail: share.readOnly ? "Read-only" : "Read/write"
-                                )
-                            }
-                        }
-                    }
-                }
-
-                summaryCard("Branch") {
-                    Button("Manage…") { showBranchSheet = true }
-                        .buttonStyle(.bordered)
-                        .controlSize(.regular)
-                        .disabled(isRunningOrStopping)
-                } content: {
-                    summaryRows {
-                        summaryRow("Active Branch") {
-                            HStack(alignment: .center, spacing: 10) {
-                                valueText(session.bundle.meta.activeBranch)
-                                if session.bundle.activeBranchInfo?.readOnly == true {
-                                    Label("Read-only", systemImage: "lock.fill")
-                                        .font(.caption.weight(.medium))
-                                        .foregroundStyle(.secondary)
-                                        .padding(.horizontal, 8)
-                                        .padding(.vertical, 4)
-                                        .background(
-                                            Capsule(style: .continuous)
-                                                .fill(Color.secondary.opacity(0.12))
-                                        )
-                                        .help("Read-only")
-                                }
-                            }
-                        }
-                    }
-                }
+                Spacer(minLength: 0)
             }
-            .frame(maxWidth: 860, alignment: .leading)
             .padding(.horizontal, 28)
             .padding(.vertical, 24)
         }
+        .frame(maxWidth: .infinity, alignment: .top)
     }
 
     private func summaryCard<HeaderAction: View, Content: View>(
