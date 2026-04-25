@@ -9,12 +9,32 @@ import AppKit
 import ToyVMCore
 #endif
 
-/// Tabs for the configuration editor.
-enum ConfigTab: Hashable {
+/// Categories for the configuration editor.
+enum ConfigTab: String, CaseIterable, Hashable, Identifiable {
     case system
     case boot
     case storage
     case sharing
+
+    var id: Self { self }
+
+    var title: String {
+        switch self {
+        case .system: "System"
+        case .boot: "Boot"
+        case .storage: "Storage"
+        case .sharing: "Sharing"
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .system: "cpu"
+        case .boot: "power"
+        case .storage: "externaldrive"
+        case .sharing: "folder"
+        }
+    }
 }
 
 @available(macOS 15.0, *)
@@ -61,45 +81,43 @@ struct ConfigEditView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            TabView(selection: $selectedTab) {
-                systemTab
-                    .tabItem { Label("System", systemImage: "cpu") }
-                    .tag(ConfigTab.system)
-
-                bootTab
-                    .tabItem { Label("Boot", systemImage: "power") }
-                    .tag(ConfigTab.boot)
-
-                storageTab
-                    .tabItem { Label("Storage", systemImage: "externaldrive") }
-                    .tag(ConfigTab.storage)
-
-                sharingTab
-                    .tabItem { Label("Sharing", systemImage: "folder") }
-                    .tag(ConfigTab.sharing)
+            HStack(spacing: 0) {
+                sidebar
+                Divider()
+                detailPane
             }
 
-            if let errorMessage {
-                Text(errorMessage)
-                    .foregroundStyle(.red)
-                    .padding(.horizontal)
-            }
+            Divider()
 
-            HStack {
-                Spacer()
-                if isRunning {
-                    Button("Done") { dismiss() }
-                        .keyboardShortcut(.defaultAction)
-                } else {
-                    Button("Cancel") { dismiss() }
-                        .keyboardShortcut(.cancelAction)
-                    Button("Save") { save() }
-                        .keyboardShortcut(.defaultAction)
+            VStack(spacing: 0) {
+                if let errorMessage {
+                    HStack {
+                        Text(errorMessage)
+                            .foregroundStyle(.red)
+                        Spacer()
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.top, 12)
                 }
+
+                HStack {
+                    Spacer()
+                    if isRunning {
+                        Button("Done") { dismiss() }
+                            .keyboardShortcut(.defaultAction)
+                    } else {
+                        Button("Cancel") { dismiss() }
+                            .keyboardShortcut(.cancelAction)
+                        Button("Save") { save() }
+                            .keyboardShortcut(.defaultAction)
+                    }
+                }
+                .padding()
             }
-            .padding()
+            .background(Color(nsColor: .windowBackgroundColor))
         }
-        .frame(minWidth: 500, minHeight: 400)
+        .frame(minWidth: 760, minHeight: 520)
+        .background(Color(nsColor: .windowBackgroundColor))
         .sheet(isPresented: $showDiskCreateSheet) {
             DiskCreateSheet(session: session)
         }
@@ -151,10 +169,79 @@ struct ConfigEditView: View {
         }
     }
 
+    // MARK: - Layout
+
+    private var sidebar: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            ForEach(ConfigTab.allCases) { tab in
+                Button {
+                    selectedTab = tab
+                } label: {
+                    Label(tab.title, systemImage: tab.systemImage)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 10)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .background {
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .fill(selectedTab == tab ? Color.accentColor.opacity(0.16) : .clear)
+                }
+            }
+
+            Spacer()
+        }
+        .padding(12)
+        .frame(width: 180)
+        .frame(maxHeight: .infinity, alignment: .topLeading)
+        .background(Color(nsColor: .controlBackgroundColor))
+    }
+
+    private var detailPane: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text(selectedTab.title)
+                .font(.title2.weight(.semibold))
+                .padding(.horizontal, 24)
+                .padding(.top, 24)
+                .padding(.bottom, 4)
+
+            selectedTabContent
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+        .background(Color(nsColor: .windowBackgroundColor))
+    }
+
+    @ViewBuilder
+    private var selectedTabContent: some View {
+        switch selectedTab {
+        case .system:
+            systemTab
+        case .boot:
+            bootTab
+        case .storage:
+            storageTab
+        case .sharing:
+            sharingTab
+        }
+    }
+
+    private func editorForm<Content: View>(@ViewBuilder content: () -> Content) -> some View {
+        Form {
+            content()
+        }
+        .formStyle(.grouped)
+        .scrollContentBackground(.hidden)
+        .padding(.horizontal, 16)
+        .padding(.bottom, 16)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .background(Color(nsColor: .windowBackgroundColor))
+    }
+
     // MARK: - System Tab
 
     private var systemTab: some View {
-        Form {
+        editorForm {
             SystemConfigSection(
                 cpus: $cpus,
                 memoryGB: $memoryGB,
@@ -163,14 +250,13 @@ struct ConfigEditView: View {
                 rosetta: $rosetta
             )
         }
-        .formStyle(.grouped)
         .disabled(isRunning)
     }
 
     // MARK: - Boot Tab
 
     private var bootTab: some View {
-        Form {
+        editorForm {
             if session.bundle.config.bootMode == .macOS {
                 Section("Boot Mode") {
                     LabeledContent("Boot Mode", value: "macOS")
@@ -198,14 +284,13 @@ struct ConfigEditView: View {
                 }
             }
         }
-        .formStyle(.grouped)
         .disabled(isRunning)
     }
 
     // MARK: - Storage Tab
 
     private var storageTab: some View {
-        Form {
+        editorForm {
             Section("Disks") {
                 if session.bundle.config.disks.isEmpty {
                     Text("No disks configured")
@@ -254,14 +339,13 @@ struct ConfigEditView: View {
                 }
             }
         }
-        .formStyle(.grouped)
         .disabled(isRunning)
     }
 
     // MARK: - Sharing Tab
 
     private var sharingTab: some View {
-        Form {
+        editorForm {
             Section("Directory Shares") {
                 if session.bundle.config.shares.isEmpty {
                     Text("No directory shares configured")
@@ -294,7 +378,6 @@ struct ConfigEditView: View {
                 }
             }
         }
-        .formStyle(.grouped)
         .disabled(!sharesEditable)
     }
 
