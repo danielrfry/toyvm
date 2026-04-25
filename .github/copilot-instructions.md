@@ -91,12 +91,14 @@ ToyVMAppMain (App)
 ```
 
 View files also include:
+
 - **`FullScreenObserver.swift`** — Tracks macOS full screen state via `NSWindow` notifications; `FullScreenTracker` (NSViewRepresentable) attaches it to the window.
 - **`CreateVMView.swift`** — VM creation sheet. Handles Linux, EFI, and macOS flows including restore image selection, "Download Latest from Apple" with progress/cancel, and macOS installation with `MacOSInstallManager`.
 - **`ConfigEditView.swift`** — VM config edit sheet (resources, devices, boot mode, USB disks, directory shares).
 - **`InstallationProgressView.swift`** — macOS installation progress with cancel.
 
 Menu bar additions (in `ToyVMAppMain`):
+
 - **File > New Virtual Machine…** (⌘N)
 - **View > Automatic Display Resize** — toggles `VMSession.automaticDisplayResize` for `VZVirtualMachineView.automaticallyReconfiguresDisplay`; disabled when no graphics display is active.
 
@@ -123,10 +125,10 @@ Branches form a tree. The root branch has `parent == nil`. Only leaf branches ca
 
 ## Boot modes
 
-| Mode | Boot loader | Display | Notes |
-|------|-------------|---------|-------|
-| `.linux` | `VZLinuxBootLoader` | Terminal (serial) | Kernel + optional initrd required |
-| `.efi` | `VZEFIBootLoader` | Graphics (`VZVirtualMachineView`) | ISO/USB install media supported |
+| Mode     | Boot loader         | Display                           | Notes                                                                |
+| -------- | ------------------- | --------------------------------- | -------------------------------------------------------------------- |
+| `.linux` | `VZLinuxBootLoader` | Terminal (serial)                 | Kernel + optional initrd required                                    |
+| `.efi`   | `VZEFIBootLoader`   | Graphics (`VZVirtualMachineView`) | ISO/USB install media supported                                      |
 | `.macOS` | `VZMacOSBootLoader` | Graphics (`VZVirtualMachineView`) | arm64 only; requires hardware model + machine ID + auxiliary storage |
 
 ## Fullscreen behaviour (ToyVMApp)
@@ -149,3 +151,9 @@ Branches form a tree. The root branch has `parent == nil`. Only leaf branches ca
 - **Bundle deletion**: Always use `NSWorkspace.shared.recycle()` for user-initiated deletion (moves to Trash). Use `FileManager.removeItem` only for cleanup of partial/failed bundles.
 - **Platform minimums**: ToyVMCore minimum is macOS 13; CLI minimum is macOS 12; ToyVMApp minimum is macOS 15 (required for `.windowToolbarFullScreenVisibility`).
 - **Guest artifacts**: Kernel, initrd, and rootfs disk images come from outside this repository (see `README.md` / `doc/INSTALL.md`).
+
+## General considerations
+
+- When verifying a change, build both CLI and GUI targets, using both SPM and Xcode (preferably via the MCP server if possible).
+- Use the Xcode MCP server, if available, to make modifications to the Xcode project.
+- After making each change and successfully verifying the build, commit with a descriptive message. For larger changes, consider breaking them into multiple commits for easier review.
