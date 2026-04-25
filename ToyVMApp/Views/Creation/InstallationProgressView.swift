@@ -15,25 +15,34 @@ struct InstallationProgressView: View {
     let onCancel: () -> Void
 
     var body: some View {
-        VStack(spacing: 16) {
-            Spacer()
+        VStack(spacing: 0) {
+            VStack(spacing: 16) {
+                Spacer()
 
-            statusLabel
+                statusLabel
 
-            ProgressView(value: installManager.installProgress)
-                .progressViewStyle(.linear)
+                ProgressView(value: installManager.installProgress)
+                    .progressViewStyle(.linear)
 
-            Text(percentText)
-                .font(.caption)
-                .foregroundStyle(.secondary)
+                Text(percentText)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
 
-            Button("Cancel") {
-                onCancel()
+                Spacer()
             }
+            .padding(32)
 
-            Spacer()
+            Divider()
+
+            HStack {
+                Spacer()
+                Button("Cancel") {
+                    onCancel()
+                }
+                .keyboardShortcut(.cancelAction)
+            }
+            .padding()
         }
-        .padding(32)
         .frame(minWidth: 350, minHeight: 200)
     }
 

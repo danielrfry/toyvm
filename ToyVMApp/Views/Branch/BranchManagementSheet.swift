@@ -53,8 +53,6 @@ struct BranchManagementSheet: View {
                 Text("Branches")
                     .font(.headline)
                 Spacer()
-                Button("Done") { dismiss() }
-                    .keyboardShortcut(.cancelAction)
             }
             .padding()
 
@@ -85,6 +83,9 @@ struct BranchManagementSheet: View {
                 .disabled(isRunning)
 
                 Spacer()
+
+                Button("Done") { dismiss() }
+                    .keyboardShortcut(.cancelAction)
             }
             .padding()
         }
@@ -155,9 +156,9 @@ struct BranchManagementSheet: View {
             .formStyle(.grouped)
 
             HStack {
+                Spacer()
                 Button("Cancel") { showCreateSheet = false }
                     .keyboardShortcut(.cancelAction)
-                Spacer()
                 Button("Create") { performCreate() }
                     .keyboardShortcut(.defaultAction)
                     .disabled(createName.trimmingCharacters(in: .whitespaces).isEmpty)

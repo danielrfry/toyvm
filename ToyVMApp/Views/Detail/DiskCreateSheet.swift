@@ -45,9 +45,9 @@ struct DiskCreateSheet: View {
             Divider()
 
             HStack {
+                Spacer()
                 Button("Cancel") { dismiss() }
                     .keyboardShortcut(.cancelAction)
-                Spacer()
                 Button("Create") { create() }
                     .keyboardShortcut(.defaultAction)
                     .disabled(sizeText.isEmpty || isCreating)

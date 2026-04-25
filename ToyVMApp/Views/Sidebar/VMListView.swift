@@ -46,9 +46,6 @@ struct VMListView: View {
             get: { bundleToDelete != nil },
             set: { if !$0 { bundleToDelete = nil } }
         )) {
-            Button("Cancel", role: .cancel) {
-                bundleToDelete = nil
-            }
             Button("Delete", role: .destructive) {
                 if let bundle = bundleToDelete {
                     do {
@@ -57,6 +54,9 @@ struct VMListView: View {
                         manager.errorMessage = error.localizedDescription
                     }
                 }
+                bundleToDelete = nil
+            }
+            Button("Cancel", role: .cancel) {
                 bundleToDelete = nil
             }
         } message: {

@@ -54,12 +54,12 @@ struct ShareEditSheet: View {
             Divider()
 
             HStack {
+                Spacer()
                 Button("Cancel") {
                     onDismiss()
                     dismiss()
                 }
                 .keyboardShortcut(.cancelAction)
-                Spacer()
                 Button(isEditing ? "Save" : "Add") {
                     save()
                 }

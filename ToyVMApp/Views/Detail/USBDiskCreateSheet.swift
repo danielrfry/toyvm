@@ -77,9 +77,9 @@ struct USBDiskCreateSheet: View {
             Divider()
 
             HStack {
+                Spacer()
                 Button("Cancel") { dismiss() }
                     .keyboardShortcut(.cancelAction)
-                Spacer()
                 Button("Create") { performCreate() }
                     .keyboardShortcut(.defaultAction)
                     .disabled(sizeText.isEmpty || locationURL == nil || isCreating || volumeLabelError != nil)

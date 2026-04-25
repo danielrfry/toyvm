@@ -186,27 +186,36 @@ struct CreateVMView: View {
     }
 
     private var downloadProgressContent: some View {
-        VStack(spacing: 16) {
-            Spacer()
+        VStack(spacing: 0) {
+            VStack(spacing: 16) {
+                Spacer()
 
-            Text("Downloading macOS restore image…")
-                .font(.headline)
+                Text("Downloading macOS restore image…")
+                    .font(.headline)
 
-            ProgressView(value: restoreImageManager.downloadProgress)
-                .progressViewStyle(.linear)
+                ProgressView(value: restoreImageManager.downloadProgress)
+                    .progressViewStyle(.linear)
 
-            Text("\(Int(restoreImageManager.downloadProgress * 100))%")
-                .font(.caption)
-                .foregroundStyle(.secondary)
+                Text("\(Int(restoreImageManager.downloadProgress * 100))%")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
 
-            Button("Cancel") {
-                restoreImageManager.cancel()
-                isDownloading = false
+                Spacer()
             }
+            .padding(32)
 
-            Spacer()
+            Divider()
+
+            HStack {
+                Spacer()
+                Button("Cancel") {
+                    restoreImageManager.cancel()
+                    isDownloading = false
+                }
+                .keyboardShortcut(.cancelAction)
+            }
+            .padding()
         }
-        .padding(32)
         .frame(minWidth: 350, minHeight: 200)
     }
 
