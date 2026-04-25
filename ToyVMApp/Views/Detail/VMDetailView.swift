@@ -220,109 +220,249 @@ struct VMDetailView: View {
         }
     }
 
+    private let summaryLabelWidth: CGFloat = 140
+
+    private var hasStorageSummary: Bool {
+        !session.bundle.config.disks.isEmpty || !session.bundle.config.usbDisks.isEmpty
+    }
+
     private var configSummary: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: 24) {
                 statusBanner
 
-                GroupBox {
-                    LabeledContent("CPUs", value: "\(session.bundle.config.cpus)")
-                    LabeledContent("Memory", value: "\(session.bundle.config.memoryGB) GB")
-                    LabeledContent("Network", value: session.bundle.config.network ? "Enabled" : "Disabled")
-                    LabeledContent("Audio", value: session.bundle.config.audio ? "Enabled" : "Disabled")
-                    LabeledContent("Rosetta", value: session.bundle.config.rosetta ? "Enabled" : "Disabled")
-                } label: {
-                    editableGroupBoxLabel("System", tab: .system)
-                }
-
-                GroupBox {
-                    LabeledContent("Boot Mode", value: session.bundle.config.bootMode.label)
-                    if session.bundle.config.bootMode != .macOS {
-                        if let kernel = session.bundle.config.kernel {
-                            LabeledContent("Kernel", value: kernel)
-                        }
-                        if let initrd = session.bundle.config.initrd {
-                            LabeledContent("Initrd", value: initrd)
-                        }
-                        if session.bundle.config.bootMode == .linux {
-                            LabeledContent("Command Line", value: session.bundle.config.kernelCommandLine.joined(separator: " "))
-                        }
-                    }
-                } label: {
-                    editableGroupBoxLabel("Boot", tab: .boot)
-                }
-
-                if !session.bundle.config.disks.isEmpty {
-                    GroupBox {
-                        ForEach(session.bundle.config.disks, id: \.file) { disk in
-                            LabeledContent(disk.file) {
-                                Text("\(disk.format.rawValue), \(disk.readOnly ? "read-only" : "read/write")")
-                            }
-                        }
-                    } label: {
-                        editableGroupBoxLabel("Disks", tab: .storage)
+                summaryCard("System") {
+                    editButton(for: .system)
+                } content: {
+                    summaryRows {
+                        summaryRow("CPUs", value: "\(session.bundle.config.cpus)")
+                        summaryRow("Memory", value: "\(session.bundle.config.memoryGB) GB")
+                        summaryRow("Network") { stateBadge(enabled: session.bundle.config.network) }
+                        summaryRow("Audio") { stateBadge(enabled: session.bundle.config.audio) }
+                        summaryRow("Rosetta") { stateBadge(enabled: session.bundle.config.rosetta) }
                     }
                 }
 
-                if !session.bundle.config.usbDisks.isEmpty {
-                    GroupBox {
-                        ForEach(Array(session.bundle.config.usbDisks.enumerated()), id: \.offset) { _, usbDisk in
-                            LabeledContent(URL(fileURLWithPath: usbDisk.path).lastPathComponent) {
-                                Text(usbDisk.readOnly ? "read-only" : "read/write")
+                summaryCard("Boot") {
+                    editButton(for: .boot)
+                } content: {
+                    summaryRows {
+                        summaryRow("Boot Mode", value: session.bundle.config.bootMode.label)
+                        if session.bundle.config.bootMode != .macOS {
+                            if let kernel = session.bundle.config.kernel {
+                                summaryRow("Kernel", value: kernel)
+                            }
+                            if let initrd = session.bundle.config.initrd {
+                                summaryRow("Initrd", value: initrd)
+                            }
+                            if session.bundle.config.bootMode == .linux {
+                                summaryRow("Command Line", value: session.bundle.config.kernelCommandLine.joined(separator: " "))
                             }
                         }
-                    } label: {
-                        editableGroupBoxLabel("USB Disks", tab: .storage)
+                    }
+                }
+
+                if hasStorageSummary {
+                    summaryCard("Storage") {
+                        editButton(for: .storage)
+                    } content: {
+                        VStack(alignment: .leading, spacing: 18) {
+                            if !session.bundle.config.disks.isEmpty {
+                                summarySubsection("Disks")
+                                VStack(alignment: .leading, spacing: 10) {
+                                    ForEach(session.bundle.config.disks, id: \.file) { disk in
+                                        summaryItem(
+                                            title: disk.file,
+                                            subtitle: disk.format.rawValue.uppercased(),
+                                            detail: disk.readOnly ? "Read-only" : "Read/write"
+                                        )
+                                    }
+                                }
+                            }
+
+                            if !session.bundle.config.usbDisks.isEmpty {
+                                if !session.bundle.config.disks.isEmpty {
+                                    Divider()
+                                }
+                                summarySubsection("USB Disks")
+                                VStack(alignment: .leading, spacing: 10) {
+                                    ForEach(Array(session.bundle.config.usbDisks.enumerated()), id: \.offset) { _, usbDisk in
+                                        summaryItem(
+                                            title: URL(fileURLWithPath: usbDisk.path).lastPathComponent,
+                                            subtitle: usbDisk.readOnly ? "Read-only" : "Read/write"
+                                        )
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
 
                 if !session.bundle.config.shares.isEmpty {
-                    GroupBox {
-                        ForEach(session.bundle.config.shares, id: \.tag) { share in
-                            LabeledContent(share.tag) {
-                                Text("\(share.path) (\(share.readOnly ? "ro" : "rw"))")
+                    summaryCard("Directory Shares") {
+                        editButton(for: .sharing)
+                    } content: {
+                        VStack(alignment: .leading, spacing: 10) {
+                            ForEach(session.bundle.config.shares, id: \.tag) { share in
+                                summaryItem(
+                                    title: share.tag,
+                                    subtitle: share.path,
+                                    detail: share.readOnly ? "Read-only" : "Read/write"
+                                )
                             }
                         }
-                    } label: {
-                        editableGroupBoxLabel("Directory Shares", tab: .sharing)
                     }
                 }
 
-                Divider()
-                    .padding(.vertical, 4)
-
-                GroupBox("Branch") {
-                    HStack {
-                        LabeledContent("Active Branch", value: session.bundle.meta.activeBranch)
-                        if session.bundle.activeBranchInfo?.readOnly == true {
-                            Image(systemName: "lock.fill")
-                                .foregroundStyle(.secondary)
-                                .help("Read-only")
+                summaryCard("Branch") {
+                    Button("Manage…") { showBranchSheet = true }
+                        .buttonStyle(.bordered)
+                        .controlSize(.regular)
+                        .disabled(isRunningOrStopping)
+                } content: {
+                    summaryRows {
+                        summaryRow("Active Branch") {
+                            HStack(alignment: .center, spacing: 10) {
+                                valueText(session.bundle.meta.activeBranch)
+                                if session.bundle.activeBranchInfo?.readOnly == true {
+                                    Label("Read-only", systemImage: "lock.fill")
+                                        .font(.caption.weight(.medium))
+                                        .foregroundStyle(.secondary)
+                                        .padding(.horizontal, 8)
+                                        .padding(.vertical, 4)
+                                        .background(
+                                            Capsule(style: .continuous)
+                                                .fill(Color.secondary.opacity(0.12))
+                                        )
+                                        .help("Read-only")
+                                }
+                            }
                         }
-                        Spacer()
-                        Button("Manage…") { showBranchSheet = true }
-                            .disabled(isRunningOrStopping)
                     }
                 }
             }
-            .padding()
+            .frame(maxWidth: 860, alignment: .leading)
+            .padding(.horizontal, 28)
+            .padding(.vertical, 24)
         }
     }
 
-    private func editableGroupBoxLabel(_ title: String, tab: ConfigTab) -> some View {
-        HStack {
-            Text(title)
-            Spacer()
-            Button {
-                configInitialTab = tab
-                showConfigEditor = true
-            } label: {
-                Label("Edit", systemImage: "pencil")
-                    .labelStyle(.iconOnly)
-                    .font(.caption)
+    private func summaryCard<HeaderAction: View, Content: View>(
+        _ title: String,
+        @ViewBuilder action: () -> HeaderAction,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 18) {
+            HStack(alignment: .center, spacing: 12) {
+                Text(title)
+                    .font(.headline)
+                    .fontWeight(.semibold)
+
+                Spacer(minLength: 12)
+
+                action()
             }
-            .buttonStyle(.borderless)
+
+            content()
         }
+        .padding(22)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(Color(nsColor: .controlBackgroundColor))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .strokeBorder(Color.primary.opacity(0.08))
+        )
+    }
+
+    private func editButton(for tab: ConfigTab) -> some View {
+        Button {
+            configInitialTab = tab
+            showConfigEditor = true
+        } label: {
+            Label("Edit…", systemImage: "pencil")
+        }
+        .buttonStyle(.bordered)
+        .controlSize(.regular)
+    }
+
+    private func summaryRows<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 14) {
+            content()
+        }
+    }
+
+    private func summaryRow<Value: View>(
+        _ label: String,
+        @ViewBuilder value: () -> Value
+    ) -> some View {
+        HStack(alignment: .top, spacing: 18) {
+            Text(label)
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(.secondary)
+                .frame(width: summaryLabelWidth, alignment: .leading)
+
+            value()
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    private func summaryRow(_ label: String, value: String) -> some View {
+        summaryRow(label) {
+            valueText(value)
+        }
+    }
+
+    private func valueText(_ text: String) -> some View {
+        Text(text)
+            .font(.body.weight(.medium))
+            .multilineTextAlignment(.leading)
+            .textSelection(.enabled)
+    }
+
+    private func stateBadge(enabled: Bool) -> some View {
+        Text(enabled ? "Enabled" : "Disabled")
+            .font(.callout.weight(.medium))
+            .foregroundStyle(enabled ? Color.green : Color.secondary)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 4)
+            .background(
+                Capsule(style: .continuous)
+                    .fill((enabled ? Color.green : Color.secondary).opacity(0.12))
+            )
+    }
+
+    private func summarySubsection(_ title: String) -> some View {
+        Text(title)
+            .font(.subheadline.weight(.semibold))
+            .foregroundStyle(.secondary)
+    }
+
+    private func summaryItem(title: String, subtitle: String, detail: String? = nil) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title)
+                .font(.body.weight(.medium))
+                .textSelection(.enabled)
+
+            Text(subtitle)
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .textSelection(.enabled)
+
+            if let detail {
+                Text(detail)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(14)
+        .background(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(Color.primary.opacity(0.04))
+        )
     }
 
     @ViewBuilder
@@ -510,5 +650,6 @@ struct VMDetailView: View {
 @available(macOS 15.0, *)
 #Preview("Stopped") {
     VMDetailView(session: PreviewFixtures.primarySession, manager: PreviewFixtures.manager)
+        .frame(width: 1100, height: 760)
 }
 #endif
