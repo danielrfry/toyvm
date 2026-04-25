@@ -10,7 +10,8 @@ import ToyVMCore
 
 /// Persistent layer that holds one `TerminalDisplayView` for every session that has
 /// been started in terminal mode. Views are never removed from the hierarchy — only
-/// hidden — so the scroll buffer and terminal state are preserved when switching VMs.
+/// hidden — so terminal state is preserved when switching VMs, while each new VM run
+/// can still reset its own console contents.
 ///
 /// `TerminalDisplayView.updateNSView` reads `session.inputPipe`, which establishes an
 /// `@Observable` dependency so SwiftUI calls `updateNSView` again when the pipe

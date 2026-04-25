@@ -12,7 +12,8 @@ import ToyVMCore
 
 /// Wraps SwiftTerm's `TerminalView` for use in SwiftUI.
 /// Intended for use inside `TerminalLayerView`, which keeps one instance per session
-/// permanently in the view hierarchy so the scroll buffer is never lost.
+/// in the view hierarchy so terminal state survives VM switching, while resets on
+/// a fresh console connection start each VM run with a blank terminal.
 @available(macOS 15.0, *)
 struct TerminalDisplayView: NSViewRepresentable {
     let session: VMSession
@@ -40,11 +41,15 @@ struct TerminalDisplayView: NSViewRepresentable {
         /// Connect to a new pipe pair. Disconnects the previous pair first.
         /// Guards against redundant reconnects using object identity.
         func connectPipes(input: Pipe?, output: Pipe?) {
-            guard output !== connectedOutput else { return }
+            guard input !== connectedInput || output !== connectedOutput else { return }
 
             connectedOutput?.fileHandleForReading.readabilityHandler = nil
             connectedInput = input
             connectedOutput = output
+
+            if output != nil {
+                resetTerminal()
+            }
 
             output?.fileHandleForReading.readabilityHandler = { [weak self] handle in
                 let data = handle.availableData
@@ -56,6 +61,12 @@ struct TerminalDisplayView: NSViewRepresentable {
                 let bytes = ArraySlice([UInt8](data))
                 DispatchQueue.main.async { self?.terminalView?.feed(byteArray: bytes) }
             }
+        }
+
+        private func resetTerminal() {
+            guard let terminalView else { return }
+            terminalView.getTerminal().resetToInitialState()
+            terminalView.setNeedsDisplay(terminalView.bounds)
         }
 
         // MARK: - TerminalViewDelegate
