@@ -51,6 +51,9 @@ struct ConfigEditView: View {
     @State private var rosetta: Bool
     @State private var kernelCommandLine: String
     @State private var bootMode: BootMode
+    @State private var replacementKernelPath: String
+    @State private var replacementInitrdPath: String
+    @State private var removeInitrdOnSave: Bool
     @State private var usbDisks: [USBDiskConfig]
     @State private var errorMessage: String?
     @State private var showDiskCreateSheet = false
@@ -71,6 +74,9 @@ struct ConfigEditView: View {
         _rosetta = State(initialValue: config.rosetta)
         _kernelCommandLine = State(initialValue: config.kernelCommandLine.joined(separator: " "))
         _bootMode = State(initialValue: config.bootMode)
+        _replacementKernelPath = State(initialValue: "")
+        _replacementInitrdPath = State(initialValue: "")
+        _removeInitrdOnSave = State(initialValue: false)
         _usbDisks = State(initialValue: config.usbDisks)
     }
 
@@ -272,10 +278,49 @@ struct ConfigEditView: View {
 
                 Section("Boot Images") {
                     if let kernel = session.bundle.config.kernel {
-                        LabeledContent("Kernel", value: kernel)
+                        LabeledContent("Current Kernel", value: kernel)
                     }
+                    HStack {
+                        TextField(
+                            session.bundle.config.kernel == nil ? "Kernel" : "Replace Kernel",
+                            text: $replacementKernelPath
+                        )
+                        .textFieldStyle(.roundedBorder)
+                        Button("Browse…") {
+                            chooseFile(title: "Select Kernel Image") { url in
+                                replacementKernelPath = url.path
+                            }
+                        }
+                    }
+
                     if let initrd = session.bundle.config.initrd {
-                        LabeledContent("Initrd", value: initrd)
+                        LabeledContent("Current Initrd", value: initrd)
+                    }
+                    HStack {
+                        TextField(
+                            session.bundle.config.initrd == nil ? "Initrd (optional)" : "Replace Initrd (optional)",
+                            text: $replacementInitrdPath
+                        )
+                        .textFieldStyle(.roundedBorder)
+                        Button("Browse…") {
+                            chooseFile(title: "Select Initrd Image") { url in
+                                replacementInitrdPath = url.path
+                                removeInitrdOnSave = false
+                            }
+                        }
+                        if session.bundle.config.initrd != nil {
+                            Button(removeInitrdOnSave ? "Keep Current" : "Remove") {
+                                removeInitrdOnSave.toggle()
+                                if removeInitrdOnSave {
+                                    replacementInitrdPath = ""
+                                }
+                            }
+                        }
+                    }
+                    if removeInitrdOnSave {
+                        Text("The current initrd will be removed when you save.")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
                     }
                     if bootMode == .linux {
                         TextField("Kernel Command Line", text: $kernelCommandLine)
@@ -385,6 +430,29 @@ struct ConfigEditView: View {
 
     private func save() {
         do {
+            let currentKernelURL = session.bundle.config.kernelURL(in: session.bundle.activeBranchURL)
+            let currentInitrdURL = session.bundle.config.initrdURL(in: session.bundle.activeBranchURL)
+            let trimmedKernelPath = replacementKernelPath.trimmingCharacters(in: .whitespacesAndNewlines)
+            let trimmedInitrdPath = replacementInitrdPath.trimmingCharacters(in: .whitespacesAndNewlines)
+
+            if !trimmedKernelPath.isEmpty {
+                let kernelURL = try validatedReplacementURL(path: trimmedKernelPath, label: "Kernel")
+                if kernelURL.standardizedFileURL != currentKernelURL?.standardizedFileURL {
+                    try session.bundle.replaceKernel(from: kernelURL)
+                }
+            } else if bootMode == .linux && session.bundle.config.kernel == nil {
+                throw ToyVMError("Linux boot mode requires a kernel image")
+            }
+
+            if !trimmedInitrdPath.isEmpty {
+                let initrdURL = try validatedReplacementURL(path: trimmedInitrdPath, label: "Initrd")
+                if initrdURL.standardizedFileURL != currentInitrdURL?.standardizedFileURL {
+                    try session.bundle.replaceInitrd(from: initrdURL)
+                }
+            } else if removeInitrdOnSave {
+                try session.bundle.removeInitrd()
+            }
+
             session.bundle.config.cpus = cpus
             session.bundle.config.memoryGB = memoryGB
             session.bundle.config.audio = audio
@@ -416,6 +484,13 @@ struct ConfigEditView: View {
         if panel.runModal() == .OK, let url = panel.url {
             completion(url)
         }
+    }
+
+    private func validatedReplacementURL(path: String, label: String) throws -> URL {
+        guard FileManager.default.fileExists(atPath: path) else {
+            throw ToyVMError("\(label) file not found: \(path)")
+        }
+        return URL(fileURLWithPath: path)
     }
 }
 
