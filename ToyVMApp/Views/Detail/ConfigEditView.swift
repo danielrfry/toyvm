@@ -279,9 +279,8 @@ struct ConfigEditView: View {
                 Section("Boot Images") {
                     bootImageRow(
                         title: "Current Kernel",
-                        value: session.bundle.config.kernel ?? "Not set",
-                        replacementPath: replacementKernelPath,
-                        actionTitle: session.bundle.config.kernel == nil ? "Browse…" : "Replace…"
+                        value: displayedKernelName ?? "Not set",
+                        actionTitle: bootImageActionTitle(for: displayedKernelName)
                     ) {
                         chooseFile(title: "Select Kernel Image") { url in
                             replacementKernelPath = url.path
@@ -290,10 +289,8 @@ struct ConfigEditView: View {
 
                     bootImageRow(
                         title: "Current Initrd",
-                        value: session.bundle.config.initrd ?? "Not set",
-                        replacementPath: replacementInitrdPath,
-                        actionTitle: session.bundle.config.initrd == nil ? "Browse…" : "Replace…",
-                        isPendingRemoval: removeInitrdOnSave
+                        value: displayedInitrdName ?? "Not set",
+                        actionTitle: bootImageActionTitle(for: displayedInitrdName)
                     ) {
                         chooseFile(title: "Select Initrd Image") { url in
                             replacementInitrdPath = url.path
@@ -311,12 +308,6 @@ struct ConfigEditView: View {
                             }
                             .buttonStyle(.borderless)
                         }
-                    }
-
-                    if removeInitrdOnSave {
-                        Text("The current initrd will be removed when you save.")
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
                     }
                     if bootMode == .linux {
                         TextField("Kernel Command Line", text: $kernelCommandLine)
@@ -471,51 +462,69 @@ struct ConfigEditView: View {
         }
     }
 
+    private var displayedKernelName: String? {
+        pendingBootImageName(currentName: session.bundle.config.kernel, replacementPath: replacementKernelPath)
+    }
+
+    private var displayedInitrdName: String? {
+        pendingBootImageName(
+            currentName: session.bundle.config.initrd,
+            replacementPath: replacementInitrdPath,
+            isPendingRemoval: removeInitrdOnSave
+        )
+    }
+
     private func bootImageRow<Accessory: View>(
         title: String,
         value: String,
-        replacementPath: String,
         actionTitle: String,
-        isPendingRemoval: Bool = false,
         action: @escaping () -> Void,
         @ViewBuilder accessory: () -> Accessory
     ) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack(alignment: .firstTextBaseline, spacing: 12) {
-                Text(title)
-                Spacer()
-                Text(value)
-                    .foregroundStyle(isPendingRemoval ? .secondary : .primary)
-                Button(actionTitle, action: action)
-                accessory()
-            }
-
-            if !replacementPath.isEmpty {
-                Text("Selected replacement: \(URL(fileURLWithPath: replacementPath).lastPathComponent)")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-            }
+        HStack(alignment: .firstTextBaseline, spacing: 12) {
+            Text(title)
+            Spacer()
+            Text(value)
+            Button(actionTitle, action: action)
+            accessory()
         }
     }
 
     private func bootImageRow(
         title: String,
         value: String,
-        replacementPath: String,
         actionTitle: String,
-        isPendingRemoval: Bool = false,
         action: @escaping () -> Void
     ) -> some View {
         bootImageRow(
             title: title,
             value: value,
-            replacementPath: replacementPath,
             actionTitle: actionTitle,
-            isPendingRemoval: isPendingRemoval,
             action: action
         ) {
             EmptyView()
         }
+    }
+
+    private func pendingBootImageName(
+        currentName: String?,
+        replacementPath: String,
+        isPendingRemoval: Bool = false
+    ) -> String? {
+        if isPendingRemoval {
+            return nil
+        }
+
+        let trimmedPath = replacementPath.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !trimmedPath.isEmpty {
+            return URL(fileURLWithPath: trimmedPath).lastPathComponent
+        }
+
+        return currentName
+    }
+
+    private func bootImageActionTitle(for currentName: String?) -> String {
+        currentName == nil ? "Browse…" : "Replace…"
     }
 
     private func chooseFile(title: String, completion: @escaping (URL) -> Void) {
