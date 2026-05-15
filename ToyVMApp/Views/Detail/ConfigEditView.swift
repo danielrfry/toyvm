@@ -485,8 +485,8 @@ struct ConfigEditView: View {
             Text(title)
             Spacer()
             Text(value)
-            Button(actionTitle, action: action)
             accessory()
+            Button(actionTitle, action: action)
         }
     }
 
