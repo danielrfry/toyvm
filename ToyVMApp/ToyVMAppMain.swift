@@ -3,14 +3,39 @@
 //  ToyVMApp
 //
 
+import AppKit
 import SwiftUI
 #if canImport(ToyVMCore)
 import ToyVMCore
 #endif
 
 @available(macOS 15.0, *)
+private final class QuitConfirmationAppDelegate: NSObject, NSApplicationDelegate {
+    weak var manager: VMManager?
+
+    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        guard let manager, manager.activeSessionCount > 0 else {
+            return .terminateNow
+        }
+
+        let count = manager.activeSessionCount
+        let alert = NSAlert()
+        alert.alertStyle = .warning
+        alert.messageText = "Quit with Running Virtual Machines?"
+        alert.informativeText = count == 1
+            ? "1 virtual machine is still running. Quitting ToyVM will stop it immediately. Any unsaved data in the guest may be lost."
+            : "\(count) virtual machines are still running. Quitting ToyVM will stop them immediately. Any unsaved data in the guests may be lost."
+        alert.addButton(withTitle: "Cancel")
+        alert.addButton(withTitle: "Quit")
+
+        return alert.runModal() == .alertSecondButtonReturn ? .terminateNow : .terminateCancel
+    }
+}
+
+@available(macOS 15.0, *)
 @main
 struct ToyVMAppMain: App {
+    @NSApplicationDelegateAdaptor(QuitConfirmationAppDelegate.self) private var appDelegate
     @State private var manager = VMManager()
     @State private var showConfigEditor = false
     @State private var showBranchSheet = false
@@ -41,11 +66,7 @@ struct ToyVMAppMain: App {
     }
 
     private var isRunning: Bool {
-        guard let state = selectedSession?.runner?.state else { return false }
-        switch state {
-        case .running, .starting, .stopping: return true
-        default: return false
-        }
+        selectedSession?.isActive == true
     }
 
     private var sharesEditable: Bool {
@@ -56,6 +77,9 @@ struct ToyVMAppMain: App {
     var body: some Scene {
         WindowGroup {
             ContentView(manager: manager)
+                .onAppear {
+                    appDelegate.manager = manager
+                }
                 .sheet(isPresented: $showConfigEditor) {
                     if let session = selectedSession {
                         ConfigEditView(session: session, isRunning: isRunning)

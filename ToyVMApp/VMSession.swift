@@ -45,6 +45,16 @@ class VMSession: Identifiable {
     /// Stable identity for SwiftUI ForEach.
     var id: URL { bundle.bundleURL }
 
+    var isActive: Bool {
+        guard let state = runner?.state else { return false }
+        switch state {
+        case .starting, .running, .stopping:
+            return true
+        default:
+            return false
+        }
+    }
+
     private var startContext: VMStartContext?
 
     init(bundle: VMBundle) {

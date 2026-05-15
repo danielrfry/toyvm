@@ -19,6 +19,14 @@ class VMManager {
     var showCreateSheet = false
     var errorMessage: String?
 
+    var activeSessionCount: Int {
+        sessions.values.reduce(into: 0) { count, session in
+            if session.isActive {
+                count += 1
+            }
+        }
+    }
+
     private let vmDirectory: URL
     private var directoryMonitorSource: DispatchSourceFileSystemObject?
     private var directoryMonitorFD: Int32 = -1
