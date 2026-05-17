@@ -82,7 +82,7 @@ struct ToyVMAppMain: App {
                 }
                 .sheet(isPresented: $showConfigEditor) {
                     if let session = selectedSession {
-                        ConfigEditView(session: session, isRunning: isRunning)
+                        ConfigEditView(manager: manager, session: session, isRunning: isRunning)
                     }
                 }
                 .sheet(isPresented: $showBranchSheet) {

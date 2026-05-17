@@ -11,6 +11,7 @@ import ToyVMCore
 
 /// Categories for the configuration editor.
 enum ConfigTab: String, CaseIterable, Hashable, Identifiable {
+    case general
     case system
     case boot
     case storage
@@ -20,6 +21,7 @@ enum ConfigTab: String, CaseIterable, Hashable, Identifiable {
 
     var title: String {
         switch self {
+        case .general: "General"
         case .system: "System"
         case .boot: "Boot"
         case .storage: "Storage"
@@ -29,6 +31,7 @@ enum ConfigTab: String, CaseIterable, Hashable, Identifiable {
 
     var systemImage: String {
         switch self {
+        case .general: "gearshape"
         case .system: "cpu"
         case .boot: "power"
         case .storage: "externaldrive"
@@ -39,11 +42,13 @@ enum ConfigTab: String, CaseIterable, Hashable, Identifiable {
 
 @available(macOS 15.0, *)
 struct ConfigEditView: View {
+    let manager: VMManager
     @Bindable var session: VMSession
     let isRunning: Bool
     @Environment(\.dismiss) private var dismiss
 
     @State private var selectedTab: ConfigTab
+    @State private var vmName: String
     @State private var cpus: Int
     @State private var memoryGB: Int
     @State private var audio: Bool
@@ -62,11 +67,13 @@ struct ConfigEditView: View {
     @State private var editingShare: ShareConfig?
     @State private var shareToRemove: ShareConfig?
 
-    init(session: VMSession, initialTab: ConfigTab = .system, isRunning: Bool = false) {
+    init(manager: VMManager, session: VMSession, initialTab: ConfigTab = .general, isRunning: Bool = false) {
+        self.manager = manager
         self.session = session
         self.isRunning = isRunning
         let config = session.bundle.config
         _selectedTab = State(initialValue: initialTab)
+        _vmName = State(initialValue: VMManager.displayName(for: session.bundle))
         _cpus = State(initialValue: config.cpus)
         _memoryGB = State(initialValue: config.memoryGB)
         _audio = State(initialValue: config.audio)
@@ -83,6 +90,10 @@ struct ConfigEditView: View {
     /// Whether shares can be edited (stopped, or running macOS guest).
     private var sharesEditable: Bool {
         !isRunning || session.bundle.config.bootMode == .macOS
+    }
+
+    private var hasPendingRename: Bool {
+        VMManager.normalizedDisplayName(vmName) != VMManager.displayName(for: session.bundle)
     }
 
     var body: some View {
@@ -108,7 +119,7 @@ struct ConfigEditView: View {
 
                 HStack {
                     Spacer()
-                    if isRunning {
+                    if isRunning && !hasPendingRename {
                         Button("Done") { dismiss() }
                             .keyboardShortcut(.defaultAction)
                     } else {
@@ -221,6 +232,8 @@ struct ConfigEditView: View {
     @ViewBuilder
     private var selectedTabContent: some View {
         switch selectedTab {
+        case .general:
+            generalTab
         case .system:
             systemTab
         case .boot:
@@ -242,6 +255,17 @@ struct ConfigEditView: View {
         .padding(.bottom, 16)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .background(Color(nsColor: .windowBackgroundColor))
+    }
+
+    // MARK: - General Tab
+
+    private var generalTab: some View {
+        editorForm {
+            Section("Virtual Machine") {
+                TextField("Name", text: $vmName)
+                    .textFieldStyle(.roundedBorder)
+            }
+        }
     }
 
     // MARK: - System Tab
@@ -417,6 +441,12 @@ struct ConfigEditView: View {
 
     private func save() {
         do {
+            let requestedName = VMManager.normalizedDisplayName(vmName)
+            if requestedName != VMManager.displayName(for: session.bundle) {
+                _ = try manager.rename(bundle: session.bundle, to: requestedName)
+                vmName = requestedName
+            }
+
             let currentKernelURL = session.bundle.config.kernelURL(in: session.bundle.activeBranchURL)
             let currentInitrdURL = session.bundle.config.initrdURL(in: session.bundle.activeBranchURL)
             let trimmedKernelPath = replacementKernelPath.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -549,11 +579,11 @@ struct ConfigEditView: View {
 #if DEBUG
 @available(macOS 15.0, *)
 #Preview("System") {
-    ConfigEditView(session: PreviewFixtures.primarySession, initialTab: .system)
+    ConfigEditView(manager: PreviewFixtures.manager, session: PreviewFixtures.primarySession, initialTab: .system)
 }
 
 @available(macOS 15.0, *)
 #Preview("Storage") {
-    ConfigEditView(session: PreviewFixtures.primarySession, initialTab: .storage)
+    ConfigEditView(manager: PreviewFixtures.manager, session: PreviewFixtures.primarySession, initialTab: .storage)
 }
 #endif

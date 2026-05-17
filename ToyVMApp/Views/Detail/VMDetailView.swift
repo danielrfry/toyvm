@@ -15,7 +15,7 @@ struct VMDetailView: View {
     @Bindable var session: VMSession
     let manager: VMManager
     @State private var showConfigEditor = false
-    @State private var configInitialTab: ConfigTab = .system
+    @State private var configInitialTab: ConfigTab = .general
     @State private var showBranchSheet = false
     @State private var deviceToDetach: VMSession.AttachedUSBDevice?
     @State private var configUSBDiskIndexToRemove: Int?
@@ -99,7 +99,7 @@ struct VMDetailView: View {
 
             ToolbarItem(placement: .automatic) {
                 Button {
-                    configInitialTab = .system
+                    configInitialTab = .general
                     showConfigEditor = true
                 } label: {
                     Label("Configure", systemImage: "gearshape")
@@ -119,7 +119,7 @@ struct VMDetailView: View {
         }
         .navigationTitle(VMManager.displayName(for: session.bundle))
         .sheet(isPresented: $showConfigEditor) {
-            ConfigEditView(session: session, initialTab: configInitialTab, isRunning: isRunningOrStopping)
+            ConfigEditView(manager: manager, session: session, initialTab: configInitialTab, isRunning: isRunningOrStopping)
         }
         .sheet(isPresented: $showBranchSheet) {
             BranchManagementSheet(session: session)

@@ -105,6 +105,45 @@ class VMManager {
         refresh()
     }
 
+    /// Rename a VM bundle and update any in-memory session tracking.
+    @MainActor
+    @discardableResult
+    func rename(bundle: VMBundle, to requestedName: String) throws -> VMBundle {
+        let displayName = Self.normalizedDisplayName(requestedName)
+        try Self.validateDisplayName(displayName)
+
+        let oldURL = bundle.bundleURL
+        let newURL = vmDirectory.appendingPathComponent("\(displayName).bundle", isDirectory: true)
+        guard newURL.standardizedFileURL != oldURL.standardizedFileURL else {
+            return sessions[oldURL]?.bundle ?? bundle
+        }
+        guard !FileManager.default.fileExists(atPath: newURL.path) else {
+            throw ToyVMError("A virtual machine named '\(displayName)' already exists.")
+        }
+
+        do {
+            try FileManager.default.moveItem(at: oldURL, to: newURL)
+            let renamedBundle = try VMBundle.load(from: newURL)
+
+            if let session = sessions.removeValue(forKey: oldURL) {
+                session.bundle = renamedBundle
+                sessions[newURL] = session
+            }
+            if selectedBundleURL == oldURL {
+                selectedBundleURL = newURL
+            }
+
+            refresh()
+            return renamedBundle
+        } catch {
+            if FileManager.default.fileExists(atPath: newURL.path),
+               !FileManager.default.fileExists(atPath: oldURL.path) {
+                try? FileManager.default.moveItem(at: newURL, to: oldURL)
+            }
+            throw error
+        }
+    }
+
     /// Display name for a bundle (filename without .bundle extension).
     static func displayName(for bundle: VMBundle) -> String {
         let filename = bundle.bundleURL.lastPathComponent
@@ -112,6 +151,30 @@ class VMManager {
             return String(filename.dropLast(".bundle".count))
         }
         return filename
+    }
+
+    static func normalizedDisplayName(_ rawValue: String) -> String {
+        var displayName = rawValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let suffixRange = displayName.range(
+            of: ".bundle",
+            options: [.caseInsensitive, .anchored, .backwards]
+        ) {
+            displayName.removeSubrange(suffixRange)
+            displayName = displayName.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        return displayName
+    }
+
+    private static func validateDisplayName(_ displayName: String) throws {
+        guard !displayName.isEmpty else {
+            throw ToyVMError("Virtual machine name cannot be empty.")
+        }
+        guard !displayName.contains("/") else {
+            throw ToyVMError("Virtual machine name cannot contain '/'.")
+        }
+        guard displayName != "." && displayName != ".." else {
+            throw ToyVMError("Virtual machine name '\(displayName)' is not valid.")
+        }
     }
 
     // MARK: - Directory Monitoring

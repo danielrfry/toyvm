@@ -43,7 +43,7 @@ class VMSession: Identifiable {
     private(set) var outputPipe: Pipe?
 
     /// Stable identity for SwiftUI ForEach.
-    var id: URL { bundle.bundleURL }
+    let id = UUID()
 
     var isActive: Bool {
         guard let state = runner?.state else { return false }
