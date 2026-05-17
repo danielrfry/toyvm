@@ -96,21 +96,16 @@ struct ShareEditSheet: View {
     }
 
     private func save() {
-        // If editing and the tag changed, remove the old entry first
-        if let existing, existing.tag != tag {
-            do {
-                try session.bundle.removeShare(tag: existing.tag)
-            } catch {
-                errorMessage = error.localizedDescription
-                return
-            }
-        }
-
-        let share = ShareConfig(tag: tag, path: path, readOnly: readOnly)
-        session.bundle.addShare(share)
-
         do {
-            try session.bundle.saveConfig()
+            try session.updateBundle { bundle in
+                if let existing, existing.tag != tag {
+                    try bundle.removeShare(tag: existing.tag)
+                }
+
+                let share = ShareConfig(tag: tag, path: path, readOnly: readOnly)
+                bundle.addShare(share)
+                try bundle.saveConfig()
+            }
         } catch {
             errorMessage = error.localizedDescription
             return

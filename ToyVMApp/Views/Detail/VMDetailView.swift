@@ -207,8 +207,10 @@ struct VMDetailView: View {
         ) { share in
             Button("Remove", role: .destructive) {
                 do {
-                    try session.bundle.removeShare(tag: share.tag)
-                    try session.bundle.saveConfig()
+                    try session.updateBundle { bundle in
+                        try bundle.removeShare(tag: share.tag)
+                        try bundle.saveConfig()
+                    }
                     session.updateRuntimeShares()
                 } catch {
                     session.errorMessage = error.localizedDescription

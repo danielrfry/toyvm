@@ -254,8 +254,9 @@ struct BranchManagementSheet: View {
 
     private func performRevert() {
         do {
-            try session.bundle.revertBranch(named: revertBranchName)
-            session.reloadBundle()
+            try session.updateBundle { bundle in
+                try bundle.revertBranch(named: revertBranchName)
+            }
         } catch {
             showErrorMessage(error.localizedDescription)
         }
@@ -263,8 +264,9 @@ struct BranchManagementSheet: View {
 
     private func performCommit() {
         do {
-            try session.bundle.commitBranch(named: commitBranchName)
-            session.reloadBundle()
+            try session.updateBundle { bundle in
+                try bundle.commitBranch(named: commitBranchName)
+            }
         } catch {
             showErrorMessage(error.localizedDescription)
         }
@@ -273,8 +275,9 @@ struct BranchManagementSheet: View {
     private func performToggleReadOnly(_ name: String) {
         do {
             let current = session.bundle.meta.branches[name]?.readOnly ?? false
-            try session.bundle.setBranchReadOnly(!current, branch: name)
-            session.reloadBundle()
+            try session.updateBundle { bundle in
+                try bundle.setBranchReadOnly(!current, branch: name)
+            }
         } catch {
             showErrorMessage(error.localizedDescription)
         }

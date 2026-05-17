@@ -61,6 +61,15 @@ class VMSession: Identifiable {
         self.bundle = bundle
     }
 
+    @discardableResult
+    @MainActor
+    func updateBundle<Result>(_ update: (inout VMBundle) throws -> Result) throws -> Result {
+        var bundle = self.bundle
+        let result = try update(&bundle)
+        self.bundle = bundle
+        return result
+    }
+
     func reloadBundle() {
         do {
             bundle = try VMBundle.load(from: bundle.bundleURL)
@@ -135,8 +144,10 @@ class VMSession: Identifiable {
         try await controller.attach(device: device)
         attachedUSBDevices.append(AttachedUSBDevice(url: url, readOnly: readOnly, device: device))
 
-        bundle.config.usbDisks.append(USBDiskConfig(path: url.path, readOnly: readOnly))
-        try bundle.saveConfig()
+        try updateBundle { bundle in
+            bundle.config.usbDisks.append(USBDiskConfig(path: url.path, readOnly: readOnly))
+            try bundle.saveConfig()
+        }
     }
 
     @MainActor
@@ -151,25 +162,31 @@ class VMSession: Identifiable {
         try await controller.detach(device: entry.device)
         attachedUSBDevices.remove(at: index)
 
-        bundle.config.usbDisks.removeAll { $0.path == entry.url.path }
-        try bundle.saveConfig()
+        try updateBundle { bundle in
+            bundle.config.usbDisks.removeAll { $0.path == entry.url.path }
+            try bundle.saveConfig()
+        }
     }
 
     /// Adds a USB disk to the persisted configuration without hot-plugging.
     /// Use this when the VM is not running.
     @MainActor
     func addUSBDiskToConfig(url: URL, readOnly: Bool) throws {
-        bundle.config.usbDisks.append(USBDiskConfig(path: url.path, readOnly: readOnly))
-        try bundle.saveConfig()
+        try updateBundle { bundle in
+            bundle.config.usbDisks.append(USBDiskConfig(path: url.path, readOnly: readOnly))
+            try bundle.saveConfig()
+        }
     }
 
     /// Removes a USB disk from the persisted configuration by index.
     /// Use this when the VM is not running.
     @MainActor
     func removeUSBDiskFromConfig(at index: Int) throws {
-        guard bundle.config.usbDisks.indices.contains(index) else { return }
-        bundle.config.usbDisks.remove(at: index)
-        try bundle.saveConfig()
+        try updateBundle { bundle in
+            guard bundle.config.usbDisks.indices.contains(index) else { return }
+            bundle.config.usbDisks.remove(at: index)
+            try bundle.saveConfig()
+        }
     }
 
     // MARK: - Runtime directory share updates (macOS guests)

@@ -63,8 +63,10 @@ struct DiskCreateSheet: View {
 
         do {
             let size = try parseSize(sizeText)
-            try session.bundle.addDisk(format: format, size: size, readOnly: readOnly)
-            try session.bundle.saveConfig()
+            try session.updateBundle { bundle in
+                try bundle.addDisk(format: format, size: size, readOnly: readOnly)
+                try bundle.saveConfig()
+            }
             dismiss()
         } catch {
             errorMessage = error.localizedDescription

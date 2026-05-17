@@ -148,8 +148,10 @@ struct ConfigEditView: View {
         ) { disk in
             Button("Remove", role: .destructive) {
                 do {
-                    try session.bundle.removeDisk(named: disk.file)
-                    try session.bundle.saveConfig()
+                    try session.updateBundle { bundle in
+                        try bundle.removeDisk(named: disk.file)
+                        try bundle.saveConfig()
+                    }
                 } catch {
                     errorMessage = error.localizedDescription
                 }
@@ -173,8 +175,10 @@ struct ConfigEditView: View {
         ) { share in
             Button("Remove", role: .destructive) {
                 do {
-                    try session.bundle.removeShare(tag: share.tag)
-                    try session.bundle.saveConfig()
+                    try session.updateBundle { bundle in
+                        try bundle.removeShare(tag: share.tag)
+                        try bundle.saveConfig()
+                    }
                     session.updateRuntimeShares()
                 } catch {
                     errorMessage = error.localizedDescription
@@ -447,45 +451,47 @@ struct ConfigEditView: View {
                 vmName = requestedName
             }
 
-            let currentKernelURL = session.bundle.config.kernelURL(in: session.bundle.activeBranchURL)
-            let currentInitrdURL = session.bundle.config.initrdURL(in: session.bundle.activeBranchURL)
             let trimmedKernelPath = replacementKernelPath.trimmingCharacters(in: .whitespacesAndNewlines)
             let trimmedInitrdPath = replacementInitrdPath.trimmingCharacters(in: .whitespacesAndNewlines)
+            try session.updateBundle { bundle in
+                let currentKernelURL = bundle.config.kernelURL(in: bundle.activeBranchURL)
+                let currentInitrdURL = bundle.config.initrdURL(in: bundle.activeBranchURL)
 
-            if !trimmedKernelPath.isEmpty {
-                let kernelURL = try validatedReplacementURL(path: trimmedKernelPath, label: "Kernel")
-                if kernelURL.standardizedFileURL != currentKernelURL?.standardizedFileURL {
-                    try session.bundle.replaceKernel(from: kernelURL)
+                if !trimmedKernelPath.isEmpty {
+                    let kernelURL = try validatedReplacementURL(path: trimmedKernelPath, label: "Kernel")
+                    if kernelURL.standardizedFileURL != currentKernelURL?.standardizedFileURL {
+                        try bundle.replaceKernel(from: kernelURL)
+                    }
+                } else if bootMode == .linux && bundle.config.kernel == nil {
+                    throw ToyVMError("Linux boot mode requires a kernel image")
                 }
-            } else if bootMode == .linux && session.bundle.config.kernel == nil {
-                throw ToyVMError("Linux boot mode requires a kernel image")
-            }
 
-            if !trimmedInitrdPath.isEmpty {
-                let initrdURL = try validatedReplacementURL(path: trimmedInitrdPath, label: "Initrd")
-                if initrdURL.standardizedFileURL != currentInitrdURL?.standardizedFileURL {
-                    try session.bundle.replaceInitrd(from: initrdURL)
+                if !trimmedInitrdPath.isEmpty {
+                    let initrdURL = try validatedReplacementURL(path: trimmedInitrdPath, label: "Initrd")
+                    if initrdURL.standardizedFileURL != currentInitrdURL?.standardizedFileURL {
+                        try bundle.replaceInitrd(from: initrdURL)
+                    }
+                } else if removeInitrdOnSave {
+                    try bundle.removeInitrd()
                 }
-            } else if removeInitrdOnSave {
-                try session.bundle.removeInitrd()
+
+                bundle.config.cpus = cpus
+                bundle.config.memoryGB = memoryGB
+                bundle.config.audio = audio
+                bundle.config.network = network
+                bundle.config.rosetta = rosetta
+                bundle.config.bootMode = bootMode
+                bundle.config.usbDisks = usbDisks
+
+                if bootMode == .linux {
+                    let args = kernelCommandLine.trimmingCharacters(in: .whitespacesAndNewlines)
+                    bundle.config.kernelCommandLine = args.isEmpty
+                        ? ["console=hvc0"]
+                        : args.components(separatedBy: " ").filter { !$0.isEmpty }
+                }
+
+                try bundle.saveConfig()
             }
-
-            session.bundle.config.cpus = cpus
-            session.bundle.config.memoryGB = memoryGB
-            session.bundle.config.audio = audio
-            session.bundle.config.network = network
-            session.bundle.config.rosetta = rosetta
-            session.bundle.config.bootMode = bootMode
-            session.bundle.config.usbDisks = usbDisks
-
-            if bootMode == .linux {
-                let args = kernelCommandLine.trimmingCharacters(in: .whitespacesAndNewlines)
-                session.bundle.config.kernelCommandLine = args.isEmpty
-                    ? ["console=hvc0"]
-                    : args.components(separatedBy: " ").filter { !$0.isEmpty }
-            }
-
-            try session.bundle.saveConfig()
             dismiss()
         } catch {
             errorMessage = error.localizedDescription
