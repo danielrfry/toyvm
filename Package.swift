@@ -15,5 +15,10 @@ let package = Package(
             ],
             path: "toyvm"
         ),
+        .testTarget(
+            name: "toyvmTests",
+            dependencies: ["toyvm"],
+            path: "toyvmTests"
+        ),
     ]
 )

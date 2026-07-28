@@ -68,11 +68,11 @@ extension ToyVM {
                 try fm.createDirectory(at: bundleURL, withIntermediateDirectories: false)
                 bundleCreated = true
 
-                // Create branches directory and the root "main" branch subdirectory
+                // Create branches directory and the initial "main" branch subdirectory
                 let branchesDir = bundleURL.appendingPathComponent(VMConfig.branchesDir)
                 try fm.createDirectory(at: branchesDir, withIntermediateDirectories: false)
-                let rootBranch = "main"
-                let branchURL = VMConfig.branchURL(in: bundleURL, branch: rootBranch)
+                let initialBranch = "main"
+                let branchURL = VMConfig.branchURL(in: bundleURL, branch: initialBranch)
                 try fm.createDirectory(at: branchURL, withIntermediateDirectories: false)
 
                 // Create kernel, initrd, and disks subdirectories inside the branch
@@ -150,7 +150,7 @@ extension ToyVM {
                 try config.save(to: branchURL)
 
                 // Write bundle-level metadata
-                let bundleMeta = BundleMeta(rootBranch: rootBranch)
+                let bundleMeta = BundleMeta(initialBranch: initialBranch)
                 try bundleMeta.save(to: bundleURL)
 
                 print("Created VM bundle: \(bundle)")
@@ -163,4 +163,3 @@ extension ToyVM {
         }
     }
 }
-

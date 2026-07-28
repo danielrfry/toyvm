@@ -6,16 +6,18 @@ A VM bundle is a directory (with a `.bundle` suffix) that contains everything ne
 
 ```
 myvm.bundle/
-  bundle.plist          ← Branch metadata (active branch, branch tree)
+  bundle.plist          ← Branch metadata (active branch and branch properties)
   branches/
-    main/               ← Initial branch created by 'toyvm create'
+    main/               ← Initial active branch created by 'toyvm create'
       config.plist      ← VM configuration (CPUs, memory, devices, etc.)
       kernel/           ← Kernel image
       initrd/           ← Initrd image (if present)
       disks/            ← Disk image files
 ```
 
-Additional branches appear as sibling directories alongside `main/`. See [Branches](BRANCHES.md) for details.
+Additional branches appear as independent sibling directories alongside
+`main/`. Branch ancestry is not recorded. See [Branches](BRANCHES.md) for
+details.
 
 ## VM name shortcuts
 
@@ -57,6 +59,9 @@ toyvm config myvm --disk asif:10G
 Sizes can be specified using `K`, `M`, `G`, or `T` suffixes (powers of 1024, e.g. `20G` = 21,474,836,480 bytes).
 
 ## Configuration file
+
+`bundle.plist` stores the active branch name and each branch's read-only flag.
+Older parent fields are accepted but ignored.
 
 `config.plist` inside each branch directory is a property list encoding of the VM configuration. It stores:
 

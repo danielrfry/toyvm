@@ -131,7 +131,8 @@ USAGE: toyvm branch <subcommand>
 
 ### toyvm branch ls
 
-Lists all branches in a tree view. The active branch is marked with `*`. Read-only branches are marked with `[ro]`.
+Lists branches alphabetically. The active branch is marked with `*`. Read-only
+branches are marked with `[ro]`.
 
 ```
 USAGE: toyvm branch ls <vm>
@@ -139,18 +140,18 @@ USAGE: toyvm branch ls <vm>
 
 Example output:
 ```
+experimental
 main [ro]
-├── stable *
-└── experimental
-    └── wip
+stable *
 ```
 
 ### toyvm branch create
 
-Creates a new branch as a copy-on-write clone of an existing branch. The new branch is automatically selected as the active branch.
+Creates a new branch as a copy-on-write clone of any existing branch. The new
+branch starts writable and is automatically selected as the active branch.
 
 ```
-USAGE: toyvm branch create [--from <branch>] <vm> <name>
+USAGE: toyvm branch create <vm> <name> [--from <branch>]
 
 ARGUMENTS:
   <vm>              VM name or bundle path
@@ -162,7 +163,8 @@ OPTIONS:
 
 ### toyvm branch select
 
-Sets the active branch. Only leaf branches (branches with no children) may be selected.
+Sets the active branch. Any branch, including a read-only branch, may be
+selected.
 
 ```
 USAGE: toyvm branch select <vm> <name>
@@ -170,7 +172,7 @@ USAGE: toyvm branch select <vm> <name>
 
 ### toyvm branch rename
 
-Renames a branch. Updates all child branch references and the active branch pointer if needed.
+Renames a branch and updates the active branch pointer if needed.
 
 ```
 USAGE: toyvm branch rename <vm> <old-name> <new-name>
@@ -178,37 +180,13 @@ USAGE: toyvm branch rename <vm> <old-name> <new-name>
 
 ### toyvm branch delete
 
-Deletes a branch and all its descendants. Prompts for confirmation. The root branch cannot be deleted. Read-only branches cannot be deleted.
-
-If the active branch is within the deleted subtree, the parent of the deleted branch becomes the new active branch (only possible if it has no other child branches after the deletion).
-
-```
-USAGE: toyvm branch delete [<vm>] [<name>]
-
-  <name>  Branch to delete (default: active branch)
-```
-
-### toyvm branch revert
-
-Reverts a branch to the current state of its parent branch, discarding all changes. Prompts for confirmation. Read-only branches cannot be reverted.
+Deletes one branch after prompting for confirmation. The branch name is
+required. Active and read-only branches cannot be deleted; select another branch
+or clear its read-only flag first. No branch is a protected root, so `main` can
+be deleted when it is not active.
 
 ```
-USAGE: toyvm branch revert <vm> [<name>]
+USAGE: toyvm branch delete <vm> <name>
 
-  <name>  Branch to revert (default: active branch)
-```
-
-### toyvm branch commit
-
-Copies the state of a branch onto its parent, then deletes the branch. Prompts for confirmation.
-
-Constraints:
-- The branch must be a leaf (no children).
-- The parent must have no other child branches.
-- Neither the branch nor its parent may be read-only.
-
-```
-USAGE: toyvm branch commit <vm> [<name>]
-
-  <name>  Branch to commit (default: active branch)
+  <name>  Branch to delete
 ```
