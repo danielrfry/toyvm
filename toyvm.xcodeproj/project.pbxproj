@@ -7,6 +7,19 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A10000000000000000000001 /* BranchModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000003 /* BranchModelTests.swift */; };
+		A1000000000000000000000E /* Prompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37F379BC2F66F90F004A32AF /* Prompt.swift */; };
+		A1000000000000000000000F /* LsCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37F379BA2F66E567004A32AF /* LsCommand.swift */; };
+		A10000000000000000000010 /* ConfigCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37F379B42F66E422004A32AF /* ConfigCommand.swift */; };
+		A10000000000000000000011 /* CreateCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37F379B52F66E422004A32AF /* CreateCommand.swift */; };
+		A10000000000000000000012 /* StartCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37F379B62F66E422004A32AF /* StartCommand.swift */; };
+		A10000000000000000000013 /* VMConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37D4731B2F6624570027142F /* VMConfig.swift */; };
+		A10000000000000000000014 /* BundleMeta.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0679C9A064AC41E1B592BD32 /* BundleMeta.swift */; };
+		A10000000000000000000015 /* BranchCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E10A52C1C074057822BA3F3 /* BranchCommand.swift */; };
+		A10000000000000000000016 /* ToyVM.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E8C366362A341E7B9E094FB /* ToyVM.swift */; };
+		A10000000000000000000017 /* ToyVMDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3B8843591644736A193283A /* ToyVMDelegate.swift */; };
+		A10000000000000000000018 /* ArgumentParser in Frameworks */ = {isa = PBXBuildFile; productRef = DD30C2482CDB40B1842BD25A /* ArgumentParser */; };
+		A10000000000000000000019 /* Virtualization.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 375A3A9625684A8300EEB67A /* Virtualization.framework */; };
 		2A21A2C6A57D40608FC50458 /* ArgumentParser in Frameworks */ = {isa = PBXBuildFile; productRef = DD30C2482CDB40B1842BD25A /* ArgumentParser */; };
 		3267BA3FD5B340B09D4E1F93 /* BranchCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E10A52C1C074057822BA3F3 /* BranchCommand.swift */; };
 		375A3A9725684A8300EEB67A /* Virtualization.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 375A3A9625684A8300EEB67A /* Virtualization.framework */; };
@@ -21,6 +34,16 @@
 		FC2B71D4FC084E858EC3DFF2 /* ToyVM.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E8C366362A341E7B9E094FB /* ToyVM.swift */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		A10000000000000000000009 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 375A3A8225684A5E00EEB67A /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 375A3A8925684A5E00EEB67A;
+			remoteInfo = toyvm;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXCopyFilesBuildPhase section */
 		375A3A8825684A5E00EEB67A /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
@@ -34,6 +57,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		A10000000000000000000002 /* toyvmTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = toyvmTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		A10000000000000000000003 /* BranchModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BranchModelTests.swift; sourceTree = "<group>"; };
 		0679C9A064AC41E1B592BD32 /* BundleMeta.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BundleMeta.swift; sourceTree = "<group>"; };
 		375A3A8A25684A5E00EEB67A /* toyvm */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = toyvm; sourceTree = BUILT_PRODUCTS_DIR; };
 		375A3A9625684A8300EEB67A /* Virtualization.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Virtualization.framework; path = System/Library/Frameworks/Virtualization.framework; sourceTree = SDKROOT; };
@@ -51,6 +76,15 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		A10000000000000000000004 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A10000000000000000000018 /* ArgumentParser in Frameworks */,
+				A10000000000000000000019 /* Virtualization.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		375A3A8725684A5E00EEB67A /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -69,6 +103,7 @@
 				379F73F5257405E1008AAEB7 /* README.md */,
 				375A3A9B2568500400EEB67A /* toyvm.entitlements */,
 				375A3A8C25684A5E00EEB67A /* toyvm */,
+				A10000000000000000000007 /* toyvmTests */,
 				375A3A8B25684A5E00EEB67A /* Products */,
 				375A3A9525684A8300EEB67A /* Frameworks */,
 			);
@@ -78,6 +113,7 @@
 			isa = PBXGroup;
 			children = (
 				375A3A8A25684A5E00EEB67A /* toyvm */,
+				A10000000000000000000002 /* toyvmTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -107,6 +143,14 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
+		A10000000000000000000007 /* toyvmTests */ = {
+			isa = PBXGroup;
+			children = (
+				A10000000000000000000003 /* BranchModelTests.swift */,
+			);
+			path = toyvmTests;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -130,6 +174,27 @@
 			productReference = 375A3A8A25684A5E00EEB67A /* toyvm */;
 			productType = "com.apple.product-type.tool";
 		};
+		A10000000000000000000008 /* toyvmTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A1000000000000000000000D /* Build configuration list for PBXNativeTarget "toyvmTests" */;
+			buildPhases = (
+				A10000000000000000000006 /* Sources */,
+				A10000000000000000000004 /* Frameworks */,
+				A10000000000000000000005 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				A1000000000000000000000A /* PBXTargetDependency */,
+			);
+			name = toyvmTests;
+			packageProductDependencies = (
+				DD30C2482CDB40B1842BD25A /* ArgumentParser */,
+			);
+			productName = toyvmTests;
+			productReference = A10000000000000000000002 /* toyvmTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -140,6 +205,10 @@
 				TargetAttributes = {
 					375A3A8925684A5E00EEB67A = {
 						CreatedOnToolsVersion = 12.2;
+					};
+					A10000000000000000000008 = {
+						CreatedOnToolsVersion = 16.4;
+						TestTargetID = 375A3A8925684A5E00EEB67A;
 					};
 				};
 			};
@@ -160,11 +229,40 @@
 			projectRoot = "";
 			targets = (
 				375A3A8925684A5E00EEB67A /* toyvm */,
+				A10000000000000000000008 /* toyvmTests */,
 			);
 		};
 /* End PBXProject section */
 
+/* Begin PBXResourcesBuildPhase section */
+		A10000000000000000000005 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
+		A10000000000000000000006 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A10000000000000000000001 /* BranchModelTests.swift in Sources */,
+				A1000000000000000000000E /* Prompt.swift in Sources */,
+				A1000000000000000000000F /* LsCommand.swift in Sources */,
+				A10000000000000000000010 /* ConfigCommand.swift in Sources */,
+				A10000000000000000000011 /* CreateCommand.swift in Sources */,
+				A10000000000000000000012 /* StartCommand.swift in Sources */,
+				A10000000000000000000013 /* VMConfig.swift in Sources */,
+				A10000000000000000000014 /* BundleMeta.swift in Sources */,
+				A10000000000000000000015 /* BranchCommand.swift in Sources */,
+				A10000000000000000000016 /* ToyVM.swift in Sources */,
+				A10000000000000000000017 /* ToyVMDelegate.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		375A3A8625684A5E00EEB67A /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -184,7 +282,45 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		A1000000000000000000000A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 375A3A8925684A5E00EEB67A /* toyvm */;
+			targetProxy = A10000000000000000000009 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		A1000000000000000000000B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
+				PRODUCT_BUNDLE_IDENTIFIER = toyvmTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG TOYVM_TESTING";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		A1000000000000000000000C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
+				PRODUCT_BUNDLE_IDENTIFIER = toyvmTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = TOYVM_TESTING;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
 		375A3A8F25684A5E00EEB67A /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -339,6 +475,15 @@
 			buildConfigurations = (
 				375A3A9225684A5E00EEB67A /* Debug */,
 				375A3A9325684A5E00EEB67A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A1000000000000000000000D /* Build configuration list for PBXNativeTarget "toyvmTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A1000000000000000000000B /* Debug */,
+				A1000000000000000000000C /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

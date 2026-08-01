@@ -1,6 +1,8 @@
 import Foundation
 import XCTest
+#if SWIFT_PACKAGE
 @testable import toyvm
+#endif
 
 final class BranchModelTests: XCTestCase {
     private var temporaryDirectories: [URL] = []

@@ -6,7 +6,9 @@
 import ArgumentParser
 import Foundation
 
+#if !TOYVM_TESTING
 @main
+#endif
 struct ToyVM: ParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "toyvm",
